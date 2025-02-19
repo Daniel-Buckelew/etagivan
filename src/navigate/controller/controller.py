@@ -687,7 +687,7 @@ class Controller:
             """Query the stages for their current position in a thread-blocking format.
             """
             query_thread = self.threads_pool.createThread(
-                resourceName="query_stages",
+                resourceName="model",
                 target=self.stop_stage)
 
             while query_thread.is_alive():
@@ -1361,11 +1361,6 @@ class Controller:
         and update the GUI control values accordingly.
         """
         self.model.stop_stage()
-
-    def query_stages(self):
-        """Query the stages for their current position."""
-        query_complete = self.model.query_stages(update_flag=True)
-        self.update_stage_controller_silent(ret_pos_dict)
 
     def update_stage_controller_silent(self, ret_pos_dict):
         """Send updates to the stage GUI
