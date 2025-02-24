@@ -48,34 +48,6 @@ from navigate.tools.decorators import log_initialization
 p = __name__.split(".")[1]
 logger = logging.getLogger(p)
 
-
-def build_photometrics_connection(camera_connection):
-    """Build Photometrics connection
-
-    Import Photometrics API and Initialize Camera Controller.
-
-    Parameters
-    ----------
-    camera_connection : str
-        Camera connection string
-
-    Returns
-    -------
-    camera_to_open : object
-        Camera object.
-    """
-    try:
-        pvc.init_pvcam()
-        camera_to_open = Camera.select_camera(camera_connection)
-        camera_to_open.open()
-        return camera_to_open
-    except Exception as e:
-        logger.error(f"Could not establish connection with camera: {e}.")
-        raise UserWarning(
-            "Could not establish connection with camera", camera_connection
-        )
-
-
 @log_initialization
 class PhotometricsCamera(CameraBase):
     """Photometrics Base camera class.
@@ -187,6 +159,17 @@ class PhotometricsCamera(CameraBase):
         """Delete PhotometricsBase object."""
         if hasattr(self, "camera_controller"):
             self.camera_controller.close()
+
+    @classmethod
+    def get_connect_params(cls):
+        """Register the parameters required to connect to the stage.
+
+        Returns
+        -------
+        list
+            List of parameters required to connect to the stage.
+        """
+        return ["camera_connection"]
 
     @classmethod
     def connect(cls, camera_connection):
