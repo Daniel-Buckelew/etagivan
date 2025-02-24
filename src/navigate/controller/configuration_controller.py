@@ -33,6 +33,7 @@
 
 # Standard Library Imports
 import logging
+from multiprocessing.managers import ListProxy, DictProxy
 
 # Third Party Imports
 
@@ -153,8 +154,7 @@ class ConfigurationController:
             return []
 
         return [
-            str(laser["wavelength"]) + "nm"
-            for laser in self.microscope_config["laser"]
+            str(laser["wavelength"]) + "nm" for laser in self.microscope_config["laser"]
         ]
 
     @property
@@ -368,6 +368,25 @@ class ConfigurationController:
         if self.microscope_config is not None:
             return self.microscope_config["stage"]
         return None
+
+    @property
+    def z_stages(self):
+        """Return a list of all z stage names.
+
+        Returns
+        -------
+        z_stages : list
+            A list of z stage names.
+        """
+        if self.microscope_config is not None:
+            stages = self.microscope_config["stage"]["hardware"]
+            if isinstance(stages, ListProxy):
+                stages = list(stages)
+                return [stage["type"] for stage in stages if "z" in stage["axes"]]
+            elif isinstance(stages, DictProxy):
+                return [
+                    stage["type"] for stage in stages.values() if "z" in stage["axes"]
+                ]
 
     @property
     def number_of_channels(self):
