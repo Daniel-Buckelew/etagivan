@@ -108,6 +108,7 @@ filter_wheel_hardware_widgets = {
 
 daq_device_types = {
     "National Instruments": "NI",
+    "ASI Tiger Controller": "ASI",
     "Virtual Device": "Synthetic",
 }
 
@@ -153,12 +154,15 @@ daq_hardware_widgets = {
 
 shutter_device_types = {
     "Analog/Digital Device": ("NI", "ni"),
+    "ASI Device": ("ASI","asi"),
     "Virtual Device": ("Synthetic", "synthetic"),
 }
 
 shutter_hardware_widgets = {
     "type": ["Device Type", "Combobox", "string", shutter_device_types, None],
     "channel": ["NI Channel", "Input", "string", None, "Example: PXI6259/port0/line0"],
+    "port": ["Serial Port", "Input", "string", None, "Example: COM1"],
+    "baudrate": ["Baudrate", "Input", "string", None, "Example: 9600"],
     "min": ["Minimum Voltage", "Spinbox", "float", None, "Example: 0"],
     "max": ["Maximum Voltage", "Spinbox", "float", None, "Example: 5"],
     "frame_config": {"ref": "hardware"},
@@ -432,12 +436,15 @@ stage_constants_widgets = {
 remote_focus_device_types = {
     "Equipment Solutions": ("EquipmentSolutions", "equipment_solutions"),
     "Analog Device": ("NI", "ni"),
+    "ASI Device": ("ASI","asi"),
     "Virtual Device": ("Synthetic", "synthetic"),
 }
 
 remote_focus_hardware_widgets = {
     "type": ["Device Type", "Combobox", "string", remote_focus_device_types, None],
     "channel": ["DAQ Channel", "Input", "string", None, "Example: PXI6259/ao3"],
+    "port": ["Serial Port", "Input", "string", None, "Example: COM1"],
+    "baudrate": ["Baudrate", "Input", "string", None, "Example: 9600"],
     "min": [
         "Minimum Voltage",
         "Spinbox",
@@ -463,7 +470,7 @@ remote_focus_hardware_widgets = {
     "frame_config": {"ref": "hardware"},
 }
 
-galvo_device_types = {"Analog Device": ("NI", "ni"), "Virtual Device": ("Synthetic", "synthetic")}
+galvo_device_types = {"Analog Device": ("NI", "ni"), "ASI Device": ("ASI","asi"), "Virtual Device": ("Synthetic", "synthetic")}
 
 waveform_types = {
     "Sine": "sine",
@@ -480,6 +487,8 @@ galvo_hardware_widgets = {
         None,
         "*Analog Device only. Example: PXI6259/ao1",
     ],
+    "hardware/port": ["Serial Port", "Input", "string", None, "Example: COM1"],
+    "hardware/baudrate": ["Baudrate", "Input", "string", None, "Example: 9600"],
     "hardware/min": [
         "Minimum Voltage",
         "Spinbox",
@@ -582,14 +591,14 @@ laser_hardware_widgets = {
         None,
         "Example: PXI6733/port0/line2",
     ],
-    "power/hardware/port": [
+    "onoff/hardware/port": [
         "Serial Port",
         "Input",
         "string",
         None,
         "Example: COM1",
     ],
-    "power/hardware/baudrate": [
+    "onoff/hardware/baudrate": [
         "Baudrate",
         "Input",
         "string",
