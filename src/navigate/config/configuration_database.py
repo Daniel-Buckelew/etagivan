@@ -569,7 +569,7 @@ mirror_hardware_widgets = {
     "n_modes": ["Number of Modes", "Input", "int", None, "Example: 32", 32],
 }
 
-laser_device_types = {"Analog Device": ("NI", "ni"), "Virtual Device": ("Synthetic", "synthetic")}
+laser_device_types = {"Analog Device": ("NI", "ni"), "ASI Device": ("ASI","asi"), "Virtual Device": ("Synthetic", "synthetic")}
 
 laser_hardware_widgets = {
     "wavelength": ["Wavelength", "Input", "int", None, "Example: 488", 488],
@@ -581,6 +581,20 @@ laser_hardware_widgets = {
         "string",
         None,
         "Example: PXI6733/port0/line2",
+    ],
+    "power/hardware/port": [
+        "Serial Port",
+        "Input",
+        "string",
+        None,
+        "Example: COM1",
+    ],
+    "power/hardware/baudrate": [
+        "Baudrate",
+        "Input",
+        "string",
+        None,
+        "Example: 9600",
     ],
     "onoff/hardware/min": [
         "Minimum Voltage",
@@ -604,6 +618,20 @@ laser_hardware_widgets = {
         "string",
         None,
         "Example: PXI6733/ao0",
+    ],
+    "power/hardware/port": [
+        "Serial Port",
+        "Input",
+        "string",
+        None,
+        "Example: COM1",
+    ],
+    "power/hardware/baudrate": [
+        "Baudrate",
+        "Input",
+        "string",
+        None,
+        "Example: 9600",
     ],
     "power/hardware/min": [
         "Minimum Voltage",
