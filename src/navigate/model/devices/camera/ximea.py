@@ -95,11 +95,14 @@ class XimeaBase(CameraBase):
         self.offset_x_step = self.cam.get_param("offsetX:inc")
         self.offset_y_min = self.cam.get_param("offsetY:min")
         self.offset_y_max = self.cam.get_param("offsetY:max")
-        self.offset_y_step = self.cam.get_param("offset:inc")
+        self.offset_y_step = self.cam.get_param("offsetY:inc")
         self.minimum_exposure_time = self.cam.get_param("exposure:min")
 
         # set external rising edge trigger: XI_TRG_EDGE_RISING
-        self.cam.set_param('trigger_source', 1)
+        # the input signal port should be set in configuration
+        self.cam.set_param("gpi_selector", "XI_GPI_PORT1")
+        self.cam.set_param("gpi_mode", "XI_GPI_TRIGGER")
+        self.cam.set_param('trigger_source', "XI_TRG_EDGE_RISING")
 
 
     def __str__(str):
@@ -145,7 +148,8 @@ class XimeaBase(CameraBase):
         """
         try:
             cam = xiapi.Camera()
-            xiapi.open_device_by_sn(str(serial_number))
+            # XI_OPEN_BY_SN
+            cam.open_device_by_SN(str(serial_number))
             return cam
         except Exception as e:
             logger.error(f"Could not establish connection with camera: {e}.")
@@ -375,7 +379,7 @@ class XimeaBase(CameraBase):
         if self._frames_received >= self._number_of_frames:
             self._frames_received = 0
 
-class MU196XR(XimeaBase):
+class MU196XRCamera(XimeaBase):
     """Ximea MU196XR class.
 
     This camear class supports ximea camera models: MU196MR/MU196CR.
