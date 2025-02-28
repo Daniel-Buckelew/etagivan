@@ -425,13 +425,14 @@ class Microscope:
 
         if self.camera.is_acquiring:
             self.camera.close_image_series()
-        self.set_camera_roi()
         self.set_camera_sensor_mode()
+        # Ximea camera must set binning before setting ROI
         self.camera.set_binning(
             self.configuration["experiment"]["CameraParameters"][self.microscope_name][
                 "binning"
             ]
         )
+        self.set_camera_roi()
         logger.debug(f"Running microscope {self.microscope_name}")
         self.report_camera_settings()
         # Initialize Image Series - Attaches camera buffer and start imaging

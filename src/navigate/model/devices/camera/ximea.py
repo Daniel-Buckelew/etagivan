@@ -91,10 +91,8 @@ class XimeaBase(CameraBase):
         self.camera_parameters["x_pixels_step"] = self.cam.get_param("width:inc")
         self.camera_parameters["y_pixels_step"] = self.cam.get_param("height:inc")
         self.offset_x_min = self.cam.get_param("offsetX:min")
-        self.offset_x_max = self.cam.get_param("offsetX:max")
         self.offset_x_step = self.cam.get_param("offsetX:inc")
         self.offset_y_min = self.cam.get_param("offsetY:min")
-        self.offset_y_max = self.cam.get_param("offsetY:max")
         self.offset_y_step = self.cam.get_param("offsetY:inc")
         self.minimum_exposure_time = self.cam.get_param("exposure:min")
 
@@ -166,7 +164,7 @@ class XimeaBase(CameraBase):
         serial_number : str
             Serial number for the camera.
         """
-        self.cam.get_param("device_sn")
+        self.cam.get_param("device_sn").decode("utf-8")
 
     def report_settings(self):
         """Print Camera Settings.
@@ -187,12 +185,15 @@ class XimeaBase(CameraBase):
         If the camera is triggered, either by hardware trigger or through software, 
         the sensor uses the Global Reset Release mode.
 
+        Confirmed that the camera can run in free-run mode even if it is triggered by software.
+
         Parameters
         ----------
         mode : str
             'Normal' or 'Light-Sheet'
         """
-        #TODO: test if the shutter
+        self.cam.set_param("acq_timing_mode", "XI_ACQ_TIMING_MODE_FREE_RUN")
+        self.cam.set_param("shutter_type", "XI_SHUTTER_ROLLING")
     
     def set_readout_direction(self, mode):
         """Set readout direction"""
@@ -273,8 +274,10 @@ class XimeaBase(CameraBase):
             logger.debug(f"can't set binning to {binning_string}")
             print(f"can't set binning to {binning_string}")
             return False
-        # self.cam.set_param("downsampling_type", 0) # XI_BINNING
-        self.cam.set_param("downsampling", binning_dict[binning_string])
+        self.cam.set_param("downsampling_type", "XI_BINNING") # XI_BINNING
+        self.cam.set_param("downsampling", "XI_DWN_" + binning_string)
+        # after setting downsampling, the image size changes (width, height, imgpayloadsize)
+
         return True
 
     def set_ROI(self, roi_width=2048, roi_height=2048, center_x=1024, center_y=1024):
@@ -296,31 +299,37 @@ class XimeaBase(CameraBase):
         result: bool
             True if successful, False otherwise.
         """
+        binning_value = int(self.cam.get_param("downsampling")[len("XI_DWN_"):].split("x"))
         offset_x = center_x - roi_width // 2
         offset_y = center_y - roi_height // 2
-        if (self.roi_width % self.camera_parameters["x_pixels_step"] != 0
-            or self.roi_height % self.camera_parameters["y_pixels_step"] != 0
+
+        x_max = self.camera_parameters["x_pixels"] // binning_value
+        y_max = self.camera_parameters["y_pixels"] // binning_value
+        roi_width = roi_width // binning_value
+        roi_height = roi_height // binning_value
+
+        if (roi_width % self.camera_parameters["x_pixels_step"] != 0
+            or roi_height % self.camera_parameters["y_pixels_step"] != 0
             or offset_x < self.offset_x_min
-            or offset_x > self.offset_x_max
             or offset_x % self.offset_x_step != 0
             or offset_y < self.offset_y_min
-            or offset_y > self.offset_y_max
             or offset_y % self.offset_y_step != 0
-            or offset_x + roi_width > self.camera_parameters["x_pixels"]
-            or offset_y + roi_height > self.camera_parameters["y_pixels"]
+            or offset_x + roi_width > x_max
+            or offset_y + roi_height > y_max
         ):
             logger.debug(f"can't set roi to {roi_width} and {roi_height} with the center ({center_x}, {center_y})")
             return False
         
+        # width and height are actual image size, not the ROI size in Ximea Camera
         self.cam.set_param("width", roi_width)
         self.cam.set_param("height", roi_height)
         self.cam.set_param("offsetX", offset_x)
         self.cam.set_param("offsetY", offset_y)
 
-        self.x_pixels = self.cam.get_param("width")
-        self.y_pixels = self.cam.get_param("height")
+        self.x_pixels = self.cam.get_param("width") * binning_value
+        self.y_pixels = self.cam.get_param("height") * binning_value
 
-        return self.x_pixels == roi_width and self.y_pixels == roi_height
+        return self.x_pixels == roi_width * binning_value and self.y_pixels == roi_height * binning_value
 
     def initialize_image_series(self, data_buffer=None, number_of_frames=100):
         """Initialize Ximea Camera image series.
@@ -339,16 +348,15 @@ class XimeaBase(CameraBase):
         self._frames_received = 0
 
         # set buffer policy: XI_BP_SAFE
-        self.cam.set_param("buffer_policy", 1)
-        # set image data format to XI_MONO16
-        self.set_param('imgdataformat', 1)
-        #TODO: test if setting imgpayloadsize is necessary
-        self.cam.get_param("imgpayloadsize")
+        self.cam.set_param("buffer_policy", "XI_BP_SAFE")
+        # set image data format to XI_MONO16, this value can be set only if acquisition is stopped.
+        self.cam.set_param('imgdataformat', "XI_MONO16")
+        #imgpayloadsize changes automatically after setting imgdataformat
+        # self.cam.get_param("imgpayloadsize")
         # start_acquisition
         self._image = xiapi.Image()
         self.cam.start_acquisition()
         self.is_acquiring = True
-        self.cam.get_param("imgpayloadsize")
 
     def close_image_series(self):
         """Close image series.
@@ -369,11 +377,6 @@ class XimeaBase(CameraBase):
         # attach buffer to image object
         self._image.bp = ctypes.c_void_p(self._data_buffer[self._frames_received].ctypes.data)
         self.cam.get_image(self._image, 500)
-
-        # if attach buffer doesn't work
-        # self._data_buffer[self._frames_received][:, :] = np.copy(
-        #     self._image.get_image_data_numpy()[:]
-        # )
 
         self._frames_received += 1
         if self._frames_received >= self._number_of_frames:
