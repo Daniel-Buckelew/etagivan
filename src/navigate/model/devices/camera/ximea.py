@@ -33,11 +33,9 @@
 # Standard Library Imports
 import logging
 from typing import Any, Dict, Optional
-import ctypes
 
 # Third Party Imports
 from ximea import xiapi
-import numpy as np
 
 # Local Imports
 from navigate.model.devices.camera.base import CameraBase
@@ -299,7 +297,7 @@ class XimeaBase(CameraBase):
         result: bool
             True if successful, False otherwise.
         """
-        binning_value = int(self.cam.get_param("downsampling")[len("XI_DWN_"):].split("x"))
+        binning_value = int(self.cam.get_param("downsampling")[len("XI_DWN_"):].split("x")[0])
         offset_x = center_x - roi_width // 2
         offset_y = center_y - roi_height // 2
 
@@ -375,12 +373,18 @@ class XimeaBase(CameraBase):
             Frame ids from Ximea camera.
         """
         # attach buffer to image object
-        self._image.bp = ctypes.c_void_p(self._data_buffer[self._frames_received].ctypes.data)
+        self._image.bp = self._data_buffer[self._frames_received].ctypes.data
+        self._image.bp_size = self._data_buffer[self._frames_received].nbytes
+        # get data from camera
         self.cam.get_image(self._image, 500)
+
+        frames_received = [self._frames_received]
 
         self._frames_received += 1
         if self._frames_received >= self._number_of_frames:
             self._frames_received = 0
+
+        return frames_received
 
 class MU196XRCamera(XimeaBase):
     """Ximea MU196XR class.
