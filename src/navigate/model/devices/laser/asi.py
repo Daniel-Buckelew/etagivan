@@ -33,6 +33,8 @@
 #  Standard Library Imports
 import logging
 import time
+import traceback
+from typing import Any, Dict
 
 # Third Party Imports
 
@@ -54,7 +56,7 @@ class ASILaser(LaserBase, SerialDevice):
     This class is used to control a laser connected to a ASI Device.
     """
 
-    def __init__(self, microscope_name, device_connection, configuration, device_id: int):
+    def __init__(self, microscope_name, device_connection, configuration, device_id: 0):
         """Initialize the ASILaser class.
 
         Parameters
@@ -69,21 +71,56 @@ class ASILaser(LaserBase, SerialDevice):
             The laser id.
         """
 
-        super().__init__(microscope_name, device_connection, configuration)
-        #: TigerController: ASI Tiger Controller object.
-        self.laser = device_connection
+        super().__init__(microscope_name, device_connection, configuration, device_id)
+        analog = configuration["configuration"]["microscopes"][microscope_name][
+            "laser"
+        ][device_id]["power"]["hardware"].get("type", None)
 
-        #: dict: Configuration dictionary.
-        self.device_config = configuration
+        digital = configuration["configuration"]["microscopes"][microscope_name][
+            "laser"
+        ][device_id]["onoff"]["hardware"].get("type", None)
+
+        if analog == "NI" and digital == "NI":
+            modulation_type = "mixed"
+        elif analog == "NI":
+            modulation_type = "analog"
+        elif digital == "NI":
+            modulation_type = "digital"
+        else:
+            raise ValueError("Laser modulation type not recognized.")
+
+        #: str: The modulation type of the laser - Analog, Digital, or Mixed.
+        self.modulation_type = modulation_type
+
+        #: float: The minimum digital modulation voltage.
+        self.laser_min_do = None
+
+        #: float: The maximum digital modulation voltage.
+        self.laser_max_do = None
+
+        #: float: The minimum analog modulation voltage.
+        self.laser_min_ao = None
+
+        #: float: The maximum analog modulation voltage.
+        self.laser_max_ao = None
+
+        #: float: Current laser intensity.
+        self._current_intensity = 0
+
+        # Initialize the laser modulation type.
+        if self.modulation_type == "mixed":
+            # self.initialize_digital_modulation()
+            # self.initialize_analog_modulation()
+            logger.info(f"{str(self)} initialized with mixed modulation.")
+
+        elif self.modulation_type == "analog":
+            # self.initialize_analog_modulation()
+            logger.info(f"{str(self)} initialized with analog modulation.")
+
+        elif self.modulation_type == "digital":
+            # self.initialize_digital_modulation()
+            logger.info(f"{str(self)} initialized with digital modulation.")
         
-        #: str: Device type - analog or digital.
-        self.device_type = configuration.get("device_type", "analog")
-
-        #: int: Laser Number
-        self.axis = configuration["axis"]
-
-        # Set voltage to 0.
-        self.laser.move_axis(self.axis, 0)
 
     def __str__(self):
         """String representation of the class."""
@@ -119,7 +156,7 @@ class ASILaser(LaserBase, SerialDevice):
         """Change the filter wheel to the filter designated by the filter
         position argument.
         """
-        if self.device_type == "analog":
+        if self.modulation_type == "analog":
             # TGDAC
             output_voltage = voltage * 1000
             self.laser.move_axis(axis, output_voltage)
@@ -145,25 +182,3 @@ class ASILaser(LaserBase, SerialDevice):
     def __del__(self):
         """Destructor for the ASILaser class."""
         self.close()
-
-
-if __name__ == "__main__":
-    # Test the ASILaser class
-    comport="COM1"
-    device_connection = ASILaser.connect(comport, baudrate=115200, timeout=0.25)
-    device_config = {
-        "axis": 5,
-        "min_voltage": 0,
-        "max_voltage": 10,
-    }
-    laser = ASILaser(device_connection, device_config)
-
-    for i in range(10):
-        laser.set_analog_voltage(0, wait_until_done=True)
-        time.sleep(1)
-        laser.set_analog_voltage(10, wait_until_done=True)
-        time.sleep(1)
-
-    laser.close()
-
-
