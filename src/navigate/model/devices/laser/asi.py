@@ -159,15 +159,19 @@ class ASILaser(LaserBase, SerialDevice):
         return tiger_controller
 
     def set_power(self, laser_intensity: float):
-        """Change the filter wheel to the filter designated by the filter
-        position argument.
+        """Sets the analog laser power.
+
+        Parameters
+        ----------
+        laser_intensity : float
+            The laser intensity.
         """
         if self.modulation_type == "analog":
             # TGDAC
-            scaled_laser_voltage = (int(laser_intensity) / 100) * self.laser_max_ao * 1000
-            if scaled_laser_voltage > (self.laser_max_ao * 1000):
-                scaled_laser_voltage = self.laser_max_ao * 1000
-            self.laser.move_axis(self.axis, scaled_laser_voltage)
+            self.output_voltage = (int(laser_intensity) / 100) * self.laser_max_ao * 1000
+            if self.output_voltage > (self.laser_max_ao * 1000):
+                self.output_voltage = self.laser_max_ao * 1000
+            self.laser.move_axis(self.axis, self.output_voltage)
             self._current_intensity = laser_intensity
 
         # Add PLC on and off commands
