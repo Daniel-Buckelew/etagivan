@@ -80,11 +80,11 @@ class ASILaser(LaserBase, SerialDevice):
             "laser"
         ][device_id]["onoff"]["hardware"].get("type", None)
 
-        if analog == "NI" and digital == "NI":
+        if analog == "asi.ASI" and digital == "asi.ASI":
             modulation_type = "mixed"
-        elif analog == "NI":
+        elif analog == "asi.ASI":
             modulation_type = "analog"
-        elif digital == "NI":
+        elif digital == "asi.ASI":
             modulation_type = "digital"
         else:
             raise ValueError("Laser modulation type not recognized.")
@@ -92,20 +92,26 @@ class ASILaser(LaserBase, SerialDevice):
         #: str: The modulation type of the laser - Analog, Digital, or Mixed.
         self.modulation_type = modulation_type
 
+        #: TigerController: ASI Tiger Controller object.
+        self.laser = device_connection
+
         #: float: The minimum digital modulation voltage.
-        self.laser_min_do = None
+        self.laser_min_do = self.device_config["onoff"]["hardware"]["min"]
 
         #: float: The maximum digital modulation voltage.
-        self.laser_max_do = None
+        self.laser_max_do = self.device_config["onoff"]["hardware"]["max"]
 
         #: float: The minimum analog modulation voltage.
-        self.laser_min_ao = None
+        self.laser_min_ao = self.device_config["power"]["hardware"]["min"]
 
         #: float: The maximum analog modulation voltage.
-        self.laser_max_ao = None
+        self.laser_max_ao = self.device_config["power"]["hardware"]["max"]
 
         #: float: Current laser intensity.
         self._current_intensity = 0
+
+        #: str: Output axis on Tiger Controller
+        self.axis = self.device_config["power"]["hardware"]["axis"]
 
         # Initialize the laser modulation type.
         if self.modulation_type == "mixed":
@@ -152,21 +158,34 @@ class ASILaser(LaserBase, SerialDevice):
             raise Exception("ASI stage connection failed.")
         return tiger_controller
 
-    def set_voltage(self, axis, voltage):
+    def set_power(self, power_intensity):
         """Change the filter wheel to the filter designated by the filter
         position argument.
         """
         if self.modulation_type == "analog":
             # TGDAC
-            output_voltage = voltage * 1000
-            self.laser.move_axis(axis, output_voltage)
-        else:
+            self.power_intensity = power_intensity
+            self.output_voltage = (int(power_intensity)/100) * self.laser_max_ao * 1000
+            if self.output_voltage > (self.laser_max_ao * 1000):
+                self.output_voltage = self.laser_max_ao * 1000
+            self.laser.move_axis(self.axis, self.output_voltage)
+        # Add PLC on and off commands
+        '''else:
             # Programmable Logic Card
             if voltage > 2.5:
                 output_voltage = 5
             else:
                 output_voltage = 0
             self.laser.move_digital_axis(axis, output_voltage)
+        '''
+
+    def turn_on(self):
+        """Turns on the laser."""
+        self.set_power(self._current_intensity)
+
+    def turn_off(self):
+        """Turns off the laser."""
+        self.set_power(0)
 
     
     def close(self):
@@ -175,7 +194,7 @@ class ASILaser(LaserBase, SerialDevice):
         Turns the laser off and then closes the port.
         """
         if self.laser.is_open():
-            self.laser.move_filter_wheel_to_home()
+            self.turn_off()
             logger.debug("ASI Laser - Closing Device.")
             self.laser.disconnect_from_serial()
 
