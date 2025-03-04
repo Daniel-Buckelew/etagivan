@@ -72,7 +72,7 @@ class SutterFilterWheel(FilterWheelBase, SerialDevice):
         device_id : int
             The ID of the device. Default is 0.
         """
-        super().__init__(microscope_name, device_connection, configuration)
+        super().__init__(microscope_name, device_connection, configuration, device_id)
 
         #: bool: Wait until filter wheel has completed movement.
         self.wait_until_done = True
