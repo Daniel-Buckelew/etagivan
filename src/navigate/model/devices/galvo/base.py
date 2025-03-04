@@ -170,6 +170,7 @@ class GalvoBase:
                 try:
                     galvo_amplitude = float(galvo_parameters.get("amplitude", 0))
                     galvo_offset = float(galvo_parameters.get("offset", 0))
+                    galvo_rising_ramp = float(galvo_parameters.get("rising_ramp", 50))
                     galvo_frequency = (
                         float(galvo_parameters.get("frequency", 0)) / exposure_time
                     )
@@ -203,6 +204,7 @@ class GalvoBase:
                         frequency=galvo_frequency,
                         amplitude=galvo_amplitude,
                         offset=galvo_offset,
+                        duty_cycle=galvo_rising_ramp,
                         phase=self.camera_delay,
                     )
                 elif self.galvo_waveform == "sine":
