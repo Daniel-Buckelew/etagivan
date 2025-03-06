@@ -357,9 +357,10 @@ def test_accessing_unlinked_memory_in_subprocess():
     p.store_array(a)
     p.a.sum()
     try:
-        p.a.sum()
-        del p
+        # close and unlink the memory
         del a
+        # try to access the memory
+        p.a.sum()
     except FileNotFoundError:
         pass  # we expected this error
     else:
