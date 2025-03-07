@@ -60,6 +60,7 @@ class ASIShutter(ShutterBase, SerialDevice):
         device_connection: Any,
         configuration: Dict[str, Any],
         address=None,
+       
     ) -> None:
         """Initialize the ASIShutterTTL.
 
@@ -122,6 +123,7 @@ class ASIShutter(ShutterBase, SerialDevice):
             logger.exception(f"Error during cleanup: {traceback.format_exc()}")
 
     def open_shutter(self):
+        self.shutter_state = True
         try:
             self.shutter.PLCon(self.axis)
             logger.debug("ShutterTTL - Shutter opened")
@@ -129,12 +131,14 @@ class ASIShutter(ShutterBase, SerialDevice):
             logger.exception(f"Shutter not open: {traceback.format_exc()}")
 
     def close_shutter(self):
+        self.shutter_state = False
         try:
             self.shutter.PLCoff(self.axis)
             logger.debug("ShutterTTL - Shutter closed")
         except Exception as e:
             logger.exception(f"Shutter did not close: {traceback.format_exc()}")
 
+
     @property
     def state(self):
-        return self.tiger_controller.get_axis_position(self.address)
+        return self.shutter_state
