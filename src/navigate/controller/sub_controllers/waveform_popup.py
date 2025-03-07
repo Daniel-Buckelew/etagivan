@@ -165,6 +165,9 @@ class WaveformPopupController(GUIController):
             self.variables[galvo + " Off"].trace_add(
                 "write", self.update_galvo_setting(galvo, " Off", "offset")
             )
+            self.variables[galvo + " Rising"].trace_add(
+                "write", self.update_galvo_setting(galvo, " Rising", "rising_ramp")
+            )
             self.variables[galvo + " Freq"].trace_add(
                 "write", self.update_galvo_setting(galvo, " Freq", "frequency")
             )
@@ -414,6 +417,9 @@ class WaveformPopupController(GUIController):
             )
             self.variables[galvo + " Off"].set(
                 self.galvo_setting[galvo][self.resolution][self.mag].get("offset", 0)
+            )
+            self.variables[galvo + " Rising"].set(
+                self.galvo_setting[galvo][self.resolution][self.mag].get("rising_ramp", 50)
             )
             self.variables[galvo + " Freq"].set(
                 self.galvo_setting[galvo][self.resolution][self.mag].get("frequency", 0)
@@ -690,7 +696,7 @@ class WaveformPopupController(GUIController):
                     value = float(variable_value)
                 except ValueError:
                     return
-                if "Freq" not in widget_name and (
+                if ("Amp" in widget_name or "Off" in widget_name) and (
                     value < self.galvo_min[galvo_name]
                     or value > self.galvo_max[galvo_name]
                 ):
@@ -983,6 +989,10 @@ class WaveformPopupController(GUIController):
                 self.galvo_setting[galvo_name][self.resolution][self.mag][factor_name][
                     parameter_name
                 ] = value
+
+            logger.debug(
+                f"Galvo parameter {factor_name}.{parameter_name} changed: {value} for {galvo_name}"
+            )
 
             self.event_id = self.view.popup.after(
                 500,

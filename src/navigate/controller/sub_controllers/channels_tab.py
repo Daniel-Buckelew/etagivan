@@ -40,10 +40,12 @@ import numpy as np
 import tkinter as tk
 
 import navigate
+
 # Local Imports
 from navigate.controller.sub_controllers.gui import GUIController
 from navigate.controller.sub_controllers.channels_settings import (
-    ChannelSettingController)
+    ChannelSettingController,
+)
 from navigate.controller.sub_controllers.tiling import TilingWizardController
 from navigate.view.main_window_content.channels_tab import ChannelsTab
 from navigate.view.popups.tiling_wizard_popup2 import TilingWizardPopup
@@ -57,9 +59,9 @@ class ChannelsTabController(GUIController):
     """Controller for the channels tab in the main window."""
 
     def __init__(
-            self,
-            view: ChannelsTab,
-            parent_controller: Optional['navigate.controller.controller.Controller']
+        self,
+        view: ChannelsTab,
+        parent_controller: Optional["navigate.controller.controller.Controller"],
     ) -> None:
         """Initialize the ChannelsTabController.
 
@@ -104,7 +106,9 @@ class ChannelsTabController(GUIController):
         self.stack_acq_vals["start_position"].trace_add("write", self.update_z_steps)
         self.stack_acq_vals["end_position"].trace_add("write", self.update_z_steps)
         self.stack_acq_vals["start_focus"].trace_add("write", self.update_z_steps)
-        self.stack_acq_buttons["set_start"].configure(command=self.update_start_position)
+        self.stack_acq_buttons["set_start"].configure(
+            command=self.update_start_position
+        )
         self.stack_acq_buttons["set_end"].configure(command=self.update_end_position)
 
         # stack acquisition_variables
@@ -180,8 +184,17 @@ class ChannelsTabController(GUIController):
         main window.
         """
         config = self.parent_controller.configuration_controller
-
         self.stack_acq_widgets["cycling"].widget["values"] = ["Per Z", "Per Stack"]
+
+        # Set the default stage for acquiring a z-stack.
+        self.stack_acq_widgets["z_device"].widget["values"] = config.z_stages
+        if len(config.z_stages) == 1:
+            self.stack_acq_widgets["z_device"].widget.current(0)
+            self.stack_acq_widgets["z_device"].widget["state"] = "disabled"
+        else:
+            # Now need to allow the user to have an offset between the two stages.
+            self.stack_acq_widgets["z_offset"].widget["state"] = "normal"
+
         self.filter_wheel_delay = [
             config.filter_wheel_setting_dict[i]["filter_wheel_delay"]
             for i in range(config.number_of_filter_wheels)
@@ -776,9 +789,11 @@ class ChannelsTabController(GUIController):
             # update framerate info in camera setting tab
             exposure_time = max(
                 map(
-                    lambda channel: float(channel["camera_exposure_time"])
-                    if channel["is_selected"]
-                    else 0,
+                    lambda channel: (
+                        float(channel["camera_exposure_time"])
+                        if channel["is_selected"]
+                        else 0
+                    ),
                     self.microscope_state_dict["channels"].values(),
                 )
             )

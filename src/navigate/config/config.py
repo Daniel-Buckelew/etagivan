@@ -823,6 +823,12 @@ def verify_waveform_constants(manager, configuration):
             ):
                 update_config_dict(manager, waveform_dict, microscope_name, {})
 
+            galvo_config = {
+                "amplitude": "0",
+                "offset": 0,
+                "rising_ramp": 50,
+                "frequency": 10,
+            }
             for zoom in config_dict["zoom"]["position"].keys():
                 if (
                     zoom not in waveform_dict[microscope_name].keys()
@@ -832,18 +838,14 @@ def verify_waveform_constants(manager, configuration):
                         manager,
                         waveform_dict[microscope_name],
                         zoom,
-                        {
-                            "amplitude": "0",
-                            "offset": 0,
-                            "frequency": 10,
-                        },
+                        galvo_config,
                     )
                 else:
-                    for k in ["amplitude", "offset", "frequency"]:
+                    for k in galvo_config.keys():
                         if k not in waveform_dict[microscope_name][zoom].keys():
                             waveform_dict[microscope_name][zoom][k] = config_dict[
                                 "galvo"
-                            ][i].get(k, "0")
+                            ][i].get(k, galvo_config[k])
                         else:
                             try:
                                 float(waveform_dict[microscope_name][zoom][k])
@@ -992,11 +994,21 @@ def verify_configuration(manager, configuration):
 
         # laser
         for i, laser_config in enumerate(device_config[microscope_name]["laser"]):
+            onoff_type = laser_config["onoff"]["hardware"].get("type", "Synthetic")
+            power_type = laser_config["power"]["hardware"].get("type", "Synthetic")
+            if onoff_type != "Synthetic":
+                laser_hardware_config = dict(laser_config["onoff"]["hardware"])
+            elif power_type != "Synthetic":
+                laser_hardware_config = dict(laser_config["power"]["hardware"])
+            else:
+                laser_hardware_config = {"type": "Synthetic"}
+            laser_hardware_config["wavelength"] = laser_config["wavelength"]
+
             update_config_dict(
                 manager,
                 laser_config,
                 "hardware",
-                {"type": "NI", "wavelength": laser_config["wavelength"]}
+                laser_hardware_config
             )
 
         # zoom

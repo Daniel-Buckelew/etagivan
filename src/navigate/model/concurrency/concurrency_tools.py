@@ -114,7 +114,7 @@ class SharedNDArray(np.ndarray):
         obj.shared_memory = shm
         obj.offset = offset
         if must_unlink:
-            weakref.finalize(obj, shm.unlink)
+            weakref.finalize(obj, cls.__clean_up_shm, cls, shm)
         return obj
 
     def __array_finalize__(self, obj):
@@ -162,6 +162,13 @@ class SharedNDArray(np.ndarray):
             None,
         )
         return SharedNDArray, args
+    
+    def __clean_up_shm(cls, shm):
+        try:
+            shm.close()
+            shm.unlink()
+        except Exception:
+            pass
 
 
 class ResultThread(threading.Thread):

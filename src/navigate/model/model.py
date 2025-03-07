@@ -266,6 +266,10 @@ class Model:
         ]
         self.update_data_buffer(self.img_width, self.img_height)
 
+        self.data_buffer_positions = SharedNDArray(
+            shape=(self.number_of_frames, 5), dtype=float
+        )  # x, y, z, theta, f
+
         # Image Writer/Save functionality
         #: ImageWriter: Image writer.
         self.image_writer = None
@@ -409,13 +413,16 @@ class Model:
         """
         self.img_width = img_width
         self.img_height = img_height
+        if self.data_buffer is not None:
+            for i in range(self.number_of_frames):
+                self.data_buffer[i].shared_memory.close()
+                self.data_buffer[i].shared_memory.unlink()
+
         self.data_buffer = [
             SharedNDArray(shape=(img_height, img_width), dtype="uint16")
             for _ in range(self.number_of_frames)
         ]
-        self.data_buffer_positions = SharedNDArray(
-            shape=(self.number_of_frames, 5), dtype=float
-        )  # z-index, x, y, z, theta, f
+
         for microscope_name in self.microscopes:
             self.microscopes[microscope_name].update_data_buffer(
                 self.data_buffer,
