@@ -113,21 +113,6 @@ class ASILaser(LaserBase, SerialDevice):
         #: float: Current laser intensity.
         self._current_intensity = 0
 
-        # Initialize the laser modulation type.
-        if self.modulation_type == "mixed":
-            # self.initialize_digital_modulation()
-            # self.initialize_analog_modulation()
-            logger.info(f"{str(self)} initialized with mixed modulation.")
-
-        elif self.modulation_type == "analog":
-            self.initialize_analog_modulation()
-            logger.info(f"{str(self)} initialized with analog modulation.")
-
-        elif self.modulation_type == "digital":
-            # self.initialize_digital_modulation()
-            logger.info(f"{str(self)} initialized with digital modulation.")
-        
-
     def __str__(self):
         """String representation of the class."""
         return "ASILaser"
@@ -166,33 +151,46 @@ class ASILaser(LaserBase, SerialDevice):
         laser_intensity : float
             The laser intensity.
         """
-        if self.modulation_type == "analog":
-            # TGDAC
-            self.output_voltage = (int(laser_intensity) / 100) * self.laser_max_ao * 1000
-            if self.output_voltage > (self.laser_max_ao * 1000):
-                self.output_voltage = self.laser_max_ao * 1000
-            self.laser.move_axis(self.axis, self.output_voltage)
-            self._current_intensity = laser_intensity
-
-        # Add PLC on and off commands
-        '''else:
-            # Programmable Logic Card
-            if voltage > 2.5:
-                output_voltage = 5
-            else:
-                output_voltage = 0
-            self.laser.move_digital_axis(axis, output_voltage)
-        '''
+        self.output_voltage = (int(laser_intensity) / 100) * self.laser_max_ao * 1000
+        if self.output_voltage > (self.laser_max_ao * 1000):
+            self.output_voltage = self.laser_max_ao * 1000
+        self.laser.move_axis(self.axis, self.output_voltage)
+        self._current_intensity = laser_intensity
 
     def turn_on(self):
         """Turns on the laser."""
-        self.set_power(self._current_intensity)
+        if self.modulation_type == "mixed":
+            self.set_power(self._current_intensity)
+            self.laser.PLCon(self.axis)
+            logger.info(f"{str(self)} initialized with mixed modulation.")
+
+        elif self.modulation_type == "analog":
+            self.set_power(self._current_intensity)
+            logger.info(f"{str(self)} initialized with analog modulation.")
+
+        elif self.modulation_type == "digital":
+            self.laser.PLCon(self.axis)
+            logger.info(f"{str(self)} initialized with digital modulation.")
+        
 
     def turn_off(self):
         """Turns off the laser."""
-        tmp = self._current_intensity
-        self.set_power(0)
-        self._current_intensity = tmp
+        if self.modulation_type == "mixed":
+            tmp = self._current_intensity
+            self.set_power(0)
+            self._current_intensity = tmp
+            self.laser.PLCoff(self.axis)
+            logger.info(f"{str(self)} initialized with mixed modulation.")
+
+        elif self.modulation_type == "analog":
+            tmp = self._current_intensity
+            self.set_power(0)
+            self._current_intensity = tmp
+            logger.info(f"{str(self)} initialized with analog modulation.")
+
+        elif self.modulation_type == "digital":
+            self.laser.PLCoff(self.axis)
+            logger.info(f"{str(self)} initialized with digital modulation.")
 
     
     def close(self):
