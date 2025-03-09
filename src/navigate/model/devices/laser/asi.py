@@ -110,11 +110,11 @@ class ASILaser(LaserBase, SerialDevice):
         #: float: The maximum analog modulation voltage.
         self.laser_max_ao = self.device_config["power"]["hardware"].get("max", 5)
 
+        #: str: Output axis on Tiger Controller
+        self.axis = self.axis = self.device_config["power"]["hardware"]["axis"]
+
         #: float: Current laser intensity.
         self._current_intensity = 0
-
-        #: str: Output axis on Tiger Controller
-        self.axis = self.device_config["power"]["hardware"]["axis"]
 
         # Initialize the laser modulation type.
         if self.modulation_type == "mixed":
@@ -123,7 +123,7 @@ class ASILaser(LaserBase, SerialDevice):
             logger.info(f"{str(self)} initialized with mixed modulation.")
 
         elif self.modulation_type == "analog":
-            # self.initialize_analog_modulation()
+            self.initialize_analog_modulation()
             logger.info(f"{str(self)} initialized with analog modulation.")
 
         elif self.modulation_type == "digital":
@@ -160,7 +160,7 @@ class ASILaser(LaserBase, SerialDevice):
             logger.error("ASI stage connection failed.")
             raise Exception("ASI stage connection failed.")
         return tiger_controller
-
+    
     def set_power(self, laser_intensity: float):
         """Sets the analog laser power.
 
@@ -190,7 +190,9 @@ class ASILaser(LaserBase, SerialDevice):
 
         Should set to the minimum?
         """
+        tmp = self._current_intensity
         self.set_power(0)
+        self._current_intensity = tmp
 
     
     def close(self):
