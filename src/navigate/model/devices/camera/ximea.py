@@ -100,6 +100,9 @@ class XimeaBase(CameraBase):
         self.cam.set_param("gpi_mode", "XI_GPI_TRIGGER")
         self.cam.set_param('trigger_source', "XI_TRG_EDGE_RISING")
 
+        self.camera_parameters["supported_sensor_modes"] = ["Normal"]
+        self.camera_parameters["supported_readout_directions"] = ["Top-to-Bottom"]
+
 
     def __str__(str):
         """Return string representation of Ximea Base class
@@ -328,6 +331,37 @@ class XimeaBase(CameraBase):
         self.y_pixels = self.cam.get_param("height") * binning_value
 
         return self.x_pixels == roi_width * binning_value and self.y_pixels == roi_height * binning_value
+    
+    def set_ROI_and_binning(self, roi_width=2048, roi_height=2048, center_x=1024, center_y=1024, binning='1x1'):
+        """Change the size of the active region on the camera and set the binning mode.
+
+        Parameters
+        ----------
+        roi_width : int
+            Width of active camera region.
+        roi_height : int
+            Height of active camera region.
+        center_x : int
+            X position of the center of view
+        center_y : int
+            Y position of the center of view
+        binning : str
+            Desired binning properties (e.g., '1x1', '2x2', '4x4', '8x8', '16x16',
+            '1x2', '2x4')
+        
+        Returns
+        -------
+        result: bool
+            True if successful, False otherwise.
+        """
+        # Set Binning
+        result = self.set_binning(binning)
+        if not result:
+            return False
+        
+        # Set ROI
+        result = self.set_ROI(roi_width, roi_height, center_x, center_y)
+        return result
 
     def initialize_image_series(self, data_buffer=None, number_of_frames=100):
         """Initialize Ximea Camera image series.

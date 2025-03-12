@@ -234,18 +234,38 @@ class SyntheticCamera(CameraBase):
         """
         pass
 
-    def set_binning(self, binning_string: str) -> None:
+    def set_binning(self, binning_string: str) -> bool:
         """Set SyntheticCamera binning mode.
 
         Parameters
         ----------
         binning_string : str
-            Desired binning properties (e.g., '2x2', '4x4', '8x8'
+            Desired binning properties (e.g., '2x2', '4x4', '8x8')
+
+        Returns
+        -------
+        bool
+            True if successful, False otherwise.
         """
+        binning_dict = {
+            "1x1": 1,
+            "2x2": 2,
+            "4x4": 4,
+            # '8x8': 8,
+            # '16x16': 16,
+            # '1x2': 102,
+            # '2x4': 204
+        }
+        if binning_string not in binning_dict.keys():
+            logger.debug(f"can't set binning to {binning_string}")
+            print(f"can't set binning to {binning_string}")
+            return False
+        
         self.x_binning = int(binning_string[0])
         self.y_binning = int(binning_string[2])
         self.x_pixels = int(self.x_pixels / self.x_binning)
         self.y_pixels = int(self.y_pixels / self.y_binning)
+        return True
 
     def initialize_image_series(
         self,
@@ -362,7 +382,7 @@ class SyntheticCamera(CameraBase):
         roi_height: int = 2048,
         center_x: int = 1024,
         center_y: int = 1024,
-    ) -> None:
+    ) -> bool:
         """Change the size of the active region on the camera.
 
         Parameters
@@ -375,11 +395,17 @@ class SyntheticCamera(CameraBase):
             X position of the center of view
         center_y : int
             Y position of the center of view
+        
+        Returns
+        -------
+        bool
+            True if successful, False otherwise.
         """
         self.x_pixels = roi_width
         self.y_pixels = roi_height
         self.center_x = center_x
         self.center_y = center_y
+        return True
 
     @staticmethod
     def calculate_readout_time() -> float:
