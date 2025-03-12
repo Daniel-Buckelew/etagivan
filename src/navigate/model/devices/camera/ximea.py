@@ -308,7 +308,9 @@ class XimeaBase(CameraBase):
         roi_height = roi_height // binning_value
         roi_height = roi_height - roi_height % self.camera_parameters["y_pixels_step"]
         offset_x = center_x - (roi_width * binning_value) // 2
+        offset_x = offset_x - offset_x % self.offset_x_step
         offset_y = center_y - (roi_height * binning_value) // 2
+        offset_y = offset_y - offset_y % self.offset_y_step
 
         x_max = self.camera_parameters["x_pixels"] // binning_value
         y_max = self.camera_parameters["y_pixels"] // binning_value
