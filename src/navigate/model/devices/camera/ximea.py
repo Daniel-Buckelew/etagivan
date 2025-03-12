@@ -172,10 +172,11 @@ class XimeaBase(CameraBase):
 
         Prints the current camera settings to the console and the log file.
         """
-        params = ["exposure", ]
+        params = ["exposure", "downsampling", "width", "height", "offsetX", "offsetY", "shutter_type"]
         for param in params:
-            print(param, self.camera_controller.get_property_value(param))
-            logger.info(f"{param}, {self.camera_controller.get_property_value(param)}")
+            value = self.cam.get_param(param)
+            print(param, value)
+            logger.info(f"{param}, {value}")
 
     def set_sensor_mode(self, mode):
         """Set Ximea sensor mode.
@@ -301,13 +302,16 @@ class XimeaBase(CameraBase):
             True if successful, False otherwise.
         """
         binning_value = int(self.cam.get_param("downsampling")[len("XI_DWN_"):].split("x")[0])
-        offset_x = center_x - roi_width // 2
-        offset_y = center_y - roi_height // 2
+
+        roi_width = roi_width // binning_value
+        roi_width = roi_width - roi_width % self.camera_parameters["x_pixels_step"]
+        roi_height = roi_height // binning_value
+        roi_height = roi_height - roi_height % self.camera_parameters["y_pixels_step"]
+        offset_x = center_x - (roi_width * binning_value) // 2
+        offset_y = center_y - (roi_height * binning_value) // 2
 
         x_max = self.camera_parameters["x_pixels"] // binning_value
         y_max = self.camera_parameters["y_pixels"] // binning_value
-        roi_width = roi_width // binning_value
-        roi_height = roi_height // binning_value
 
         if (roi_width % self.camera_parameters["x_pixels_step"] != 0
             or roi_height % self.camera_parameters["y_pixels_step"] != 0
@@ -322,10 +326,14 @@ class XimeaBase(CameraBase):
             return False
         
         # width and height are actual image size, not the ROI size in Ximea Camera
-        self.cam.set_param("width", roi_width)
-        self.cam.set_param("height", roi_height)
-        self.cam.set_param("offsetX", offset_x)
-        self.cam.set_param("offsetY", offset_y)
+        try:
+            self.cam.set_param("width", roi_width)
+            self.cam.set_param("height", roi_height)
+            self.cam.set_param("offsetX", offset_x)
+            self.cam.set_param("offsetY", offset_y)
+        except xiapi.Xi_error as e:
+            logger.error(f"Error setting ROI: {e} with {roi_width} and {roi_height} with the offset ({offset_x}, {offset_y})")
+            return False
 
         self.x_pixels = self.cam.get_param("width") * binning_value
         self.y_pixels = self.cam.get_param("height") * binning_value

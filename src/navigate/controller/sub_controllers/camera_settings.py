@@ -335,6 +335,11 @@ class CameraSettingController(GUIController):
         ]
         img_width = x_pixels // binning[0]
         img_height = y_pixels // binning[1]
+        img_width = img_width - img_width % self.step_width
+        img_height = img_height - img_height % self.step_height
+
+        x_pixels = img_width * binning[0]
+        y_pixels = img_height * binning[1]
 
         self.camera_setting_dict["x_pixels"] = x_pixels
         self.camera_setting_dict["y_pixels"] = y_pixels
