@@ -314,18 +314,27 @@ class TestCameraSettingController:
             assert (
                 self.camera_settings.camera_setting_dict["img_y_pixels"] == set_height
             )
+            binning = 1
         else:
             assert self.camera_settings.camera_setting_dict["binning"] == "4x4"
-            assert (
-                self.camera_settings.camera_setting_dict["img_x_pixels"]
-                == set_width // 4
-            )
-            assert (
-                self.camera_settings.camera_setting_dict["img_y_pixels"]
-                == set_height // 4
-            )
-        assert self.camera_settings.camera_setting_dict["x_pixels"] == set_width
-        assert self.camera_settings.camera_setting_dict["y_pixels"] == set_height
+            # make sure image size is divisible by step_width and step_height
+            assert self.camera_settings.camera_setting_dict["img_x_pixels"] == (
+                set_width // 4
+            ) - (set_width // 4 % step_width)
+            assert self.camera_settings.camera_setting_dict["img_y_pixels"] == (
+                set_height // 4
+            ) - (set_height // 4 % step_height)
+            binning = 4
+        
+        # make sure x, y pixels are img_x, img_y pixels * binning
+        assert (
+            self.camera_settings.camera_setting_dict["x_pixels"]
+            == self.camera_settings.camera_setting_dict["img_x_pixels"] * binning
+        )
+        assert (
+            self.camera_settings.camera_setting_dict["y_pixels"]
+            == self.camera_settings.camera_setting_dict["img_y_pixels"] * binning
+        )
         assert (
             self.camera_settings.camera_setting_dict["pixel_size"]
             == self.camera_settings.default_pixel_size
