@@ -82,10 +82,26 @@ class ASILaser(LaserBase, SerialDevice):
 
         if analog == "asi.ASI" and digital == "asi.ASI":
             modulation_type = "mixed"
+            #: float: The minimum digital modulation voltage.
+            self.laser_min_do = self.device_config["onoff"]["hardware"]["min"]
+            #: float: The maximum digital modulation voltage.
+            self.laser_max_do = self.device_config["onoff"]["hardware"]["max"]
+            #: float: The minimum analog modulation voltage.
+            self.laser_min_ao = self.device_config["power"]["hardware"]["min"]
+            #: float: The maximum analog modulation voltage.
+            self.laser_max_ao = self.device_config["power"]["hardware"]["max"]
         elif analog == "asi.ASI":
             modulation_type = "analog"
+            #: float: The minimum analog modulation voltage.
+            self.laser_min_ao = self.device_config["power"]["hardware"]["min"]
+            #: float: The maximum analog modulation voltage.
+            self.laser_max_ao = self.device_config["power"]["hardware"]["max"]
         elif digital == "asi.ASI":
             modulation_type = "digital"
+            #: float: The minimum digital modulation voltage.
+            self.laser_min_do = self.device_config["onoff"]["hardware"]["min"]
+            #: float: The maximum digital modulation voltage.
+            self.laser_max_do = self.device_config["onoff"]["hardware"]["max"]
         else:
             raise ValueError("Laser modulation type not recognized.")
 
@@ -94,18 +110,6 @@ class ASILaser(LaserBase, SerialDevice):
 
         #: TigerController: ASI Tiger Controller object.
         self.laser = device_connection
-
-        #: float: The minimum digital modulation voltage.
-        self.laser_min_do = self.device_config["onoff"]["hardware"]["min"]
-
-        #: float: The maximum digital modulation voltage.
-        self.laser_max_do = self.device_config["onoff"]["hardware"]["max"]
-
-        #: float: The minimum analog modulation voltage.
-        self.laser_min_ao = self.device_config["power"]["hardware"]["min"]
-
-        #: float: The maximum analog modulation voltage.
-        self.laser_max_ao = self.device_config["power"]["hardware"]["max"]
 
         #: str: Output axis on Tiger Controller
         self.axis = self.axis = self.device_config["power"]["hardware"]["axis"]
