@@ -223,7 +223,9 @@ class XimeaBase(CameraBase):
         exposure_time : float
             Exposure time in seconds.
         """
-        return self.cam.set_param("exposure", exposure_time * 1000000)
+        #seconds to us.
+        self.cam.set_param("exposure", exposure_time * 1000000)
+        return True
     
     def set_line_interval(self, line_interval_time):
         """Set line interval.
@@ -420,7 +422,11 @@ class XimeaBase(CameraBase):
         self._image.bp = self._data_buffer[self._frames_received].ctypes.data
         self._image.bp_size = self._data_buffer[self._frames_received].nbytes
         # get data from camera
-        self.cam.get_image(self._image, 500)
+        try:
+            self.cam.get_image(self._image, 500)
+        except xiapi.Xi_error as e:
+            logger.error(f"Error getting image from camera: {e}")
+            return []
 
         frames_received = [self._frames_received]
 
