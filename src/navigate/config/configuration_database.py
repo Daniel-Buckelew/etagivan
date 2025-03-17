@@ -663,9 +663,8 @@ hardwares_config_name_dict = {
 }
 
 deceased_device_type_names = {
-    "MS2000": "ASIMS2000",
-    "MFC2000": "ASIMFC2000",
+    "ASIMS2000": "MS2000",
+    "ASIMFC2000": "MFC2000",
     "GalvoNIStage": "NI",
     "Thorlabs": "KIM001",
-    "KST101": "KST101",
 }
