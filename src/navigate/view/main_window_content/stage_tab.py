@@ -515,6 +515,10 @@ class PositionFrame(ttk.Labelframe):
         #: list: List of labels for the position entries.
         entry_labels = ["X", "Y", "Z", "\N{Greek Capital Theta Symbol}", "F"]
 
+        #: ttk.Style: Style for the position entries.
+        self.position_style = ttk.Style()
+        self.position_style.configure("Position.TEntry", fieldbackground="white")
+
         #: list: List of frames for the position entries.
         for i in range(len(entry_names)):
             self.inputs[entry_names[i]] = LabelInput(
@@ -582,11 +586,12 @@ class PositionFrame(ttk.Labelframe):
         else:
             entry_state = "normal"
             frame_back_color = "#f0f0f0"
+        self.position_style.configure("Position.TEntry", fieldbackground=frame_back_color)
 
         for variable in self.get_variables():
             if variable in joystick_axes:
-                self.frame_back_list[frame_back_counter]["bg"] = frame_back_color
                 try:
+                    self.inputs[f"{variable}"].widget.config(style="Position.TEntry")
                     self.inputs[f"{variable}"].widget["state"] = entry_state
 
                 except KeyError:
