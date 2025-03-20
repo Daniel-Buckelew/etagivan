@@ -555,7 +555,15 @@ class Model:
                 ] = False
 
             # Calculate waveforms, turn on lasers, etc.
-            self.prepare_acquisition()
+            r = self.prepare_acquisition()
+            if not r:
+                self.show_img_pipe.send("stop")
+                self.event_queue.put((
+                    "warning", 
+                    "Acquisition aborted because of camera ROI setting failed.\n"
+                    "Please do not use center ROI for the Ximea Camera."
+                    ))
+                return
 
             # load features
             if self.imaging_mode == "customized":
@@ -1044,7 +1052,7 @@ class Model:
         self.logger.info("Data thread stopped.")
         self.logger.info(f"Received frames in total: {acquired_frame_num}")
 
-    def prepare_acquisition(self, turn_off_flags: bool = True) -> None:
+    def prepare_acquisition(self, turn_off_flags: bool = True) -> bool:
         """Prepare the acquisition.
 
         This function is called when user starts the acquisition.
@@ -1055,6 +1063,11 @@ class Model:
         ----------
         turn_off_flags : bool
             Turn off the flags.
+
+        Returns
+        -------
+        bool
+            Was the preparation successful?
         """
         # turn off flags
         if turn_off_flags:
@@ -1075,9 +1088,13 @@ class Model:
 
         # prepare active microscope
         waveform_dict = self.active_microscope.prepare_acquisition()
+        if waveform_dict is None:
+            return False
+        
         self.event_queue.put(("waveform", waveform_dict))
 
         self.frame_id = 0
+        return True
 
     def snap_image(self) -> None:
         """Acquire an image after updating the waveforms.

@@ -153,7 +153,6 @@ class CameraSettingController(GUIController):
         self.update_camera_device_related_setting()
 
         # Camera Mode
-        self.mode_widgets["Sensor"].widget["values"] = ["Normal", "Light-Sheet"]
         self.mode_widgets["Sensor"].widget["state"] = "readonly"
         self.mode_widgets["Sensor"].widget.selection_clear()
 
@@ -219,8 +218,7 @@ class CameraSettingController(GUIController):
         ][microscope_name]
 
         # Readout Settings
-        self.mode_widgets["Sensor"].set(self.camera_setting_dict["sensor_mode"])
-        self.update_sensor_mode()
+        self.update_sensor_mode(self.camera_setting_dict["sensor_mode"])
 
         # ROI Settings
         if self.camera_setting_dict.get("is_centered", True):
@@ -337,6 +335,11 @@ class CameraSettingController(GUIController):
         ]
         img_width = x_pixels // binning[0]
         img_height = y_pixels // binning[1]
+        img_width = img_width - img_width % self.step_width
+        img_height = img_height - img_height % self.step_height
+
+        x_pixels = img_width * binning[0]
+        y_pixels = img_height * binning[1]
 
         self.camera_setting_dict["x_pixels"] = x_pixels
         self.camera_setting_dict["y_pixels"] = y_pixels
@@ -372,6 +375,8 @@ class CameraSettingController(GUIController):
         # Camera Mode
         if len(args) > 0 and type(args[0]) is str:
             sensor_value = args[0]
+            if sensor_value not in self.mode_widgets["Sensor"].widget["values"]:
+                sensor_value = self.mode_widgets["Sensor"].widget["values"][0]
             self.mode_widgets["Sensor"].widget.set(sensor_value)
         else:
             sensor_value = self.mode_widgets["Sensor"].widget.get()
@@ -705,6 +710,10 @@ class CameraSettingController(GUIController):
         self.camera_setting_dict = self.parent_controller.configuration["experiment"][
             "CameraParameters"
         ][microscope_name]
+
+        self.mode_widgets["Sensor"].widget["values"] = camera_config_dict.get("supported_sensor_modes", ["Normal"])
+        if self.mode_widgets["Sensor"].get() not in self.mode_widgets["Sensor"].widget["values"]:
+            self.update_sensor_mode(self.mode_widgets["Sensor"].widget["values"][0])
 
     def update_camera_parameters_silent(self, value):
         """Update GUI camera parameters
