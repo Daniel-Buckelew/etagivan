@@ -105,9 +105,23 @@ class MultiPositionController(GUIController):
             stage_position = self.parent_controller.configuration["experiment"][
                 "StageParameters"
             ]
+            # get the current stage position
             positions = [[stage_position[axis] for axis in axis_dict.keys()]]
-        for i, name in enumerate(axis_dict.keys()):
-            data[axis_dict[name]] = list(pos[i] for pos in positions)
+        # check if the positions contain the headers (column names)
+        cmp_header = [axis in positions[0] for axis in axis_dict.values()]
+        # if positions[0] contains ["X", "Y", "Z", "R", "F"], then consider it as headers
+        # else add headers to the table
+        if not all(cmp_header):
+            headers = list(axis_dict.values())
+            start_index = 0
+        else:
+            headers = positions[0]
+            start_index = 1
+        # if there are some missing headers, add them
+        if len(headers) < len(positions[start_index]):
+            headers = headers + ["col-" + str(i) for i in range(len(positions[start_index]) - len(headers))]
+        for i, name in enumerate(headers):
+            data[name] = list(pos[i] if i < len(pos) else 0 for pos in positions[start_index:])
         self.table.model.df = pd.DataFrame(data)
         self.table.currentrow = 0
         self.table.redraw()
@@ -122,7 +136,8 @@ class MultiPositionController(GUIController):
         list
             positions in the format of [[x, y, z, theta, f], ]
         """
-        positions = []
+        positions = [list(self.table.model.df.columns)]
+        axes_index = [positions[0].index(axis) for axis in ["X", "Y", "Z", "R", "F"]]
         rows = self.table.model.df.shape[0]
         for i in range(rows):
             temp = list(self.table.model.df.iloc[i])
@@ -130,8 +145,8 @@ class MultiPositionController(GUIController):
                 len(
                     list(
                         filter(
-                            lambda v: type(v) in (float, int) and not math.isnan(v),
-                            temp,
+                            lambda v: isinstance(v, (float, int)) and not math.isnan(v),
+                            [temp[i] for i in axes_index],
                         )
                     )
                 )
@@ -151,6 +166,7 @@ class MultiPositionController(GUIController):
         event : tkinter event
             event that triggers the function
         """
+        print("***** double click event:", event)
         # it is calculated based on the GUI position
         rowclicked = self.table.get_row_clicked(event)
         # make sure a valid row is clicked
@@ -168,12 +184,13 @@ class MultiPositionController(GUIController):
             )
             logger.info("position is invalid")
             return
+        axes_index = [self.table.model.df.columns.get_loc(axis) for axis in ["X", "Y", "Z", "R", "F"]]
         position = {
-            "x": temp[0],
-            "y": temp[1],
-            "z": temp[2],
-            "theta": temp[3],
-            "f": temp[4],
+            "x": temp[axes_index[0]],
+            "y": temp[axes_index[1]],
+            "z": temp[axes_index[2]],
+            "theta": temp[axes_index[3]],
+            "f": temp[axes_index[4]],
         }
         self.parent_controller.execute("move_stage_and_update_info", position)
         self.show_verbose_info("move stage to", position)
@@ -202,8 +219,8 @@ class MultiPositionController(GUIController):
         df = pd.read_csv(filename[0])
         # validate the csv file
         df.columns = map(lambda v: v.upper(), df.columns)
-        cmp_header = df.columns == ["X", "Y", "Z", "R", "F"]
-        if not cmp_header.all():
+        cmp_header = [axis in df.columns for axis in ["X", "Y", "Z", "R", "F"]]
+        if not all(cmp_header):
             messagebox.showwarning(
                 title="Warning",
                 message="The csv file isn't right, it should contain [X, Y, Z, R, F]",

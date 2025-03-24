@@ -1075,8 +1075,20 @@ def verify_positions_config(positions):
     if positions is None or type(positions) not in (list, ListProxy):
         return []
     # MultiPositions
+    # check if there is a header
+    start_index = 0
+    if len(positions) > 0:
+        cmp_header = [axis in positions[0] for axis in ["X", "Y", "Z", "R", "F"]]
+        if all(cmp_header):
+            start_index = 1
+        elif any(cmp_header):
+            positions = positions[1:]
+            start_index = 0
+        else:
+            start_index = 0
+
     position_num = len(positions)
-    for i in range(position_num - 1, -1, -1):
+    for i in range(position_num - 1, start_index-1, -1):
         position = positions[i]
         try:
             for j in range(5):
