@@ -1078,7 +1078,7 @@ def verify_positions_config(positions):
     # check if there is a header
     start_index = 0
     if len(positions) > 0:
-        cmp_header = [axis in positions[0] for axis in ["X", "Y", "Z", "R", "F"]]
+        cmp_header = [axis in positions[0] for axis in ["X", "Y"]]
         if all(cmp_header):
             start_index = 1
         elif any(cmp_header):
@@ -1091,7 +1091,7 @@ def verify_positions_config(positions):
     for i in range(position_num - 1, start_index-1, -1):
         position = positions[i]
         try:
-            for j in range(5):
+            for j in range(len(position)):
                 float(position[j])
         except (ValueError, KeyError, IndexError):
             del positions[i]

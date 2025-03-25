@@ -99,7 +99,7 @@ class MultiPositionController(GUIController):
         positions : [[]]
             positions to be set
         """
-        axis_dict = {"x": "X", "y": "Y", "z": "Z", "theta": "R", "f": "F"}
+        stage_axes = self.parent_controller.configuration_controller.stage_axes
         data = {}
         if len(positions) == 0:
             # add current stage position to the table
@@ -107,14 +107,22 @@ class MultiPositionController(GUIController):
                 "StageParameters"
             ]
             # get the current stage position
-            positions = [[stage_position[axis] for axis in axis_dict.keys()]]
+            positions = [[stage_position[axis] for axis in stage_axes]]
         # check if the positions contain the headers (column names)
-        cmp_header = [axis in positions[0] for axis in axis_dict.values()]
+        cmp_header = [axis.upper() in positions[0] for axis in stage_axes]
         # if positions[0] contains ["X", "Y", "Z", "R", "F"], then consider it as headers
         # else add headers to the table
         if not all(cmp_header):
-            headers = list(axis_dict.values())
-            start_index = 0
+            # if the first row contains some headers, update the headers
+            if any(cmp_header):
+                headers = positions[0]
+                for i, flag in enumerate(cmp_header):
+                    if not flag:
+                        headers.append(stage_axes[i].upper())
+                start_index = 1
+            else:
+                headers = [axis.upper() for axis in stage_axes]
+                start_index = 0
         else:
             headers = positions[0]
             start_index = 1
@@ -122,7 +130,7 @@ class MultiPositionController(GUIController):
         if len(headers) < len(positions[start_index]):
             headers = headers + ["col-" + str(i) for i in range(len(positions[start_index]) - len(headers))]
         for i, name in enumerate(headers):
-            data[name] = list(pos[i] if i < len(pos) else 0 for pos in positions[start_index:])
+            data[name] = list(pos[i] if i < len(pos) else np.nan for pos in positions[start_index:])
         self.table.model.df = pd.DataFrame(data)
         self.table.currentrow = 0
         self.table.redraw()
@@ -138,7 +146,8 @@ class MultiPositionController(GUIController):
             positions in the format of [[x, y, z, theta, f], ]
         """
         positions = [list(self.table.model.df.columns)]
-        axes_index = [positions[0].index(axis) for axis in ["X", "Y", "Z", "R", "F"]]
+        stage_axes = self.parent_controller.configuration_controller.stage_axes
+        axes_index = [positions[0].index(axis) for axis in [axis.upper() for axis in stage_axes]]
         rows = self.table.model.df.shape[0]
         for i in range(rows):
             temp = list(self.table.model.df.iloc[i])
@@ -151,7 +160,7 @@ class MultiPositionController(GUIController):
                         )
                     )
                 )
-                == 5
+                == len(stage_axes)
             ):
                 positions.append(temp)
         return positions
@@ -176,7 +185,8 @@ class MultiPositionController(GUIController):
         # df.loc uses key index
         # df.iloc uses position index
         temp = list(df.iloc[rowclicked])
-        axes_index = [df.columns.get_loc(axis) for axis in ["X", "Y", "Z", "R", "F"]]
+        stage_axes = self.parent_controller.configuration_controller.stage_axes
+        axes_index = [df.columns.get_loc(axis) for axis in [axis.upper() for axis in stage_axes]]
         # validate position
         if not list(filter(lambda v: isinstance(v, (float, int)), [temp[i] for i in axes_index])):
             messagebox.showwarning(
@@ -185,13 +195,9 @@ class MultiPositionController(GUIController):
             )
             logger.info("position is invalid")
             return
-        position = {
-            "x": temp[axes_index[0]],
-            "y": temp[axes_index[1]],
-            "z": temp[axes_index[2]],
-            "theta": temp[axes_index[3]],
-            "f": temp[axes_index[4]],
-        }
+        position = {}
+        for i, axis in enumerate(stage_axes):
+            position[axis] = temp[axes_index[i]]
         self.parent_controller.execute("move_stage_and_update_info", position)
         self.show_verbose_info("move stage to", position)
 
@@ -208,7 +214,7 @@ class MultiPositionController(GUIController):
     def load_positions(self):
         """Load a csv file.
 
-        The valid csv file should contain the line of headers ['X', 'Y', 'Z', 'R', 'F']
+        The valid csv file should contain the line of headers: stage axes
         """
         filename = filedialog.askopenfilenames(
             defaultextension=".csv",
@@ -219,13 +225,14 @@ class MultiPositionController(GUIController):
         df = pd.read_csv(filename[0])
         # validate the csv file
         df.columns = map(lambda v: v.upper(), df.columns)
-        cmp_header = [axis in df.columns for axis in ["X", "Y", "Z", "R", "F"]]
+        stage_axes = self.parent_controller.configuration_controller.stage_axes
+        cmp_header = [axis in df.columns for axis in [axis.upper() for axis in stage_axes]]
         if not all(cmp_header):
             messagebox.showwarning(
                 title="Warning",
-                message="The csv file isn't right, it should contain [X, Y, Z, R, F]",
+                message=f"The csv file isn't right, it should contain {[axis.upper() for axis in stage_axes]}",
             )
-            logger.info("The csv file isn't right, it should contain [X, Y, Z, R, F]")
+            logger.info(f"The csv file isn't right, it should contain {[axis.upper() for axis in stage_axes]}")
             return
         self.table.model.df = df
         self.table.currentrow = 0

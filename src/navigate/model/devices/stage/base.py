@@ -115,8 +115,10 @@ class StageBase:
         """
         for ax in self.axes:
             setattr(self, f"{ax}_pos", 0)
-            setattr(self, f"{ax}_min", stage_configuration[f"{ax}_min"])
-            setattr(self, f"{ax}_max", stage_configuration[f"{ax}_max"])
+            if f"{ax}_min" not in stage_configuration or f"{ax}_max" not in stage_configuration:
+                logger.warning(f"Stage {ax} limits not set in configuration file.")
+            setattr(self, f"{ax}_min", stage_configuration.get(f"{ax}_min", -10000))
+            setattr(self, f"{ax}_max", stage_configuration.get(f"{ax}_max", 10000))
 
         #: bool: Whether the stage has limits enabled or not. Default is True.
         self.stage_limits = True

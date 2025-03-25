@@ -279,6 +279,27 @@ class ConfigurationController:
         for axis in ["x", "y", "z", "theta", "f"]:
             flip_flags[axis] = stage_dict.get(f"flip_{axis}", False)
         return flip_flags
+    
+    @property
+    def stage_axes(self):
+        """Return the axes of the stage
+
+        Returns
+        -------
+        axes : list
+            List of axes, e.g. ['x', 'y', 'z', 'theta', 'f'].
+        """
+        if self.microscope_config is not None:
+            stage_config = self.microscope_config["stage"]["hardware"]
+            axes = []
+            if isinstance(stage_config, ListProxy):
+                for stage in stage_config:
+                    axes.extend(list(stage["axes"]))
+            else:
+                axes = list(stage_config["axes"])
+            return axes
+        
+        return ["x", "y"]
 
     @property
     def camera_flip_flags(self):
