@@ -359,6 +359,11 @@ class MultiPositionColumnHeader(ColumnHeader):
             label="Add",
             command=self.table.addColumn
         )
+        popupmenu.add_command(
+            label="Delete Column(s)", 
+            command=self.table.deleteColumn
+        )
+
 
         popupmenu.bind("<FocusOut>", popupFocusOut)
         popupmenu.focus_set()
