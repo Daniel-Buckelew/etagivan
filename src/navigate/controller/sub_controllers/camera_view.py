@@ -628,6 +628,10 @@ class BaseViewController(GUIController, ABaseViewController):
                 -1 if stage_flip_flags["y"] else 1
             )
 
+            # get the pixel offsets
+            stage_position["x_pixel"] = self.move_to_x / self.zoom_scale * self.canvas_width_scale
+            stage_position["y_pixel"] = self.move_to_y / self.zoom_scale * self.canvas_height_scale
+
             # Place the stage position in the multi-position table.
             self.parent_controller.execute("mark_position", stage_position)
 

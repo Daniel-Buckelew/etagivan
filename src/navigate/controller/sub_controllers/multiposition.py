@@ -37,6 +37,7 @@ import logging
 
 # Third Party Imports
 import pandas as pd
+import numpy as np
 
 # Local Imports
 from navigate.controller.sub_controllers.gui import GUIController
@@ -166,7 +167,6 @@ class MultiPositionController(GUIController):
         event : tkinter event
             event that triggers the function
         """
-        print("***** double click event:", event)
         # it is calculated based on the GUI position
         rowclicked = self.table.get_row_clicked(event)
         # make sure a valid row is clicked
@@ -176,15 +176,15 @@ class MultiPositionController(GUIController):
         # df.loc uses key index
         # df.iloc uses position index
         temp = list(df.iloc[rowclicked])
+        axes_index = [df.columns.get_loc(axis) for axis in ["X", "Y", "Z", "R", "F"]]
         # validate position
-        if list(filter(lambda v: type(v) != int and type(v) != float, temp)):
+        if not list(filter(lambda v: isinstance(v, (float, int)), [temp[i] for i in axes_index])):
             messagebox.showwarning(
                 title="Warning",
                 message="The selected position is invalid, can't go to this position!",
             )
             logger.info("position is invalid")
             return
-        axes_index = [self.table.model.df.columns.get_loc(axis) for axis in ["X", "Y", "Z", "R", "F"]]
         position = {
             "x": temp[axes_index[0]],
             "y": temp[axes_index[1]],
@@ -282,9 +282,25 @@ class MultiPositionController(GUIController):
         position : dict
             position in the format of {axis: value}
         """
-        temp = list(map(lambda k: position[k], position))
+        headers = list(self.table.model.df.columns)
+
+        temp = []
+        for col_name in headers:
+            if col_name.lower() in position:
+                temp.append(position[col_name.lower()])
+            else:
+                temp.append(np.nan)
+        for col_name in position:
+            if col_name.upper() not in headers:
+                headers.append(col_name.upper())
+                temp.append(position[col_name])
+
+        # update the column headers
+        self.table.model.df = self.table.model.df.reindex(columns=headers)
+
+        # temp = list(map(lambda k: position[k], position))
         self.table.model.df = self.table.model.df.append(
-            pd.DataFrame([temp], columns=list("XYZRF")), ignore_index=True
+            pd.DataFrame([temp], columns=headers), ignore_index=True
         )
         self.table.currentrow = self.table.model.df.shape[0] - 1
         self.table.update_rowcolors()
