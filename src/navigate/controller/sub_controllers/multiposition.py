@@ -147,7 +147,11 @@ class MultiPositionController(GUIController):
         """
         positions = [list(self.table.model.df.columns)]
         stage_axes = self.parent_controller.configuration_controller.stage_axes
-        axes_index = [positions[0].index(axis) for axis in [axis.upper() for axis in stage_axes]]
+        axes_index = []
+        for axis in stage_axes:
+            if axis.upper() in positions[0]:
+                axes_index.append(positions[0].index(axis.upper()))
+        # axes_index = [positions[0].index(axis) for axis in [axis.upper() for axis in stage_axes]]
         rows = self.table.model.df.shape[0]
         for i in range(rows):
             temp = list(self.table.model.df.iloc[i])
@@ -160,7 +164,7 @@ class MultiPositionController(GUIController):
                         )
                     )
                 )
-                == len(stage_axes)
+                == len(axes_index)
             ):
                 positions.append(temp)
         return positions
@@ -188,7 +192,8 @@ class MultiPositionController(GUIController):
         stage_axes = self.parent_controller.configuration_controller.stage_axes
         axes_index = [df.columns.get_loc(axis) for axis in [axis.upper() for axis in stage_axes]]
         # validate position
-        if not list(filter(lambda v: isinstance(v, (float, int)), [temp[i] for i in axes_index])):
+        # we currently only move to a position doesn't contain nan
+        if len(list(filter(lambda v: isinstance(v, (float, int)) and not math.isnan(v), [temp[i] for i in axes_index]))) != len(stage_axes):
             messagebox.showwarning(
                 title="Warning",
                 message="The selected position is invalid, can't go to this position!",

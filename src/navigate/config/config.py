@@ -1087,6 +1087,9 @@ def verify_positions_config(positions):
         else:
             start_index = 0
 
+    if start_index == len(positions):
+        return []
+
     position_num = len(positions)
     for i in range(position_num - 1, start_index-1, -1):
         position = positions[i]

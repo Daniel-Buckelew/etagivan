@@ -397,8 +397,8 @@ class Microscope:
                 axis
                 + "_abs": (
                     pos_dict[axis + "_pos"]
-                    + self_offset_dict[axis + "_offset"]
-                    - former_offset_dict[axis + "_offset"]
+                    + self_offset_dict.get(axis + "_offset", 0)
+                    - former_offset_dict.get(axis + "_offset", 0)
                 )
                 for axis in axes
             }
