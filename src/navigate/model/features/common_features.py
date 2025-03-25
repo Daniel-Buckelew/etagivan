@@ -614,7 +614,8 @@ class MoveToNextPositionInMultiPositionTable:
         if self.initialized:
             return
         self.initialized = True
-        self.multiposition_table = self.model.configuration["multi_positions"]
+        # the first row will be headers
+        self.multiposition_table = self.model.configuration["multi_positions"][1:]
         self.position_count = len(self.multiposition_table)
         if type(self.offset) is str:
             try:
@@ -1005,9 +1006,12 @@ class ZStackAcquisition:
         self.restore_f = pos_dict["f_pos"]
 
         # position: x, y, z, theta, f
+        # TODO: Update axes headers and get positions accrodingly
         if bool(microscope_state["is_multiposition"]) or self.force_multiposition:
-            self.positions = self.model.configuration["multi_positions"]
+            self.position_headers = self.model.configuration["multi_positions"][0]
+            self.positions = self.model.configuration["multi_positions"][1:]
         else:
+            self.positions_headers = ["x", "y", "z", "theta", "f"]
             self.positions = [
                 [
                     float(pos_dict["x_pos"]),
@@ -1031,6 +1035,7 @@ class ZStackAcquisition:
                     ),
                 ]
             ]
+        self.axes_index = [self.position_headers.index(axis.upper()) for axis in ["x", "y", "z", "theta", "f"]]
 
         # Setup next channel down here, to ensure defocus isn't merged into
         # restore f_pos, positions
@@ -1048,7 +1053,7 @@ class ZStackAcquisition:
         )
         self.current_position_idx = 0
         self.current_position = dict(
-            zip(["x", "y", "z", "theta", "f"], self.positions[0])
+            zip(["x", "y", "z", "theta", "f"], [self.positions[0][i] for i in self.axes_index])
         )
         self.z_position_moved_time = 0
         self.need_to_move_new_position = True
@@ -1090,7 +1095,7 @@ class ZStackAcquisition:
             self.current_position = dict(
                 zip(
                     ["x", "y", "z", "theta", "f"],
-                    self.positions[self.current_position_idx],
+                    [self.positions[self.current_position_idx][i] for i in self.axes_index],
                 )
             )
 
