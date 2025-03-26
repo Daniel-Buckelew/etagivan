@@ -1011,7 +1011,7 @@ class ZStackAcquisition:
             self.position_headers = self.model.configuration["multi_positions"][0]
             self.positions = self.model.configuration["multi_positions"][1:]
         else:
-            self.positions_headers = ["x", "y", "z", "theta", "f"]
+            self.position_headers = ["X", "Y", "Z", "THETA", "F"]
             self.positions = [
                 [
                     float(pos_dict["x_pos"]),
