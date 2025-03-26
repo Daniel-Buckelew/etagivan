@@ -384,9 +384,8 @@ class ConfigurationController:
                 stages = list(stages)
                 return [stage["type"] for stage in stages if "z" in stage["axes"]]
             elif isinstance(stages, DictProxy):
-                return [
-                    stage["type"] for stage in stages.values() if "z" in stage["axes"]
-                ]
+                stages = dict(stages)
+                return [stages["type"]] if "z" in stages["axes"] else []
 
     @property
     def number_of_channels(self):
