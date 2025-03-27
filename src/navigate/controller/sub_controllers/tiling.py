@@ -34,6 +34,7 @@
 # Standard Library Imports
 import logging
 from tkinter import messagebox
+import os
 
 # Third Party Imports
 
@@ -46,6 +47,9 @@ from navigate.tools.multipos_table_tools import (
 )
 from navigate.controller.sub_controllers.gui import GUIController
 from navigate.tools.common_functions import combine_funcs
+from navigate.tools.file_functions import save_yaml_file, load_yaml_file
+from navigate.config.config import get_navigate_path
+
 
 # Logger Setup
 p = __name__.split(".")[1]
@@ -94,17 +98,10 @@ class TilingWizardController(GUIController):
         #: dict: flags indicating if all the value are correct to set the table
         self.is_validated = {"x": True, "y": True, "z": True, "f": True}
 
-        # Init widgets to zero
+        # Initialize widgets to previous values
         #: list: List of axes to iterate over
         self._axes = ["x", "y", "z", "f"]
-        self.variables["percent_overlap"].set(self._percent_overlap)
-        self.variables["total_tiles"].set(1)
-        for ax in self._axes:
-            self.variables[f"{ax}_start"].set(0.0)
-            self.variables[f"{ax}_end"].set(0.0)
-            self.variables[f"{ax}_dist"].set(0.0)
-            self.variables[f"{ax}_fov"].set(0.0)
-            self.variables[f"{ax}_tiles"].set(1)
+        self.load_settings()
 
         # Ref to widgets in other views
         # (Camera Settings, Stage Control Positions, Stack Acq Settings)
@@ -239,12 +236,41 @@ class TilingWizardController(GUIController):
 
         self.view.popup.bind("<Escape>", self.close_window)
 
+    def load_settings(self):
+        """Load positions from yaml file"""
+
+        # Load positions from yaml file
+        load_path = os.path.join(
+            get_navigate_path(), "config", "tiling_wizard_settings.yaml"
+        )
+
+        if os.path.exists(load_path):
+            positions = load_yaml_file(load_path)
+            for key, value in positions.items():
+                self.variables[key].set(value)
+        else:
+            self.variables["percent_overlap"].set(self._percent_overlap)
+            self.variables["total_tiles"].set(1)
+            for ax in self._axes:
+                self.variables[f"{ax}_start"].set(0.0)
+                self.variables[f"{ax}_end"].set(0.0)
+                self.variables[f"{ax}_dist"].set(0.0)
+                self.variables[f"{ax}_fov"].set(0.0)
+                self.variables[f"{ax}_tiles"].set(1)
 
     def close_window(self, *args) -> None:
-        """Close the tiling wizard popup
+        """Save multiposition information and close the tiling wizard popup
 
-        Closes the tiling wizard popup and deletes the controller
+        Save multiposition information to yaml file, and close tiling wizard.
         """
+        positions = {key: var.get() for key, var in self.variables.items()}
+        save_yaml_file(
+            file_directory=os.path.join(get_navigate_path(), "config"),
+            content_dict=positions,
+            filename="tiling_wizard_settings.yaml",
+        )
+
+        # Close the popup
         self.view.popup.dismiss()
         delattr(self.parent_controller, "tiling_wizard_controller")
 
