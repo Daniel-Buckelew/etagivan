@@ -616,19 +616,23 @@ class MoveToNextPositionInMultiPositionTable:
         self.initialized = True
         # the first row will be headers
         self.multiposition_table = self.model.configuration["multi_positions"][1:]
+        headers = self.model.configuration["multi_positions"][0]
+        self.stage_axes = list(self.model.active_microscope.stages.keys())
+        self.axes_index = [headers.index(axis.upper()) for axis in self.stage_axes]
         self.position_count = len(self.multiposition_table)
+        axes_num = len(self.stage_axes)
         if type(self.offset) is str:
             try:
                 self.offset = ast.literal_eval(self.offset)
             except SyntaxError:
-                self.offset = [0] * 5
+                self.offset = [0] * axes_num
         if not self.offset or type(self.offset) is not list:
-            self.offset = [0] * 5
+            self.offset = [0] * axes_num
 
-        # assert offset has at least 5 float values
-        if len(self.offset) < 5:
-            self.offset[len(self.offset) : 5] = [0] * (5 - self.offset)
-        for i in range(5):
+        # assert offset has values for each axis
+        if len(self.offset) < axes_num:
+            self.offset[len(self.offset) : axes_num] = [0] * (axes_num - len(self.offset))
+        for i in range(axes_num):
             try:
                 self.offset[i] = float(self.offset[i])
             except (ValueError, TypeError):
@@ -648,18 +652,18 @@ class MoveToNextPositionInMultiPositionTable:
             curr_stage_offset = self.model.configuration["configuration"][
                 "microscopes"
             ][curr_resolution]["stage"]
-            for i, axis in enumerate(["x", "y", "z", "theta", "f"]):
+            for i, axis in enumerate(self.stage_axes):
                 self.offset[i] = (
                     self.offset[i]
-                    + curr_stage_offset[axis + "_offset"]
-                    - stage_offset[axis + "_offset"]
+                    + curr_stage_offset.get(axis + "_offset", 0)
+                    - stage_offset.get(axis + "_offset", 0)
                 )
         else:
             solvent = self.model.configuration["experiment"]["Saving"]["solvent"]
             stage_solvent_offsets = self.model.active_microscope.zoom.stage_offsets
             if solvent in stage_solvent_offsets.keys():
                 stage_offset = stage_solvent_offsets[solvent]
-                for i, axis in enumerate(["x", "y", "z", "theta", "f"]):
+                for i, axis in enumerate(self.stage_axes):
                     if axis not in stage_offset.keys():
                         continue
                     try:
@@ -695,10 +699,10 @@ class MoveToNextPositionInMultiPositionTable:
         # add offset
         pos_dict = dict(
             zip(
-                ["x", "y", "z", "theta", "f"],
+                self.stage_axes,
                 [
-                    self.multiposition_table[self.current_idx][i] + self.offset[i]
-                    for i in range(5)
+                    self.multiposition_table[self.current_idx][self.axes_index[i]] + self.offset[i]
+                    for i in range(len(self.axes_index))
                 ],
             )
         )
@@ -708,27 +712,24 @@ class MoveToNextPositionInMultiPositionTable:
             pre_stage_pos = dict(
                 map(
                     lambda k: (k, temp[f"{k}_pos"]),
-                    ["x", "y", "z", "f", "theta"],
+                    self.stage_axes,
                 )
             )
         else:
             pre_stage_pos = dict(
                 zip(
-                    ["x", "y", "z", "theta", "f"],
+                    self.stage_axes,
                     [
-                        self.multiposition_table[self.current_idx - 1][i]
+                        self.multiposition_table[self.current_idx - 1][self.axes_index[i]]
                         + self.offset[i]
-                        for i in range(5)
+                        for i in range(len(self.axes_index))
                     ],
                 )
             )
-        delta_x = abs(pos_dict["x"] - pre_stage_pos["x"])
-        delta_y = abs(pos_dict["y"] - pre_stage_pos["y"])
-        delta_z = abs(pos_dict["z"] - pre_stage_pos["z"])
-        delta_f = abs(pos_dict["f"] - pre_stage_pos["f"])
+        delta_distances = [abs(pos_dict[axis] - pre_stage_pos[axis]) for axis in self.stage_axes]
         should_pause_data_thread = any(
             distance > self.stage_distance_threshold
-            for distance in [delta_x, delta_y, delta_z, delta_f]
+            for distance in delta_distances
         )
         if should_pause_data_thread:
             self.model.pause_data_thread()
