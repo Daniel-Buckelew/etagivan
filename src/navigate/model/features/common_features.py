@@ -1006,7 +1006,7 @@ class ZStackAcquisition:
         self.restore_f = pos_dict["f_pos"]
 
         # position: x, y, z, theta, f
-        # TODO: Update axes headers and get positions accrodingly
+        # TODO: Update axes headers and get positions accordingly
         if bool(microscope_state["is_multiposition"]) or self.force_multiposition:
             self.position_headers = self.model.configuration["multi_positions"][0]
             self.positions = self.model.configuration["multi_positions"][1:]
