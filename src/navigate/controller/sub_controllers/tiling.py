@@ -100,7 +100,8 @@ class TilingWizardController(GUIController):
 
         # Initialize widgets to previous values
         #: list: List of axes to iterate over
-        self._axes = ["x", "y", "z", "f"]
+        stage_axes = self.parent_controller.parent_controller.configuration_controller.stage_axes
+        self._axes = [axis for axis in stage_axes if axis != "theta"]
         self.load_settings()
 
         # Ref to widgets in other views
@@ -146,67 +147,28 @@ class TilingWizardController(GUIController):
         )
 
         # Calculate distances
-        self.variables["x_start"].trace_add(
-            "write", lambda *args: self.calculate_distance("x")
-        )
-        self.variables["x_end"].trace_add(
-            "write", lambda *args: self.calculate_distance("x")
-        )
-        self.variables["y_start"].trace_add(
-            "write", lambda *args: self.calculate_distance("y")
-        )
-        self.variables["y_end"].trace_add(
-            "write", lambda *args: self.calculate_distance("y")
-        )
-        self.variables["z_start"].trace_add(
-            "write", lambda *args: self.calculate_distance("z")
-        )
-        self.variables["z_end"].trace_add(
-            "write", lambda *args: self.calculate_distance("z")
-        )
-        self.variables["f_start"].trace_add(
-            "write", lambda *args: self.calculate_distance("f")
-        )
-        self.variables["f_end"].trace_add(
-            "write", lambda *args: self.calculate_distance("f")
-        )
+        for axis in self._axes:
+            self.variables[f"{axis}_start"].trace_add(
+                "write", lambda *args, axis=axis: self.calculate_distance(axis)
+            )
+            self.variables[f"{axis}_end"].trace_add(
+                "write", lambda *args, axis=axis: self.calculate_distance(axis)
+            )
+            # Bind FOV changes
+            self.variables[f"{axis}_fov"].trace_add(
+                "write", lambda *args, axis=axis: self.calculate_tiles(axis)
+            )
+            self.variables[f"{axis}_start"].trace_add(
+                "write", lambda *args, axis=axis: self.update_fov(axis)
+            )
+            self.variables[f"{axis}_end"].trace_add(
+                "write", lambda *args, axis=axis: self.update_fov(axis)
+            )
 
-        # Bind FOV changes
-        self.variables["x_fov"].trace_add(
-            "write", lambda *args: self.calculate_tiles("x")
-        )
-        self.variables["y_fov"].trace_add(
-            "write", lambda *args: self.calculate_tiles("y")
-        )
-        self.variables["z_fov"].trace_add(
-            "write", lambda *args: self.calculate_tiles("z")
-        )
-        self.variables["f_fov"].trace_add(
-            "write", lambda *args: self.calculate_tiles("f")
-        )
-
-        self.variables["x_start"].trace_add("write", lambda *args: self.update_fov("x"))
-        self.variables["x_end"].trace_add("write", lambda *args: self.update_fov("x"))
-        self.variables["y_start"].trace_add("write", lambda *args: self.update_fov("y"))
-        self.variables["y_end"].trace_add("write", lambda *args: self.update_fov("y"))
-        self.variables["z_start"].trace_add("write", lambda *args: self.update_fov("z"))
-        self.variables["z_end"].trace_add("write", lambda *args: self.update_fov("z"))
-        self.variables["f_start"].trace_add("write", lambda *args: self.update_fov("f"))
-        self.variables["f_end"].trace_add("write", lambda *args: self.update_fov("f"))
-
-        # Calculating Number of Tiles traces
-        self.variables["x_dist"].trace_add(
-            "write", lambda *args: self.calculate_tiles("x")
-        )
-        self.variables["y_dist"].trace_add(
-            "write", lambda *args: self.calculate_tiles("y")
-        )
-        self.variables["z_dist"].trace_add(
-            "write", lambda *args: self.calculate_tiles("z")
-        )
-        self.variables["f_dist"].trace_add(
-            "write", lambda *args: self.calculate_tiles("f")
-        )
+            # Calculating Number of Tiles traces
+            self.variables[f"{axis}_dist"].trace_add(
+                "write", lambda *args, axis=axis: self.calculate_tiles(axis)
+            )
 
         # Populate Table trace
         self.buttons["set_table"].configure(command=self.set_table)
@@ -246,17 +208,19 @@ class TilingWizardController(GUIController):
 
         if os.path.exists(load_path):
             positions = load_yaml_file(load_path)
-            for key, value in positions.items():
-                self.variables[key].set(value)
+            # for key, value in positions.items():
+            #     self.variables[key].set(value)
         else:
-            self.variables["percent_overlap"].set(self._percent_overlap)
-            self.variables["total_tiles"].set(1)
-            for ax in self._axes:
-                self.variables[f"{ax}_start"].set(0.0)
-                self.variables[f"{ax}_end"].set(0.0)
-                self.variables[f"{ax}_dist"].set(0.0)
-                self.variables[f"{ax}_fov"].set(0.0)
-                self.variables[f"{ax}_tiles"].set(1)
+            positions = {}
+
+        self.variables["percent_overlap"].set(self._percent_overlap)
+        self.variables["total_tiles"].set(1)
+        for ax in self._axes:
+            self.variables[f"{ax}_start"].set(positions.get(f"{ax}_start", 0.0))
+            self.variables[f"{ax}_end"].set(positions.get(f"{ax}_end", 0.0))
+            self.variables[f"{ax}_dist"].set(positions.get(f"{ax}_dist", 0.0))
+            self.variables[f"{ax}_fov"].set(positions.get(f"{ax}_fov", 0.0))
+            self.variables[f"{ax}_tiles"].set(positions.get(f"{ax}_tiles", 1))
 
     def close_window(self, *args) -> None:
         """Save multiposition information and close the tiling wizard popup
@@ -372,7 +336,7 @@ class TilingWizardController(GUIController):
             f_overlap=overlap,
         )
 
-        update_table(self.multipoint_table, table_values)
+        update_table(self.multipoint_table, table_values, columns=[axis.upper() for axis in self._axes])
 
         # If we have additional axes, create self.d{axis} for each
         # additional axis, to ensure we keep track of the step size
@@ -567,10 +531,10 @@ class TilingWizardController(GUIController):
                 )  # abs(self._fov[ax]))
 
                 self.calculate_tiles(ax)
-            except ValueError as e:
+            except (TypeError, ValueError) as e:
                 logger.debug(
                     f"Controller - Tiling Wizard - Caught ValueError: {e}. "
-                    "Declining to update FOV."
+                    f"Declining to update {ax} FOV."
                 )
                 pass
 
