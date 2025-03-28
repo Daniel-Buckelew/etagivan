@@ -462,7 +462,7 @@ class LoopByCount:
         if self.steps == "channels":
             self.steps = len(self.model.active_microscope.available_channels)
         elif self.steps == "positions":
-            self.steps = len(self.model.configuration["multi_positions"])
+            self.steps = len(self.model.configuration["multi_positions"]) - 1
         else:
             try:
                 parameters = self.steps.split(".")
