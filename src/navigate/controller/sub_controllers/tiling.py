@@ -336,7 +336,7 @@ class TilingWizardController(GUIController):
             f_overlap=overlap,
         )
 
-        update_table(self.multipoint_table, table_values, columns=[axis.upper() for axis in self._axes])
+        update_table(self.multipoint_table, table_values)
 
         # If we have additional axes, create self.d{axis} for each
         # additional axis, to ensure we keep track of the step size
