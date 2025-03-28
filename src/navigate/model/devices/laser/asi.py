@@ -123,7 +123,7 @@ class ASILaser(LaserBase, SerialDevice):
             logger.info(f"{str(self)} initialized with mixed modulation.")
 
         elif self.modulation_type == "analog":
-            self.initialize_analog_modulation()
+            # self.initialize_analog_modulation()
             logger.info(f"{str(self)} initialized with analog modulation.")
 
         elif self.modulation_type == "digital":
