@@ -45,7 +45,7 @@ from navigate.controller.configuration_controller import ConfigurationController
 from navigate.controller.sub_controllers.gui import GUIController
 from navigate.tools.decorators import log_initialization
 from navigate.view.main_application_window import MainApp
-from navigate.view.main_window_content.stage_tab import StageControlTab
+from navigate.view.main_window_content.stage_tab import StageControlTab, OtherAxisFrame
 
 # Logger Setup
 p = __name__.split(".")[1]
@@ -103,9 +103,15 @@ class StageController(GUIController):
         self.stage_setting_dict = self.parent_controller.configuration["experiment"][
             "StageParameters"
         ]
-
+        self.stage_axes = self.parent_controller.configuration_controller.stage_axes
+        all_stage_axes = self.parent_controller.configuration_controller.all_stage_axes
+        # add stage control buttons to the stage control tab
+        for axis in all_stage_axes:
+            if axis in ["x", "y", "z", "theta", "f"]:
+                continue
+            view.add_additional_stage(axis)
         #: dict: The event id
-        self.event_id = {"x": None, "y": None, "z": None, "theta": None, "f": None}
+        self.event_id = dict(zip(all_stage_axes, [None] * len(all_stage_axes)))
 
         #: dict: The minimum stage positions.
         self.position_min = {}
@@ -119,25 +125,28 @@ class StageController(GUIController):
         # gui event bind
         buttons = self.view.get_buttons()
         for k in buttons:
+            temp = k.split("_")
+            if len(temp) < 3 or temp[-1] != "btn":
+                continue
+            axis = temp[-2]
             large_step = True if "large" in k else False
-            match = re.search(r"_(x|y|z|theta|f)_", k)
-            if match:
-                axis = match.group(1)
-                if "up" in k:
-                    buttons[k].configure(
-                        command=self.up_btn_handler(axis=axis, large_step=large_step),
-                        repeatinterval=300,
-                        repeatdelay=300,
-                    )
+            if "up" == temp[-3]:
+                buttons[k].configure(
+                    command=self.up_btn_handler(axis=axis, large_step=large_step),
+                    repeatinterval=300,
+                    repeatdelay=300,
+                )
 
-                elif "down" in k:
-                    buttons[k].configure(
-                        command=self.down_btn_handler(axis=axis, large_step=large_step),
-                        repeatinterval=300,
-                        repeatdelay=300,
-                    )
+            elif "down" == temp[-3]:
+                buttons[k].configure(
+                    command=self.down_btn_handler(axis=axis, large_step=large_step),
+                    repeatinterval=300,
+                    repeatdelay=300,
+                )
 
-        for k in ["xy", "z", "f", "theta"]:
+        for k in all_stage_axes:
+            if k == "x" or k == "y":
+                k = "xy"
             self.widget_vals[k + "_step"].trace_add(
                 "write", self.update_step_size_handler(k)
             )
@@ -200,6 +209,13 @@ class StageController(GUIController):
     def initialize(self) -> None:
         """Initialize the Stage limits of steps and positions."""
         config = self.parent_controller.configuration_controller
+        self.stage_axes = config.stage_axes
+        # disable stages not available for the current microscope
+        for axis in set(config.all_stage_axes) - set(self.stage_axes):
+            stage_frame = getattr(self.view, f"{axis}_frame")
+            stage_frame.toggle_button_states(True, [axis])
+            stage_frame.increment_box.widget.config(state="disabled")
+            self.view.position_frame.inputs[axis].widget.config(state="disabled")
         self.disable_synthetic_stages(config)
 
         # Get the minimum and maximum stage limits.
@@ -208,7 +224,7 @@ class StageController(GUIController):
 
         widgets = self.view.get_widgets()
         step_dict = self.stage_setting_dict[config.microscope_name]
-        for axis in ["x", "y", "z", "theta", "f"]:
+        for axis in self.stage_axes:
             # Set Stage Limits
             widgets[axis].widget.min = self.position_min[axis]
             widgets[axis].widget.max = self.position_max[axis]
@@ -222,11 +238,11 @@ class StageController(GUIController):
             # TODO: Move to the GUI configuration file.
             widgets[step_axis + "_step"].widget.configure(from_=0.01)
             widgets[step_axis + "_step"].widget.configure(to=self.position_max[axis])
-            step_increment = step_dict[step_axis + "_step"] // 10
+            step_increment = step_dict.get(f"{step_axis}_step", 10) // 10
             if step_increment == 0:
                 step_increment = 1
             widgets[step_axis + "_step"].widget.configure(increment=step_increment)
-            widgets[step_axis + "_step"].set(step_dict[step_axis + "_step"])
+            widgets[step_axis + "_step"].set(step_dict.get(f"{step_axis}_step", 10))
 
         # Joystick
         microscope_name = config.microscope_name
@@ -281,47 +297,32 @@ class StageController(GUIController):
             for axis in stage_dict["axes"]:
                 if "synthetic" in stage_dict["type"].lower():
                     state = "disabled"
+                    flag = True
                 else:
                     state = "normal"
+                    flag = False
 
                 if axis == "x":
-                    self.view.xy_frame.up_x_btn.config(state=state)
-                    self.view.xy_frame.down_x_btn.config(state=state)
-                    self.view.xy_frame.large_up_x_btn.config(state=state)
-                    self.view.xy_frame.large_down_x_btn.config(state=state)
+                    self.view.xy_frame.toggle_button_states(flag, ["x"])
+                    self.view.xy_frame.increment_box.widget.config(state=state)
+                    self.view.position_frame.inputs["x"].widget.config(state=state)
 
                 elif axis == "y":
-                    self.view.xy_frame.up_y_btn.config(state=state)
-                    self.view.xy_frame.down_y_btn.config(state=state)
-                    self.view.xy_frame.large_up_y_btn.config(state=state)
-                    self.view.xy_frame.large_down_y_btn.config(state=state)
-
-                elif axis == "z":
-                    self.view.z_frame.down_btn.config(state=state)
-                    self.view.z_frame.up_btn.config(state=state)
-                    self.view.z_frame.large_down_btn.config(state=state)
-                    self.view.z_frame.large_up_btn.config(state=state)
-
-                elif axis == "theta":
-                    self.view.theta_frame.down_btn.config(state=state)
-                    self.view.theta_frame.up_btn.config(state=state)
-                    self.view.theta_frame.large_down_btn.config(state=state)
-                    self.view.theta_frame.large_up_btn.config(state=state)
-
-                elif axis == "f":
-                    self.view.f_frame.down_btn.config(state=state)
-                    self.view.f_frame.up_btn.config(state=state)
-                    self.view.f_frame.large_down_btn.config(state=state)
-                    self.view.f_frame.large_up_btn.config(state=state)
-            else:
-                pass
+                    self.view.xy_frame.toggle_button_states(flag, ["y"])
+                    self.view.position_frame.inputs["y"].widget.config(state=state)
+                
+                else:
+                    stage_frame = getattr(self.view, f"{axis}_frame")
+                    stage_frame.toggle_button_states(flag, [axis])
+                    stage_frame.increment_box.widget.config(state=state)
+                    self.view.position_frame.inputs[axis].widget.config(state=state)
 
     def bind_position_callbacks(self) -> None:
         """Binds position_callback() to each axis, records the trace name so we can
         unbind later."""
         widgets = self.view.get_widgets()
         if not self.position_callbacks_bound:
-            for axis in ["x", "y", "z", "theta", "f"]:
+            for axis in self.stage_axes:
                 widgets[axis].widget.bind("<FocusOut>", self.position_callback(axis))
             self.position_callbacks_bound = True
 
@@ -350,7 +351,7 @@ class StageController(GUIController):
         position : Dict[str, float]
             {'x': value, 'y': value, 'z': value, 'theta': value, 'f': value}
         """
-        for axis in ["x", "y", "z", "theta", "f"]:
+        for axis in self.stage_axes:
             if axis not in position:
                 continue
             self.widget_vals[axis].set(position[axis])
@@ -366,7 +367,7 @@ class StageController(GUIController):
             {'x': value, 'y': value, 'z': value, 'theta': value, 'f': value}
         """
         widgets = self.view.get_widgets()
-        for axis in ["x", "y", "z", "theta", "f"]:
+        for axis in self.stage_axes:
             if axis not in position:
                 continue
             self.widget_vals[axis].set(position[axis])
@@ -387,7 +388,7 @@ class StageController(GUIController):
         """
         position = {}
         try:
-            for axis in ["x", "y", "z", "theta", "f"]:
+            for axis in self.stage_axes:
                 position[axis] = float(self.widget_vals[axis].get())
                 if self.stage_limits is True:
                     if (
@@ -638,12 +639,14 @@ class StageController(GUIController):
     def set_hover_descriptions(self) -> None:
         """Set hover descriptions for the stage tab"""
 
-        frames = ["xy", "xy", "z", "theta", "f"]
-        axes = ["x", "y", "z", "theta", "f"]
         btn_prefix = ["large_up", "large_down", "up", "down"]
         step_multiple = [5, -5, 1, -1]
 
-        for frame_prefix, axis in zip(frames, axes):
+        for axis in self.stage_axes:
+            if axis == "x" or axis == "y":
+                frame_prefix = "xy"
+            else:
+                frame_prefix = axis
             step_value = self.widget_vals[f"{frame_prefix}_step"].get()
             if frame_prefix == "xy":
                 btn_suffix = f"{axis}_btn"
@@ -660,21 +663,14 @@ class StageController(GUIController):
                      f"setdescription('Move {step_multiple[i] * step_value} {description}')")
 
         # Position Frame
-        self.view.position_frame.inputs["y"].widget.hover.setdescription(
-            "Y stage position in \N{GREEK SMALL LETTER MU}m."
-        )
-        self.view.position_frame.inputs["x"].widget.hover.setdescription(
-            "X stage position in \N{GREEK SMALL LETTER MU}m."
-        )
-        self.view.position_frame.inputs["z"].widget.hover.setdescription(
-            "Z stage position in \N{GREEK SMALL LETTER MU}m."
-        )
-        self.view.position_frame.inputs["f"].widget.hover.setdescription(
-            "Focus stage position in \N{GREEK SMALL LETTER MU}m."
-        )
-        self.view.position_frame.inputs["theta"].widget.hover.setdescription(
-            "Theta stage position in degrees."
-        )
+        for axis in self.stage_axes:
+            if axis == "theta":
+                description = "Theta stage position in degrees."
+            else:
+                description = f"{axis.upper()} stage position in \N{GREEK SMALL LETTER MU}m."
+            self.view.position_frame.inputs[axis].widget.hover.setdescription(
+                description
+            )
 
         self.view.stack_shortcuts.set_start_button.hover.setdescription(
             "Sets the start positions for Z and F for a Z-Stack."

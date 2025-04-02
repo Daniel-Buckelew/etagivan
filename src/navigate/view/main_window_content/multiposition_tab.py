@@ -188,7 +188,7 @@ class MultiPointList(ttk.Frame):
         df = pd.DataFrame({"X": [0], "Y": [0], "Z": [0], "R": [0], "F": [0]})
 
         #: MultiPositionTable: The PandasTable instance that is being used.
-        self.pt = MultiPositionTable(self, showtoolbar=False)
+        self.pt = MultiPositionTable(self, showtoolbar=False, showstatusbar=True)
         self.pt.show()
         self.pt.model.df = df
 
@@ -351,6 +351,20 @@ class MultiPositionColumnHeader(ColumnHeader):
                 columnIndex=multicols, ascending=[1 for i in multicols]
             ),
         )
+        popupmenu.add_command(
+            label="Rename",
+            command=self.renameColumn
+        )
+        popupmenu.add_command(
+            label="Add",
+            command=self.table.addColumn
+        )
+        popupmenu.add_command(
+            label="Delete Column(s)", 
+            command=self.table.deleteColumn
+        )
+
+
         popupmenu.bind("<FocusOut>", popupFocusOut)
         popupmenu.focus_set()
         popupmenu.post(event.x_root, event.y_root)

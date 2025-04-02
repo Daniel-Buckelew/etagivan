@@ -250,14 +250,14 @@ class ConfigurationController:
             {'x': 2000, 'y': 2000, 'z': 2000, 'theta': 0, 'f': 2000}.
 
         """
-        axis = ["x", "y", "z", "theta", "f"]
+        axes = self.stage_axes
         position_limits = {}
         if self.microscope_config is not None:
             stage_dict = self.microscope_config["stage"]
-            for a in axis:
-                position_limits[a] = stage_dict[a + suffix]
+            for a in axes:
+                position_limits[a] = stage_dict.get(a + suffix, 0 if suffix == "_min" else 100)
         else:
-            for a in axis:
+            for a in axes:
                 position_limits[a] = 0 if suffix == "_min" else 100
         return position_limits
 
@@ -276,9 +276,51 @@ class ConfigurationController:
         else:
             stage_dict = {}
         flip_flags = {}
-        for axis in ["x", "y", "z", "theta", "f"]:
+        for axis in self.stage_axes:
             flip_flags[axis] = stage_dict.get(f"flip_{axis}", False)
         return flip_flags
+    
+    @property
+    def stage_axes(self):
+        """Return the axes of the stage
+
+        Returns
+        -------
+        axes : list
+            List of axes, e.g. ['x', 'y', 'z', 'theta', 'f'].
+        """
+        if self.microscope_config is not None:
+            stage_config = self.microscope_config["stage"]["hardware"]
+            axes = []
+            if isinstance(stage_config, ListProxy):
+                for stage in stage_config:
+                    axes.extend(list(stage["axes"]))
+            else:
+                axes = list(stage_config["axes"])
+            return axes
+        
+        return ["x", "y"]
+    
+    @property
+    def all_stage_axes(self):
+        """Return all the axes of the stage
+
+        Returns
+        -------
+        axes : list
+            List of all axes, e.g. ['x', 'y', 'z', 'theta', 'f'].
+        """
+        axes = []
+        for microscope_name in self.microscope_list:
+            stage_config = self.configuration["configuration"]["microscopes"][
+                microscope_name
+            ]["stage"]["hardware"]
+            if isinstance(stage_config, ListProxy):
+                for stage in stage_config:
+                    axes.extend(list(stage["axes"]))
+            else:
+                axes.extend(list(stage_config["axes"]))
+        return list(set(axes))
 
     @property
     def camera_flip_flags(self):
