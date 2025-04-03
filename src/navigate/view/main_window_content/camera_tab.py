@@ -167,6 +167,14 @@ class CameraMode(ttk.Labelframe):
                 )
             self.inputs[self.names[i]].grid(
                 row=i, column=1, pady=3, padx=5, sticky=tk.W)
+            
+        style = ttk.Style()
+        style.configure("Custom.TCheckbutton", padding=[20, 2, 2, 2])
+        self.freerun_var = tk.BooleanVar()
+        self.inputs["freerun_mode"] = ttk.Checkbutton(self, text="Free Running Mode", 
+                                                      variable=self.freerun_var,
+                                                      style="Custom.TCheckbutton")
+        self.inputs["freerun_mode"].grid(row=4, column=0, columnspan=2, padx=5, pady=3, sticky= tk.W)
 
     def get_variables(self) -> dict:
         """Get Variables.
@@ -183,7 +191,8 @@ class CameraMode(ttk.Labelframe):
         """
         variables = {}
         for key, widget in self.inputs.items():
-            variables[key] = widget.get()
+            if isinstance(widget, LabelInput):
+                variables[key] = widget.get()
         return variables
 
     def get_widgets(self) -> dict:

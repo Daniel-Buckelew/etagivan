@@ -87,6 +87,12 @@ class CameraSettingController(GUIController):
         #: dict: ROI buttons
         self.roi_btns = view.camera_roi.get_buttons()
 
+        #: tk.var: freerun variable
+        self.freerun_var = view.camera_mode.freerun_var
+
+        #: bool: freerun mode flag
+        self.freerun_mode_flag = False
+
         # initialize
 
         #: int: Default pixel size
@@ -217,6 +223,12 @@ class CameraSettingController(GUIController):
             "CameraParameters"
         ][microscope_name]
 
+        is_free_run = self.camera_setting_dict.get("is_free_run", False)
+        if is_free_run and self.freerun_mode_flag:
+            self.freerun_var.set(1)
+        else:
+            self.freerun_var.set(0)
+
         # Readout Settings
         self.update_sensor_mode(self.camera_setting_dict["sensor_mode"])
 
@@ -279,6 +291,8 @@ class CameraSettingController(GUIController):
             ].get()
             # light-sheet doesn't support binning
             self.roi_widgets["Binning"].set("1x1")
+
+        self.camera_setting_dict["is_free_run"] = self.freerun_var.get()
 
         # Camera Binning
         self.camera_setting_dict["binning"] = self.roi_widgets["Binning"].get()
@@ -526,6 +540,9 @@ class CameraSettingController(GUIController):
         state = "disabled" if mode != "stop" else "normal"
         state_readonly = "disabled" if mode != "stop" else "readonly"
         self.mode_widgets["Sensor"].widget["state"] = state_readonly
+        self.mode_widgets["freerun_mode"].config(
+            state=state if self.freerun_mode_flag else "disabled"
+        )
         if self.mode_widgets["Sensor"].get() == "Light-Sheet":
             self.mode_widgets["Readout"].widget["state"] = state_readonly
             self.mode_widgets["Pixels"].widget["state"] = (
@@ -663,6 +680,14 @@ class CameraSettingController(GUIController):
 
         if camera_config_dict is None:
             return
+        
+        if "Freerun" in camera_config_dict["supported_trigger_sources"]:
+            self.mode_widgets["freerun_mode"].config(state="normal")
+            self.freerun_mode_flag = True
+        else:
+            self.mode_widgets["freerun_mode"].config(state="disabled")
+            self.freerun_mode_flag = False
+            self.freerun_var.set(0)
 
         self.step_width = camera_config_dict.get("x_pixels_step", 4)
         self.step_height = camera_config_dict.get("y_pixels_step", 4)

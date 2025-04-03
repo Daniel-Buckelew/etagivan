@@ -119,21 +119,9 @@ class HamamatsuBase(CameraBase, SequenceDevice):
         # Values are pulled from the CameraParameters section of the configuration.yml
         # file. Exposure time converted here from milliseconds to seconds.
 
-        self.camera_controller.set_property_value(
-            "defect_correct_mode", self.camera_parameters["defect_correct_mode"]
-        )
-        self.camera_controller.set_property_value(
-            "trigger_active", self.camera_parameters["trigger_active"]
-        )
-        self.camera_controller.set_property_value(
-            "trigger_mode", self.camera_parameters["trigger_mode"]
-        )
-        self.camera_controller.set_property_value(
-            "trigger_polarity", self.camera_parameters["trigger_polarity"]
-        )
-        self.camera_controller.set_property_value(
-            "trigger_source", self.camera_parameters["trigger_source"]
-        )
+        self.set_trigger_mode()
+
+        self.camera_parameters["supported_trigger_sources"] = ["External", "Freerun"]
 
     def __str__(self):
         """Return string representation of HamamatsuOrca class.
@@ -213,6 +201,33 @@ class HamamatsuBase(CameraBase, SequenceDevice):
     def close_camera(self):
         """Close HamamatsuOrca Camera"""
         self.camera_controller.dev_close()
+
+    def set_trigger_mode(self, is_free_run=False):
+        """Set Hamamatsu trigger source and trigger mode."""
+        if is_free_run:
+            # Standard trigger mode
+            self.camera_controller.set_property_value("trigger_mode", 1)
+            # Internal trigger.
+            self.camera_controller.set_property_value("trigger_source", 1)
+            logger.debug("Set camera trigger mode: Free running mode.")
+
+        else:
+            self.camera_controller.set_property_value(
+                "defect_correct_mode", self.camera_parameters["defect_correct_mode"]
+            )
+            self.camera_controller.set_property_value(
+                "trigger_active", self.camera_parameters["trigger_active"]
+            )
+            self.camera_controller.set_property_value(
+                "trigger_mode", self.camera_parameters["trigger_mode"]
+            )
+            self.camera_controller.set_property_value(
+                "trigger_polarity", self.camera_parameters["trigger_polarity"]
+            )
+            self.camera_controller.set_property_value(
+                "trigger_source", self.camera_parameters["trigger_source"]
+            )
+            logger.debug("Set camera trigger mode: External Edge Trigger.")
 
     def set_sensor_mode(self, mode):
         """Set HamamatsuOrca sensor mode.

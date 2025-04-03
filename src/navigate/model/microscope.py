@@ -426,6 +426,8 @@ class Microscope:
 
         if self.camera.is_acquiring:
             self.camera.close_image_series()
+        # set camera trigger source
+        self.set_camera_trigger_mode()
         self.set_camera_sensor_mode()
         if not self.set_camera_roi_and_binning():
             return None
@@ -471,6 +473,15 @@ class Microscope:
             )
         )
         logger.info(f"Preparing Acquisition. Camera Parameters: {camera_info}")
+
+    def set_camera_trigger_mode(self) -> None:
+        """Set the camera trigger mode.
+        
+        This function sets the camera trigger source, trigger mode."""
+        is_free_run = self.configuration["experiment"]["CameraParameters"][
+            self.microscope_name
+        ]["is_free_run"]
+        self.camera.set_trigger_mode(is_free_run)
 
     def set_camera_sensor_mode(self) -> None:
         """Set the camera sensor mode.
