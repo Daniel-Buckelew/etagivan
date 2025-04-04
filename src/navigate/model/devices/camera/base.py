@@ -293,7 +293,12 @@ class CameraBase:
         result = self.set_binning(binning)
         return result
     
-    def set_trigger_mode(self, is_free_run=False) -> None:
-        """Set the camera trigger source to external or internal free run mode."""
+    def set_trigger_mode(self, trigger_source:str="External") -> None:
+        """Set the camera trigger source to external or internal free run mode.
+        Parameters
+        ----------
+        trigger_source : str
+            Trigger source. Options are 'External' or 'Internal'.
+        """
         # Only supports external triggering by default
         pass

@@ -136,10 +136,10 @@ class CameraMode(ttk.Labelframe):
         self.inputs = {}
 
         #: list: List of all the labels for the widgets.
-        self.labels = ["Sensor Mode", "Readout Direction", "Number of Pixels"]
+        self.labels = ["Trigger Mode", "Sensor Mode", "Readout Direction", "Number of Pixels"]
 
         #: list: List of all the names for the widgets.
-        self.names = ["Sensor", "Readout", "Pixels"]
+        self.names = ["Trigger", "Sensor", "Readout", "Pixels"]
 
         for i in range(len(self.labels)):
             self.rowconfigure(i, weight=1, uniform="1")
@@ -167,14 +167,6 @@ class CameraMode(ttk.Labelframe):
                 )
             self.inputs[self.names[i]].grid(
                 row=i, column=1, pady=3, padx=5, sticky=tk.W)
-            
-        style = ttk.Style()
-        style.configure("Custom.TCheckbutton", padding=[20, 2, 2, 2])
-        self.freerun_var = tk.BooleanVar()
-        self.inputs["freerun_mode"] = ttk.Checkbutton(self, text="Free Running Mode", 
-                                                      variable=self.freerun_var,
-                                                      style="Custom.TCheckbutton")
-        self.inputs["freerun_mode"].grid(row=4, column=0, columnspan=2, padx=5, pady=3, sticky= tk.W)
 
     def get_variables(self) -> dict:
         """Get Variables.

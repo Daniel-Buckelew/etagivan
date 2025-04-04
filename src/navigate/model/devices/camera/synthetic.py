@@ -180,7 +180,7 @@ class SyntheticCamera(CameraBase):
         #: list: list of tif images
         self.tif_images = []
 
-        self.camera_parameters["supported_trigger_sources"] = ["External", "Freerun"]
+        self.camera_parameters["supported_trigger_sources"] = ["External", "Internal"]
 
     def __str__(self) -> str:
         """String representation of SyntheticCamera class.
@@ -424,7 +424,11 @@ class SyntheticCamera(CameraBase):
         readout_time = 0.01  # 10 milliseconds.
         return readout_time
 
-    def set_trigger_mode(self, is_free_run=False):
-        """Set camera trigger mode"""
-        logger.debug("Set camera trigger mode: "
-                     "Free run mode" if is_free_run else "External trigger")
+    def set_trigger_mode(self, trigger_source: str="External") -> None:
+        """Set camera trigger mode.
+        Parameters
+        ----------
+        trigger_source : str
+            Trigger source, either 'External' or 'Internal'.
+        """
+        logger.debug(f"Set camera trigger mode: {trigger_source}")

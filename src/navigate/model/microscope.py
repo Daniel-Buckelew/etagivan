@@ -478,10 +478,10 @@ class Microscope:
         """Set the camera trigger mode.
         
         This function sets the camera trigger source, trigger mode."""
-        is_free_run = self.configuration["experiment"]["CameraParameters"][
+        trigger_source = self.configuration["experiment"]["CameraParameters"][
             self.microscope_name
-        ].get("is_free_run", False)
-        self.camera.set_trigger_mode(is_free_run)
+        ].get("trigger_source", "External")
+        self.camera.set_trigger_mode(trigger_source)
 
     def set_camera_sensor_mode(self) -> None:
         """Set the camera sensor mode.

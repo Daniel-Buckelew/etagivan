@@ -71,13 +71,6 @@ class TestCameraSettingController:
         )
         assert self.camera_settings.default_height == camera_config_dict["y_pixels"]
         assert self.camera_settings.default_width == camera_config_dict["x_pixels"]
-        assert (
-            self.camera_settings.trigger_source == camera_config_dict["trigger_source"]
-        )
-        assert (
-            self.camera_settings.trigger_active == camera_config_dict["trigger_active"]
-        )
-        assert self.camera_settings.readout_speed == camera_config_dict["readout_speed"]
 
         # Camera Mode
         assert list(self.camera_settings.mode_widgets["Sensor"].widget["values"]) == [

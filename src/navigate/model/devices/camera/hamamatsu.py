@@ -121,7 +121,7 @@ class HamamatsuBase(CameraBase, SequenceDevice):
 
         self.set_trigger_mode()
 
-        self.camera_parameters["supported_trigger_sources"] = ["External", "Freerun"]
+        self.camera_parameters["supported_trigger_sources"] = ["External", "Internal"]
 
     def __str__(self):
         """Return string representation of HamamatsuOrca class.
@@ -202,9 +202,15 @@ class HamamatsuBase(CameraBase, SequenceDevice):
         """Close HamamatsuOrca Camera"""
         self.camera_controller.dev_close()
 
-    def set_trigger_mode(self, is_free_run=False):
-        """Set Hamamatsu trigger source and trigger mode."""
-        if is_free_run:
+    def set_trigger_mode(self, trigger_source="External"):
+        """Set Hamamatsu trigger source and trigger mode.
+        
+        Parameters
+        ----------
+        trigger_source : str
+            Trigger source: "External" or "Internal". Default is "External".
+        """
+        if trigger_source == "Internal":
             # Standard trigger mode
             self.camera_controller.set_property_value("trigger_mode", 1)
             # Internal trigger.
