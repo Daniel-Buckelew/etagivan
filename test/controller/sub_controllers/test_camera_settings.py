@@ -166,9 +166,6 @@ class TestCameraSettingController:
             "default_pixel_size",
             "default_width",
             "default_height",
-            "trigger_source",
-            "trigger_active",
-            "readout_speed",
             "pixel_event_id",
         ]
 
