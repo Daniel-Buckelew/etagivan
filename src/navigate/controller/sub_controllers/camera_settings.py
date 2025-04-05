@@ -96,15 +96,6 @@ class CameraSettingController(GUIController):
         #: int: Default height
         self.default_width, self.default_height = None, None
 
-        #: int: Trigger type - 1: Internal, 2: External, 3: Synchronous
-        self.trigger_source = None
-
-        #: int: Trigger active - 1: Edge, 2: Level, 3: Synchronous
-        self.trigger_active = None
-
-        #: int: Readout speed
-        self.readout_speed = None
-
         #: int: Camera width step interval
         self.step_width = 4
 
@@ -217,6 +208,12 @@ class CameraSettingController(GUIController):
             "CameraParameters"
         ][microscope_name]
 
+        # Camera Trigger Source
+        trigger_source = self.camera_setting_dict.get("trigger_source", "External")
+        if trigger_source not in self.mode_widgets["Trigger"].widget["values"]:
+            trigger_source = self.mode_widgets["Trigger"].widget["values"][0]
+        self.mode_widgets["Trigger"].set(trigger_source)
+
         # Readout Settings
         self.update_sensor_mode(self.camera_setting_dict["sensor_mode"])
 
@@ -269,6 +266,7 @@ class CameraSettingController(GUIController):
             *args: Variable length argument list.
         """
         # Camera Operation Mode
+        self.camera_setting_dict["trigger_source"] = self.mode_widgets["Trigger"].get()
         self.camera_setting_dict["sensor_mode"] = self.mode_widgets["Sensor"].get()
         if self.camera_setting_dict["sensor_mode"] == "Light-Sheet":
             self.camera_setting_dict["readout_direction"] = self.mode_widgets[
@@ -525,6 +523,7 @@ class CameraSettingController(GUIController):
         self.mode = mode
         state = "disabled" if mode != "stop" else "normal"
         state_readonly = "disabled" if mode != "stop" else "readonly"
+        self.mode_widgets["Trigger"].widget["state"] = state_readonly
         self.mode_widgets["Sensor"].widget["state"] = state_readonly
         if self.mode_widgets["Sensor"].get() == "Light-Sheet":
             self.mode_widgets["Readout"].widget["state"] = state_readonly
@@ -672,20 +671,6 @@ class CameraSettingController(GUIController):
         self.default_pixel_size = camera_config_dict["pixel_size_in_microns"]
         self.default_height = camera_config_dict["y_pixels"]
         self.default_width = camera_config_dict["x_pixels"]
-        # (
-        #     self.default_width,
-        #     self.default_height,
-        # ) = self.parent_controller.configuration_controller.camera_pixels
-        self.trigger_source = camera_config_dict["trigger_source"]
-        self.trigger_active = camera_config_dict["trigger_active"]
-        self.readout_speed = camera_config_dict["readout_speed"]
-        # framerate_widgets
-        # self.framerate_widgets["exposure_time"].widget.min = camera_config_dict[
-        #     "exposure_time_range"
-        # ]["min"]
-        # self.framerate_widgets["exposure_time"].widget.max = camera_config_dict[
-        #     "exposure_time_range"
-        # ]["max"]
 
         # roi max width and height
         self.roi_widgets["Width"].widget.config(to=self.default_width)
@@ -711,6 +696,11 @@ class CameraSettingController(GUIController):
             "CameraParameters"
         ][microscope_name]
 
+        self.mode_widgets["Trigger"].widget["values"] = camera_config_dict.get(
+            "supported_trigger_sources", ["External"]
+        )
+        if self.mode_widgets["Trigger"].get() not in self.mode_widgets["Trigger"].widget["values"]:
+            self.mode_widgets["Trigger"].set(self.mode_widgets["Trigger"].widget["values"][0])
         self.mode_widgets["Sensor"].widget["values"] = camera_config_dict.get("supported_sensor_modes", ["Normal"])
         if self.mode_widgets["Sensor"].get() not in self.mode_widgets["Sensor"].widget["values"]:
             self.update_sensor_mode(self.mode_widgets["Sensor"].widget["values"][0])
