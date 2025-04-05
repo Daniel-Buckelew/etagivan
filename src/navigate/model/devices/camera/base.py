@@ -124,11 +124,11 @@ class CameraBase:
         #  trigger_active, trigger_mode and trigger_polarity
         # can be removed after updating how we get the
         # readout time in model and controller
-        self.camera_parameters["trigger_source"] = 2.0
+        self.camera_parameters["trigger_source"] = 2.0 # external trigger
         self.camera_parameters["readout_speed"] = 1.0
         self.camera_parameters["pixel_size_in_microns"] = 6.5
         self.camera_parameters["trigger_active"] = 1.0
-        self.camera_parameters["trigger_mode"] = 1.0
+        self.camera_parameters["trigger_mode"] = 1.0 # standard trigger mode
         self.camera_parameters["trigger_polarity"] = 2.0
         self.camera_parameters["supported_sensor_modes"] = ["Normal", "Light-Sheet"]
         self.camera_parameters["supported_readout_directions"] = [
@@ -137,6 +137,7 @@ class CameraBase:
             "Bidirectional",
             "Rev. Bidirectional",
         ]
+        self.camera_parameters["supported_trigger_sources"] = ["External"]
 
         # Initialize offset and variance maps, if present
         #: np.ndarray: Offset map
@@ -291,3 +292,13 @@ class CameraBase:
         # Set Binning
         result = self.set_binning(binning)
         return result
+    
+    def set_trigger_mode(self, trigger_source:str="External") -> None:
+        """Set the camera trigger source to external or internal free run mode.
+        Parameters
+        ----------
+        trigger_source : str
+            Trigger source. Options are 'External' or 'Internal'.
+        """
+        # Only supports external triggering by default
+        pass
