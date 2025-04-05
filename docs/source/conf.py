@@ -13,14 +13,14 @@
 import os
 import sys
 from navigate import __version__
+import datetime
 
 sys.path.insert(0, os.path.abspath("../../src"))
-
 
 # -- Project information -----------------------------------------------------
 
 project = "navigate"
-copyright = "2024, Dean Lab, UT Southwestern Medical Center"
+copyright = f"{datetime.datetime.now().year}, Dean Lab, UT Southwestern Medical Center"
 author = "Dean Lab, UT Southwestern Medical Center"
 
 # The full version, including alpha/beta/rc tags
@@ -111,8 +111,8 @@ pygments_style = "sphinx"
 
 # -- Linkcheck Options ---------------------------------------------
 linkcheck_ignore = [
-    r'http://proxy\.your_university\.edu:1234',
-    r'https://proxy\.your_university\.edu:1234'
+    r"http://proxy\.your_university\.edu:1234",
+    r"https://proxy\.your_university\.edu:1234",
 ]
 # -- LaTeX output options ----------------------------------------------------
 
