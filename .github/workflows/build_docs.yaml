@@ -16,6 +16,8 @@ jobs:
 
     permissions:
       contents: write
+      pages: write
+      id-token: write
 
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
@@ -45,9 +47,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
-#      - name: Publish to GitHub Pages
-#        uses: peaceiris/actions-gh-pages@v3
-#        with:
-#          github_token: ${{ secrets.GITHUB_TOKEN }}
-#          publish_dir: ./docs/build/html
