@@ -13,14 +13,15 @@
 import os
 import sys
 from navigate import __version__
+import datetime
 
 sys.path.insert(0, os.path.abspath("../../src"))
 
 
 # -- Project information -----------------------------------------------------
-
+year = datetime.datetime.now().year
 project = "navigate"
-copyright = "2024, Dean Lab, UT Southwestern Medical Center"
+copyright = f"{year}, Dean Lab, UT Southwestern Medical Center"
 author = "Dean Lab, UT Southwestern Medical Center"
 
 # The full version, including alpha/beta/rc tags
