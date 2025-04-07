@@ -1,4 +1,4 @@
-name: Build Docs
+name: Build Documentation
 
 on:
   push:
@@ -16,12 +16,15 @@ jobs:
 
     permissions:
       contents: write
+      pages: write
+      id-token: write
 
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout GitHub Pages
+        uses: actions/checkout@v4
 
       - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v3
@@ -33,13 +36,19 @@ jobs:
           python3 -m pip install --upgrade pip
           pip install -e '.[docs]'
 
-      - name: Build Docs
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Build HTML with Sphinx
         run: |
           cd docs
           make html
 
-      - name: Publish to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Upload Artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/build/html
+          path: './docs/build/html'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

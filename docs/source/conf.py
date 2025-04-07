@@ -18,9 +18,9 @@ import datetime
 sys.path.insert(0, os.path.abspath("../../src"))
 
 # -- Project information -----------------------------------------------------
-
+year = datetime.datetime.now().year
 project = "navigate"
-copyright = f"{datetime.datetime.now().year}, Dean Lab, UT Southwestern Medical Center"
+copyright = f"{year}, Dean Lab, UT Southwestern Medical Center"
 author = "Dean Lab, UT Southwestern Medical Center"
 
 # The full version, including alpha/beta/rc tags
