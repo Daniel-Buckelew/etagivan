@@ -17,7 +17,6 @@ import datetime
 
 sys.path.insert(0, os.path.abspath("../../src"))
 
-
 # -- Project information -----------------------------------------------------
 year = datetime.datetime.now().year
 project = "navigate"
@@ -112,8 +111,8 @@ pygments_style = "sphinx"
 
 # -- Linkcheck Options ---------------------------------------------
 linkcheck_ignore = [
-    r'http://proxy\.your_university\.edu:1234',
-    r'https://proxy\.your_university\.edu:1234'
+    r"http://proxy\.your_university\.edu:1234",
+    r"https://proxy\.your_university\.edu:1234",
 ]
 # -- LaTeX output options ----------------------------------------------------
 
