@@ -154,3 +154,30 @@ class ASIDAQ(DAQBase, SerialDevice):
         except Exception:
             logger.exception("Failed to send camera TTL command to ASI Tiger Controller.")
 
+
+
+    def run_acquisition(self) -> None:
+        try:
+        #send logic card on to cell 1
+            self.daq.logic_card_on(1)
+        except Exception:
+            logger.debug("Cannot turn on")
+            pass
+
+
+
+    def stop_acquition(self) -> None:
+        #send logic card on to cell 1
+        try:
+            self.daq.logic_card_off(1)
+        except Exception:
+            logger.debug("Cannot turn off")
+            pass
+
+    def create_analog_output_tasks(self, channel_key: str) -> None:
+        galvonometer_channel = self.configuration["configuration"]["microscopes"][self.microscope_name]["daq"]["galvo_hardware_widgets"]
+        self.analog_outputs.update({galvonometer_channel: "galvo"})
+        remote_focus_channel = self.configuration["configuration"]["microscopes"][self.microscope_name]["daq"]["remote_focus_hardware_widgets"]
+        self.analog_outputs.update({remote_focus_channel: "remote_focus"})
+
+
