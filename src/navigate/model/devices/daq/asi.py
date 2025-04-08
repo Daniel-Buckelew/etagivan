@@ -166,7 +166,7 @@ class ASIDAQ(DAQBase, SerialDevice):
 
 
 
-    def stop_acquition(self) -> None:
+    def stop_acquisition(self) -> None:
         #send logic card on to cell 1
         try:
             self.daq.logic_card_off(1)
