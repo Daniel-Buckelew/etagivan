@@ -175,9 +175,14 @@ class ASIDAQ(DAQBase, SerialDevice):
             pass
 
     def create_analog_output_tasks(self, channel_key: str) -> None:
-        galvonometer_channel = self.configuration["configuration"]["microscopes"][self.microscope_name]["daq"]["galvo_hardware_widgets"]
-        self.analog_outputs.update({galvonometer_channel: "galvo"})
-        remote_focus_channel = self.configuration["configuration"]["microscopes"][self.microscope_name]["daq"]["remote_focus_hardware_widgets"]
+        galvonometer_channel = self.configuration["configuration"]["microscopes"][self.microscope_name]["galvo"]["hardware"]["channel"]
+        if isinstance(galvonometer_channel, list):
+            for channel in galvonometer_channel:
+                self.analog_outputs.update({channel: "galvo"})
+        else:
+            self.analog_outputs.update({galvonometer_channel: "galvo"})
+        remote_focus_channel = self.configuration["configuration"]["microscopes"][self.microscope_name]["remote_focus_device"]["hardware"]["channel"]
         self.analog_outputs.update({remote_focus_channel: "remote_focus"})
+
 
 
