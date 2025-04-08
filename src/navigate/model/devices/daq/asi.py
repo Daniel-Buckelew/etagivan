@@ -116,43 +116,42 @@ class ASIDAQ(DAQBase, SerialDevice):
             raise Exception("ASI stage connection failed.")
         return tiger_controller
 
+    
+
+
     def create_camera_task(self, channel_key: str) -> None:
-        """Set up the camera trigger task using the ASI Tiger Controller via serial.
+        """
+        Set up the camera trigger pulse using ASI Tiger Controller.
 
         Parameters
         ----------
         channel_key : str
             Channel key for current channel.
         """
-
-        # Compute timing parameters from config
         camera_waveform_repeat_num = self.waveform_repeat_num * self.waveform_expand_num
 
         if self.analog_outputs:
             camera_high_time = 4  # ms
-            camera_low_time = (self.sweep_times[channel_key] * 1000) - camera_high_time
         elif camera_waveform_repeat_num == 1:
             camera_high_time = (self.sweep_times[channel_key] * 1000) - (self.camera_delay * 1000)
-            camera_low_time = 4
         else:
             camera_high_time = (self.sweep_times[channel_key] * 1000) - 4
-            camera_low_time = 4
 
-        camera_delay_ms = self.camera_delay * 1000  # Convert seconds to ms
+        camera_delay_ms = int(self.camera_delay * 1000)
 
-        # TTL output line from config
-        ttl_channel = self.configuration["configuration"]["microscopes"][self.microscope_name]["daq"]["camera_trigger_out_line"]
+        ttl_channel = int(self.configuration["configuration"]["microscopes"][self.microscope_name]["daq"]["camera_trigger_out_line"])
 
-        # Construct ASI TTL command
-        asi_command = f'TTL X={ttl_channel} P={camera_high_time:.0f} D={camera_delay_ms:.0f}\r'
-
-        # Send command over serial
         try:
-            self.serial_port.write(asi_command.encode())
-            response = self.serial_port.readline().decode().strip()
-            logger.info(f"Sent camera trigger command: {asi_command.strip()}, Response: {response}")
+            response = TigerController.send_ttl_pulse(
+                channel=ttl_channel,
+                pulse_width_ms=int(camera_high_time),
+                delay_ms=camera_delay_ms
+            )
+            logger.info(f"Sent TTL command to ASI: {response}")
         except Exception:
-            logger.exception("Failed to send camera TTL command to ASI Tiger Controller.")
+            logger.exception("Failed to send TTL command to ASI.")
+
+
 
 
 
