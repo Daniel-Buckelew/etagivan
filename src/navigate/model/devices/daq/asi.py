@@ -154,7 +154,14 @@ class ASIDAQ(DAQBase, SerialDevice):
         except Exception:
             logger.exception("Failed to send camera TTL command to ASI Tiger Controller.")
 
-
+    def prepare_acquisition(self, channel_key: str) -> None:
+        self.create_analog_output_tasks(channel_key)
+        self.create_camera_task(channel_key)
+        TigerController.setup_control_loop(self.analog_outputs)
+        self.current_channel_key = channel_key
+        self.is_updating_analog_task = False
+        if self.wait_to_run_lock.locked():
+            self.wait_to_run_lock.release()
 
     def run_acquisition(self) -> None:
         try:
