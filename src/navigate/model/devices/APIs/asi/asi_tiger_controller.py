@@ -1056,3 +1056,13 @@ class TigerController:
 
         self.send_command(f"SAM {axis}={mode}")
         self.read_response()
+
+
+    def send_ttl_pulse(self, channel: int, pulse_width_ms: int, delay_ms: int) -> str:
+    
+        command = f"TTL X={channel} P={pulse_width_ms} D={delay_ms}"
+        self.send_command(command)
+        response = self.read_response()
+        return response
+    
+    
