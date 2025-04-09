@@ -35,6 +35,7 @@ import tkinter as tk
 from tkinter import ttk
 import logging
 from typing import Dict
+from pathlib import Path
 
 # Third Party Imports
 
@@ -399,30 +400,28 @@ class StackAcquisitionFrame(ttk.Labelframe):
         #: dict: Dictionary of the buttons in the frame
         self.buttons = {}
 
-        #: ttk.Frame: The frame that holds the position and slice settings
-        self.pos_slice = ttk.Frame(self)
+        #: dict: Dictionary of variables in the frame
+        self.additional_stack_setting_variables = {}
 
-        #: ttk.Frame: The frame that holds the laser cycling settings
-        self.cycling = ttk.Frame(self)
+        self.stack_frame = ttk.Frame(self)
+        self.additional_stack_frame = ttk.Frame(self)
+        self.stack_frame.grid(row=0, column=0, sticky=tk.NSEW)
+        self.additional_stack_frame.grid(row=1, column=0, sticky=tk.NSEW)
 
-        #: ttk.Frame: The frame that holds the z-stack device settings
-        self.z_device = ttk.Frame(self)
-
-        # Griding Each Holder Frame
-        self.pos_slice.grid(row=0, column=0, sticky=tk.NSEW)
-        self.cycling.grid(row=1, column=0, sticky=tk.NSEW)
-        self.z_device.grid(row=2, column=0, sticky=tk.NSEW)
+        self.rowconfigure(0, weight=1)
+        self.rowconfigure(1, weight=1)
+        self.columnconfigure(0, weight=1)
 
         # Start Pos Frame (Vertically oriented)
         start_names = ["start_position", "start_focus"]
         start_labels = ["Pos", "Foc"]
 
         #: ttk.Label: The label for the start position frame
-        self.start_label = ttk.Label(self.pos_slice, text="Start")
-        self.start_label.grid(row=0, column=0, sticky="S")
+        start_label = ttk.Label(self.stack_frame, text="Start")
+        start_label.grid(row=0, column=0, sticky="S")
         for i in range(len(start_names)):
             self.inputs[start_names[i]] = LabelInput(
-                parent=self.pos_slice,
+                parent=self.stack_frame,
                 label=start_labels[i],
                 input_class=ValidatedSpinbox,
                 input_var=tk.DoubleVar(),
@@ -435,7 +434,7 @@ class StackAcquisitionFrame(ttk.Labelframe):
 
         # Start button
         self.buttons["set_start"] = HoverButton(
-            self.pos_slice, text="Set Start Pos/Foc"
+            self.stack_frame, text="Set Start Pos/Foc"
         )
         self.buttons["set_start"].grid(row=3, column=0, sticky="N", pady=2, padx=(6, 0))
 
@@ -444,11 +443,11 @@ class StackAcquisitionFrame(ttk.Labelframe):
         end_labels = ["Pos", "Foc"]
 
         #: ttk.Label: The label for the end position
-        self.end_label = ttk.Label(self.pos_slice, text="End")
-        self.end_label.grid(row=0, column=1, sticky="S")
+        end_label = ttk.Label(self.stack_frame, text="End")
+        end_label.grid(row=0, column=1, sticky="S")
         for i in range(len(end_names)):
             self.inputs[end_names[i]] = LabelInput(
-                parent=self.pos_slice,
+                parent=self.stack_frame,
                 label=end_labels[i],
                 input_class=ValidatedSpinbox,
                 input_var=tk.DoubleVar(),
@@ -460,14 +459,14 @@ class StackAcquisitionFrame(ttk.Labelframe):
             self.inputs[end_names[i]].label.grid(sticky="N")
 
         # End Button
-        self.buttons["set_end"] = HoverButton(self.pos_slice, text="Set End Pos/Foc")
+        self.buttons["set_end"] = HoverButton(self.stack_frame, text="Set End Pos/Foc")
         self.buttons["set_end"].grid(row=3, column=1, sticky="N", pady=2, padx=(6, 0))
 
         #: ttk.Label: The label for the step size
-        self.step_size_label = ttk.Label(self.pos_slice, text="Step Size")
-        self.step_size_label.grid(row=0, column=2, sticky="S")
+        step_size_label = ttk.Label(self.stack_frame, text="Step Size")
+        step_size_label.grid(row=0, column=2, sticky="S")
         self.inputs["step_size"] = LabelInput(
-            parent=self.pos_slice,
+            parent=self.stack_frame,
             input_class=ValidatedSpinbox,
             input_var=tk.DoubleVar(),
             input_args={"width": 6},
@@ -476,58 +475,96 @@ class StackAcquisitionFrame(ttk.Labelframe):
 
         # Slice Frame (Vertically oriented)
         #: ttk.Label: The label to add empty space to the slice frame
-        self.empty_label = ttk.Label(self.pos_slice, text=" ")
+        self.empty_label = ttk.Label(self.stack_frame, text=" ")
         self.empty_label.grid(row=0, column=3, sticky="N")
-        slice_names = ["number_z_steps", "abs_z_start", "abs_z_end"]
-        slice_labels = [
-            "Z Slices".ljust(20),
-            "Abs Z Start".ljust(20),
-            "Abs Z Stop".ljust(20),
-        ]
-        for i in range(len(slice_names)):
-            self.inputs[slice_names[i]] = LabelInput(
-                parent=self.pos_slice,
-                label=slice_labels[i],
-                input_class=ValidatedSpinbox,
-                input_var=tk.DoubleVar(),
-                input_args={"width": 6},
-            )
-            self.inputs[slice_names[i]].widget.configure(state="disabled")
-            self.inputs[slice_names[i]].grid(
-                row=i + 1, column=3, sticky="NSEW", pady=2, padx=(6, 0)
-            )
-        uniform_grid(self.pos_slice)
-
-        # Laser Cycling Settings
-        self.inputs["cycling"] = LabelInput(
-            parent=self.cycling,
-            label="Laser Cycling Settings".ljust(30),
-            input_class=ValidatedCombobox,
-            input_var=tk.StringVar(),
-            input_args={"width": 8},
+        self.inputs["number_z_steps"] = LabelInput(
+            parent=self.stack_frame,
+            label="Z Slices".ljust(20),
+            input_class=ValidatedSpinbox,
+            input_var=tk.DoubleVar(),
+            input_args={"width": 6},
         )
-        self.inputs["cycling"].state(["readonly"])
-        self.inputs["cycling"].grid(row=0, column=0, sticky="NSEW", padx=6, pady=5)
+        self.inputs["number_z_steps"].widget.configure(state="disabled")
+        self.inputs["number_z_steps"].grid(
+            row=1, column=3, sticky="NSEW", pady=2, padx=(6, 0)
+        )
 
+        # devices
         self.inputs["z_device"] = LabelInput(
-            parent=self.z_device,
+            parent=self.stack_frame,
             label="Z-Stack Device".ljust(30),
             input_class=ValidatedCombobox,
             input_var=tk.StringVar(),
             input_args={"width": 8},
         )
         self.inputs["z_device"].state(["disabled", "readonly"])
-        self.inputs["z_device"].grid(row=0, column=0, sticky="NSEW", padx=6, pady=5)
+        self.inputs["z_device"].grid(row=4, column=0, columnspan=2, sticky="NSEW", padx=6, pady=5)
+
+        self.inputs["f_device"] = LabelInput(
+            parent=self.stack_frame,
+            label="Focus Device".ljust(30),
+            input_class=ValidatedCombobox,
+            input_var=tk.StringVar(),
+            input_args={"width": 8},
+        )
+        self.inputs["f_device"].state(["disabled", "readonly"])
+        self.inputs["f_device"].grid(row=5, column=0, columnspan=2, sticky="NSEW", padx=6, pady=5)
+
+        # Laser Cycling Settings
+        self.inputs["cycling"] = LabelInput(
+            parent=self.stack_frame,
+            label="Laser Cycling Settings".ljust(25),
+            input_class=ValidatedCombobox,
+            input_var=tk.StringVar(),
+            input_args={"width": 8},
+        )
+        self.inputs["cycling"].state(["readonly"])
+        self.inputs["cycling"].grid(row=6, column=0, columnspan=2, sticky="NSEW", padx=6, pady=5)
+
+        self.cubic_frame = ttk.Frame(self.stack_frame)
+        self.cubic_frame.grid(row=3, rowspan=3, column=2, columnspan=2, sticky=tk.NE, padx=(5, 15), pady=(5, 0))
+        
+        image_directory = Path(__file__).resolve().parent
+
+        self.image = tk.PhotoImage(
+            file=image_directory.joinpath("images", "cubic_bottom_to_top.png")
+        )
+
+        # Use ttk.Label
+        self.cubic_image_label = ttk.Label(self.cubic_frame, image=self.image)
+        self.cubic_image_label.grid(row=0, rowspan=2, column=0, columnspan=2, sticky=tk.NSEW, padx=(5, 0), pady=(5, 0))
+
+        self.inputs["top"] = LabelInput(
+            parent=self.cubic_frame,
+            label="",
+            input_class=ttk.Entry,
+            input_var=tk.DoubleVar(),
+            input_args={"width": 6},
+        )
+        self.inputs["top"].grid(row=0, column=2, sticky=tk.EW, padx=0, pady=(15, 0))
+        self.inputs["top"].widget.configure(state="disabled")
+
+        self.inputs["bottom"] = LabelInput(
+            parent=self.cubic_frame,
+            label="",
+            input_class=ttk.Entry,
+            input_var=tk.DoubleVar(),
+            input_args={"width": 6},
+        )
+        self.inputs["bottom"].grid(row=1, column=2, sticky=tk.EW, padx=0, pady=(10, 0))
+        self.inputs["bottom"].widget.configure(state="disabled")
 
         self.inputs["z_offset"] = LabelInput(
-            parent=self.z_device,
+            parent=self.additional_stack_frame,
             label="Z Offset".ljust(30),
             input_class=ValidatedSpinbox,
             input_var=tk.DoubleVar(),
             input_args={"width": 8},
         )
         self.inputs["z_offset"].widget.configure(state="disabled")
-        self.inputs["z_offset"].grid(row=1, column=0, sticky="NSEW", padx=6, pady=5)
+        self.inputs["z_offset"].grid(row=0, column=0, columnspan=2, sticky="NSEW", padx=6, pady=5)
+
+        uniform_grid(self)
 
         # Initialize DescriptionHovers
         self.inputs["step_size"].widget.hover.setdescription("The Z-stack step size.")
@@ -565,13 +602,123 @@ class StackAcquisitionFrame(ttk.Labelframe):
         self.inputs["number_z_steps"].widget.hover.setdescription(
             "The number of Z slices in the Z stack per channel."
         )
-        self.inputs["abs_z_start"].widget.hover.setdescription(
-            "The absolute Z start position for the Z-stack."
-        )
-        self.inputs["abs_z_end"].widget.hover.setdescription(
-            "The absolute Z end position for the Z-stack."
-        )
+        # self.inputs["abs_z_start"].widget.hover.setdescription(
+        #     "The absolute Z start position for the Z-stack."
+        # )
+        # self.inputs["abs_z_end"].widget.hover.setdescription(
+        #     "The absolute Z end position for the Z-stack."
+        # )
 
+    def create_additional_stack_widgets(self, axes: list, devices: dict) -> None:
+        """Create the additional stack widgets.
+
+        This function creates the additional stack widgets for the
+        stack acquisition settings.
+
+        Parameters
+        ----------
+        axes : list
+            The list of axes to create the widgets for.
+        devices : dict
+            The dictionary of devices to create the widgets for. {axis: device_name}
+        """
+        # Create the additional stack widgets here
+        for widget in self.additional_stack_frame.winfo_children():
+            widget.destroy()
+        self.additional_stack_setting_variables = {}
+        self.selected_axes_num = 0
+
+        if len(axes) <= 2:
+            return
+        
+        self.devices_dict = devices
+
+        # Create the additional stack widgets here
+        separator = ttk.Separator(self.additional_stack_frame, orient=tk.HORIZONTAL)
+        separator.grid(row=0, column=0, columnspan=10, sticky=tk.NSEW, pady=(5, 0))
+
+        # Stacking on axes
+        label = ttk.Label(self.additional_stack_frame, text="Stacking on axes:")
+        label.grid(row=1, column=0, sticky=tk.NSEW, padx=(5, 30), pady=(5, 0))
+
+        for axis in axes:
+            self.additional_stack_setting_variables[f"stack_{axis}"] = tk.BooleanVar()
+            self.inputs[f"stack_{axis}"] = ttk.Checkbutton(
+                self.additional_stack_frame,
+                text=axis.upper(),
+                command=self.update_setting_widgets(axis),
+                variable=self.additional_stack_setting_variables[f"stack_{axis}"],
+            )
+            self.inputs[f"stack_{axis}"].grid(row=1, column=axes.index(axis) + 1, sticky=tk.NW, padx=(5, 10), pady=(5, 0))
+
+        self.additional_stack_setting_frame = ttk.Frame(self.additional_stack_frame)
+        self.additional_stack_setting_frame.grid(row=2, column=0, columnspan=10, sticky=tk.NSEW, padx=(5, 30), pady=(5, 0))
+        self.additional_stack_setting_labels = {}
+
+        for i, label_text in enumerate(["Axis", "Device", "Offset (" + "\N{GREEK SMALL LETTER MU}" + "m)"]): #, "Step", "Slice Num"]):
+            label = ttk.Label(self.additional_stack_setting_frame, text=label_text)
+            label.grid(row=0, column=i, sticky=tk.NSEW, padx=10, pady=2)
+        for i, axis in enumerate(axes):
+            label = ttk.Label(self.additional_stack_setting_frame, text=axis.upper())
+            label.grid(row=i+1, column=0, sticky=tk.NSEW, padx=10, pady=2)
+            label.grid_remove()
+            self.additional_stack_setting_labels[axis] = label
+            # Create the device label
+            label = ttk.Label(self.additional_stack_setting_frame, text=self.devices_dict[axis])
+            label.grid(row=i+1, column=1, sticky=tk.NSEW, padx=10, pady=2)
+            label.grid_remove()
+            self.additional_stack_setting_labels[f"{axis}_device"] = label
+            # Create the offset spinbox
+            index_name = f"{axis}_offset"
+            self.additional_stack_setting_variables[index_name] = tk.DoubleVar()
+            self.inputs[index_name] = ValidatedSpinbox(
+                master=self.additional_stack_setting_frame,
+                from_=-10000,
+                to=10000,
+                textvariable=self.additional_stack_setting_variables[index_name]
+            )
+            self.inputs[index_name].grid(row=i+1, column=2, sticky=tk.NSEW, padx=10, pady=2)
+            self.inputs[index_name].grid_remove()
+
+        self.additional_stack_setting_frame.grid_remove()
+
+        uniform_grid(self.additional_stack_frame)
+
+    def update_setting_widgets(self, axis: str) -> None:
+        """Update the setting widgets based on the movement mode.
+
+        This function updates the setting widgets based on the
+        movement mode selected.
+
+        Parameters
+        ----------
+        axis : str
+            The axis to update the widgets for.
+        """
+        def func(*args: list) -> None:
+            """Inner function to update the widgets.
+
+            Parameters
+            ----------
+            *args : list
+                The arguments passed to the function.
+            """
+            if self.additional_stack_setting_variables[f"stack_{axis}"].get():
+                self.additional_stack_setting_frame.grid()
+                self.inputs[f"{axis}_offset"].grid()
+                self.additional_stack_setting_labels[axis].grid()
+                self.additional_stack_setting_labels[f"{axis}_device"].grid()
+                self.selected_axes_num += 1
+            else:
+                self.inputs[f"{axis}_offset"].grid_remove()
+                self.additional_stack_setting_labels[axis].grid_remove()
+                self.additional_stack_setting_labels[f"{axis}_device"].grid_remove()
+                self.selected_axes_num -= 1
+                if self.selected_axes_num <= 0:
+                    self.additional_stack_setting_frame.grid_remove()
+
+        return func
+    
     # Getters
     def get_variables(self) -> dict:
         """Returns a dictionary of the variables in the widget
