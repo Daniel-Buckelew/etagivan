@@ -245,7 +245,7 @@ class ChannelsTabController(GUIController):
             devices = self.stack_acq_widgets[f"{axis}_device"].widget["values"]
             idx = 0
             for i, device in enumerate(devices):
-                if device.endswith(self.microscope_state_dict.get(f"primary_stack_{axis}_axis", axis)):
+                if device.endswith(self.microscope_state_dict.get(f"primary_{axis}_axis", axis)):
                     idx = i
                     break
             self.stack_acq_widgets[f"{axis}_device"].widget.current(idx)
@@ -876,8 +876,8 @@ class ChannelsTabController(GUIController):
         primary_f_stage = self.stack_acq_vals["f_device"].get()
         primary_f_axis = primary_f_stage.split(" - ")[1]
 
-        self.microscope_state_dict["primary_stack_z_axis"] = primary_z_axis
-        self.microscope_state_dict["primary_stack_f_axis"] = primary_f_axis
+        self.microscope_state_dict["primary_z_axis"] = primary_z_axis
+        self.microscope_state_dict["primary_f_axis"] = primary_f_axis
 
         secondary_stack_settings= {}
         variable_dict = self.view.stack_acq_frame.additional_stack_setting_variables

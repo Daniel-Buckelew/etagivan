@@ -970,6 +970,18 @@ class ZStackAcquisition:
 
         self.stack_cycling_mode = microscope_state["stack_cycling_mode"]
 
+        self.stage_axes = list(self.model.active_microscope.stages.keys())
+        # primary z and f axes, secondary stack settings
+        self.primary_z_axis = microscope_state.get("primary_z_axis", "z")
+        self.primary_f_axis = microscope_state.get("primary_f_axis", "f")
+        self.secondary_stack_settings = microscope_state.get("secondary_stack_settings", {})
+        self.tiling_axes = list(
+            set(self.stage_axes) - 
+            set([self.primary_z_axis, self.primary_f_axis]) - 
+            set(self.secondary_stack_settings.keys())
+        )
+        
+
         # get available channels
         self.channels = len(
             list(
@@ -1012,31 +1024,21 @@ class ZStackAcquisition:
             self.position_headers = self.model.configuration["multi_positions"][0]
             self.positions = self.model.configuration["multi_positions"][1:]
         else:
-            self.position_headers = ["X", "Y", "Z", "THETA", "F"]
-            self.positions = [
-                [
-                    float(pos_dict["x_pos"]),
-                    float(pos_dict["y_pos"]),
-                    float(
-                        microscope_state.get(
-                            "stack_z_origin",
-                            pos_dict["z_pos"],
-                        )
-                        if not self.get_origin
-                        else pos_dict["z_pos"]
-                    ),
-                    float(pos_dict["theta_pos"]),
-                    float(
-                        microscope_state.get(
-                            "stack_focus_origin",
-                            pos_dict["f_pos"],
-                        )
-                        if not self.get_origin
-                        else pos_dict["f_pos"]
-                    ),
-                ]
-            ]
-        self.axes_index = [self.position_headers.index(axis.upper()) for axis in ["x", "y", "z", "theta", "f"]]
+            self.position_headers = [axis.upper() for axis in self.stage_axes]
+            self.positions = [[float(pos_dict[f"{axis}_pos"]) for axis in self.stage_axes]]
+
+            # get origin for primary z and f
+            if not self.get_origin:
+                self.positions[0][self.stage_axes.index(self.primary_z_axis)] = microscope_state.get(
+                    "stack_z_origin",
+                    pos_dict[f"{self.primary_z_axis}_pos"]
+                )
+                self.positions[0][self.stage_axes.index(self.primary_f_axis)] = microscope_state.get(
+                    "stack_f_origin",
+                    pos_dict[f"{self.primary_f_axis}_pos"]
+                )
+
+        self.axes_index = [self.position_headers.index(axis.upper()) for axis in self.stage_axes]
 
         # Setup next channel down here, to ensure defocus isn't merged into
         # restore f_pos, positions
@@ -1054,7 +1056,7 @@ class ZStackAcquisition:
         )
         self.current_position_idx = 0
         self.current_position = dict(
-            zip(["x", "y", "z", "theta", "f"], [self.positions[0][i] for i in self.axes_index])
+            zip(self.stage_axes, [self.positions[0][i] for i in self.axes_index])
         )
         self.z_position_moved_time = 0
         self.need_to_move_new_position = True
@@ -1095,14 +1097,14 @@ class ZStackAcquisition:
             self.pre_position = self.current_position
             self.current_position = dict(
                 zip(
-                    ["x", "y", "z", "theta", "f"],
+                    self.stage_axes,
                     [self.positions[self.current_position_idx][i] for i in self.axes_index],
                 )
             )
 
             # calculate first z, f position
-            self.current_z_position = self.start_z_position + self.current_position["z"]
-            self.current_focus_position = self.start_focus + self.current_position["f"]
+            self.current_z_position = self.start_z_position + self.current_position[self.primary_z_axis]
+            self.current_focus_position = self.start_focus + self.current_position[self.primary_f_axis]
             if self.defocus is not None:
                 self.current_focus_position += self.defocus[
                     self.current_channel_in_list
@@ -1116,28 +1118,25 @@ class ZStackAcquisition:
                         f"{ax}_abs",
                         self.current_position[ax],
                     ),
-                    ["x", "y", "theta"],
+                    self.tiling_axes,
                 )
             )
 
             if self.current_position_idx > 0:
-                delta_x = self.current_position["x"] - self.pre_position["x"]
-                delta_y = self.current_position["y"] - self.pre_position["y"]
-                delta_z = (
-                    self.current_position["z"]
-                    - self.pre_position["z"]
+                delta_distances = [self.current_position[axis] - self.pre_position[axis] for axis in self.tiling_axes if axis != "theta"]
+                delta_distances.append(
+                    self.current_position[self.primary_z_axis]
+                    - self.pre_position[self.primary_z_axis]
                     + self.z_stack_distance
                 )
-                delta_f = (
-                    self.current_position["f"]
-                    - self.pre_position["f"]
+                delta_distances.append(
+                    self.current_position[self.primary_f_axis]
+                    - self.pre_position[self.primary_f_axis]
                     + self.f_stack_distance
                 )
             else:
-                delta_x = 0
-                delta_y = 0
-                delta_z = 0
-                delta_f = 0
+                axes_num = len(self.tiling_axes) + 2 - (1 if "theta" in self.tiling_axes else 0)
+                delta_distances = [0] * axes_num
 
             # displacement = [delta_z, delta_f, delta_x, delta_y]
             # Check the distance between current position and previous position,
@@ -1147,7 +1146,7 @@ class ZStackAcquisition:
 
             self.should_pause_data_thread = any(
                 distance > self.stage_distance_threshold
-                for distance in [delta_x, delta_y, delta_z, delta_f]
+                for distance in delta_distances
             )
             if self.should_pause_data_thread:
                 self.model.pause_data_thread()
@@ -1163,11 +1162,14 @@ class ZStackAcquisition:
                 self.model.pause_data_thread()
                 logger.info("Data thread paused.")
 
+            stack_pos = [
+                (f"{self.primary_z_axis}_abs", self.current_z_position),
+                (f"{self.primary_f_axis}_abs", self.current_focus_position)
+            ]
+            for axis, offset in self.secondary_stack_settings.items():
+                stack_pos.append((f"{axis}_abs", self.current_z_position + offset))
             self.model.move_stage(
-                {
-                    "z_abs": self.current_z_position,
-                    "f_abs": self.current_focus_position,
-                },
+                dict(stack_pos),
                 wait_until_done=True,
             )
 
@@ -1217,8 +1219,8 @@ class ZStackAcquisition:
         if self.z_position_moved_time >= self.number_z_steps:
             self.z_position_moved_time = 0
             # calculate first z, f position
-            self.current_z_position = self.start_z_position + self.current_position["z"]
-            self.current_focus_position = self.start_focus + self.current_position["f"]
+            self.current_z_position = self.start_z_position + self.current_position[self.primary_z_axis]
+            self.current_focus_position = self.start_focus + self.current_position[self.primary_f_axis]
             if (
                 self.z_stack_distance > self.stage_distance_threshold
                 or self.f_stack_distance > self.stage_distance_threshold
@@ -1240,9 +1242,15 @@ class ZStackAcquisition:
 
         if self.current_position_idx >= len(self.positions):
             self.current_position_idx = 0
-            # restore z
+            # restore z, f, and secondary z if any
+            stack_pos = [
+                (f"{self.primary_z_axis}_abs", self.restore_z),
+                (f"{self.primary_f_axis}_abs", self.restore_f)
+            ]
+            for axis, offset in self.secondary_stack_settings.values():
+                stack_pos.append((f"{axis}_abs", self.restore_z + offset))
             self.model.move_stage(
-                {"z_abs": self.restore_z, "f_abs": self.restore_f},
+                dict(stack_pos),
                 wait_until_done=False,
             )  # Update position
             return True
