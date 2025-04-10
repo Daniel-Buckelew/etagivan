@@ -481,15 +481,15 @@ class LoopByCount:
                 self.steps = int(self.steps)
         return self.steps
     
-    def syncronize(self, thread_name):
-        """Syncronize signal and data function
+    def synchronize(self, thread_name):
+        """Synchronize signal and data function
         
         Parameters:
         ----------
         thread_name : bool
             Signal or Data
         """
-        logger.debug(f"LoopByCount-Syncronize {thread_name}")
+        logger.debug(f"LoopByCount-Synchronize {thread_name}")
         with self.end_count as end_count:
             if end_count.value == 1:
                 self.initialized.value = False
@@ -502,7 +502,7 @@ class LoopByCount:
 
         self.end_count.value = 0
 
-        logger.debug(f"LoopByCount-Syncronize {thread_name} ends.")
+        logger.debug(f"LoopByCount-Synchronize {thread_name} ends.")
         
 
 
