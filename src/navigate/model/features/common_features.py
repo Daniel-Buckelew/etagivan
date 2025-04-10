@@ -1246,7 +1246,7 @@ class ZStackAcquisition:
                 (f"{self.primary_z_axis}_abs", self.restore_z),
                 (f"{self.primary_f_axis}_abs", self.restore_f)
             ]
-            for axis, offset in self.secondary_stack_settings.values():
+            for axis, offset in self.secondary_stack_settings.items():
                 stack_pos.append((f"{axis}_abs", self.restore_z + offset))
             self.model.move_stage(
                 dict(stack_pos),
