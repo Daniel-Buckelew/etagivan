@@ -136,6 +136,31 @@ class ASIRemoteFocus(SerialDevice):
         return tiger_controller
 
     def adjust(self, exposure_times, sweep_times, offset=None):
+        """Adjusts the remote focus waveform based on the readout time.
+
+        Parameters
+        ----------
+        exposure_times : dict
+            Dictionary of exposure times for each selected channel
+        sweep_times : dict
+            Dictionary of sweep times for each selected channel
+        offset : float, optional
+            Offset value for the remote focus waveform, by default None
+
+        Returns
+        -------
+        waveform : numpy.ndarray
+            Waveform for the remote focus device.
+        """
+
+        # to determine if the waveform has to be triangular
+        sensor_mode = self.configuration["experiment"]["CameraParameters"][
+            self.microscope_name
+        ]["sensor_mode"]
+        readout_direction = self.configuration["experiment"]["CameraParameters"][
+            self.microscope_name
+        ]["readout_direction"]
+
         microscope_state = self.configuration["experiment"]["MicroscopeState"]
         waveform_constants = self.configuration["waveform_constants"]
         imaging_mode = microscope_state["microscope_name"]
@@ -210,16 +235,54 @@ class ASIRemoteFocus(SerialDevice):
                         offset = self.remote_focus_min_voltage
                     amplitude = offset - self.remote_focus_min_voltage
 
-                # Calculate the Ramp Waveform
-                exposure_time=exposure_time,
-                sweep_time=self.sweep_time,
-                remote_focus_delay=remote_focus_delay,
-                camera_delay=self.camera_delay,
-                fall=remote_focus_ramp_falling,
-                amplitude=remote_focus_amplitude,
-                offset=remote_focus_offset,
+                # Calculate the Waveforms
+                if sensor_mode == "Light-Sheet" and (
+                    readout_direction == "Bidirectional"
+                    or readout_direction == "Rev. Bidirectional"
+                ):
+                    sweep_time=self.sweep_time,
+                    amplitude=remote_focus_amplitude,
+                    offset=remote_focus_offset,
+                
+                    self.triangle(sweep_time, amplitude, offset)
 
-                self.ramp(exposure_time, sweep_time, remote_focus_delay, camera_delay, fall, amplitude, offset)
+                else:
+                    exposure_time=exposure_time,
+                    sweep_time=self.sweep_time,
+                    remote_focus_delay=remote_focus_delay,
+                    camera_delay=self.camera_delay,
+                    fall=remote_focus_ramp_falling,
+                    amplitude=remote_focus_amplitude,
+                    offset=remote_focus_offset,
+
+                    self.ramp(exposure_time, sweep_time, remote_focus_delay, camera_delay, fall, amplitude, offset)
+    
+
+    def triangle(
+        self,
+        sweep_time=0.24,
+        amplitude=1,
+        offset=0,
+    ):
+        """Sends the tiger controller commands to initiate the triangle wave
+
+        Parameters
+        ----------
+        sweep_time : Float
+            Unit - Seconds
+        amplitude : Float
+            Unit - Volts
+        offset : Float
+            Unit - Volts
+        """
+
+        period = int(sweep_time * 1000)
+        amplitude *= 1000
+        offset *= 1000
+
+        self.remote_focus.SA_waveform(self.axis, 1, amplitude, offset, period)
+        self.remote_focus.SAM(self.axis, 1)
+
 
     def ramp(
         self,
@@ -285,7 +348,7 @@ class ASIRemoteFocus(SerialDevice):
         amplitude *= 1000
         offset *= 1000
 
-        self.remote_focus.SA_waveform(self.axis, 1, amplitude, offset, period)
+        self.remote_focus.SA_waveform(self.axis, 160, amplitude, offset, period)
         self.remote_focus.SAM(self.axis, 2)
         time.sleep(_delay_time)
 
