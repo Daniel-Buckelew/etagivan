@@ -405,7 +405,8 @@ class ChannelsTabController(GUIController):
                 self.stack_acq_widgets[widget_name]["state"] = state
             elif widget_name.endswith("_offset"):
                 self.stack_acq_widgets[widget_name]["state"] = state
-        self.update_additional_stacking_axes()
+        if state == "normal":
+            self.update_additional_stacking_axes()
 
         self.view.stack_timepoint_frame.save_check["state"] = (
             "normal" if image_mode == "single" and mode == "stop" else state
