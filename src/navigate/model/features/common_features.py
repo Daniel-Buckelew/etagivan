@@ -344,7 +344,7 @@ class LoopByCount:
     dynamically determining it from configuration references.
     """
 
-    def __init__(self, model, steps=1):
+    def __init__(self, model, steps=1, step_by_frame=False):
         """Initialize the LoopByCount class.
 
         Parameters:
@@ -354,12 +354,14 @@ class LoopByCount:
         steps : int or str, optional
             The number of steps or a configuration reference to determine the loop
             count. Default is 1.
+        step_by_frame : bool
+            Count by number of frames receieved/ the number of entering this node.
         """
         #: MicroscopeModel: The microscope model associated with the loop control.
         self.model = model
 
         #: bool: A boolean value indicating whether to step by frame or by step.
-        self.step_by_frame = False if type(steps) is str else True
+        self.step_by_frame = step_by_frame
 
         #: int: The remaining number of steps or frames.
         self.steps = steps
@@ -373,6 +375,10 @@ class LoopByCount:
         #: bool: Initialization flag
         self.initialized = VariableWithLock(bool)
         self.initialized.value = False
+
+        #: int: signal/data end num
+        self.end_count = VariableWithLock(int)
+        self.end_count.value = 0
 
         #: dict: A dictionary defining the configuration for the loop control process.
         self.config_table = {
@@ -417,8 +423,7 @@ class LoopByCount:
         """
         self.signals -= 1
         if self.signals <= 0:
-            self.signals = self.steps
-            # self.initialized.value = False
+            self.syncronize("signal")
             return False
         return True
 
@@ -444,8 +449,7 @@ class LoopByCount:
         else:
             self.data_frames -= 1
         if self.data_frames <= 0:
-            self.data_frames = self.steps
-            # self.initialized.value = False
+            self.syncronize("data")
             return False
         return True
 
@@ -476,6 +480,30 @@ class LoopByCount:
             else:
                 self.steps = int(self.steps)
         return self.steps
+    
+    def syncronize(self, thread_name):
+        """Syncronize signal and data function
+        
+        Parameters:
+        ----------
+        thread_name : bool
+            Signal or Data
+        """
+        logger.debug(f"LoopByCount-Syncronize {thread_name}")
+        with self.end_count as end_count:
+            if end_count.value == 1:
+                self.initialized.value = False
+                end_count.value += 1
+                return
+            end_count.value += 1
+
+        while self.end_count.value < 2:
+            time.sleep(0.001)
+
+        self.end_count.value = 0
+
+        logger.debug(f"LoopByCount-Syncronize {thread_name} ends.")
+        
 
 
 class PrepareNextChannel:
