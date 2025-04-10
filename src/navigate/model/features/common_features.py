@@ -1019,7 +1019,6 @@ class ZStackAcquisition:
         self.restore_f = pos_dict["f_pos"]
 
         # position: x, y, z, theta, f
-        # TODO: Update axes headers and get positions accordingly
         if bool(microscope_state["is_multiposition"]) or self.force_multiposition:
             self.position_headers = self.model.configuration["multi_positions"][0]
             self.positions = self.model.configuration["multi_positions"][1:]
@@ -1034,7 +1033,7 @@ class ZStackAcquisition:
                     pos_dict[f"{self.primary_z_axis}_pos"]
                 )
                 self.positions[0][self.stage_axes.index(self.primary_f_axis)] = microscope_state.get(
-                    "stack_f_origin",
+                    "stack_focus_origin",
                     pos_dict[f"{self.primary_f_axis}_pos"]
                 )
 

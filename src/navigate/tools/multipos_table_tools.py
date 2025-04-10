@@ -178,6 +178,7 @@ def compute_tiles_from_bounding_box(
         additional_coordinates.append(dim_vector(values["start"], values["tiles"], values["step"]))
 
     if f_track_with_z:
+        # TODO: update it later. We are not using this option in navigate now.
         # grid out the 4D space...
         x, y, z, t = np.meshgrid(xs, ys, zs, thetas)
 
@@ -187,15 +188,15 @@ def compute_tiles_from_bounding_box(
             :lz
         ]  # This only works if len(fs) = len(zs)
         # TODO: Don't clip f. Practically fine for now.
+        result = [x, y, z, t, f]
     else:
         result = np.meshgrid(xs, ys, zs, thetas, fs, *additional_coordinates)
 
     axes = ["x", "y", "z", "theta", "f"]
     axes.extend(list(additional_settings.keys()))
-    table_values = np.vstack([v.ravel() for v in result]).T
+    tiles = np.vstack([v.ravel() for v in result]).T
 
-    return (axes, table_values)
-    # return np.vstack([x.ravel(), y.ravel(), z.ravel(), t.ravel(), f.ravel()]).T
+    return (axes, tiles)
 
 
 def calc_num_tiles(dist, overlap, roi_length):

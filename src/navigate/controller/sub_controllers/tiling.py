@@ -308,7 +308,6 @@ class TilingWizardController(GUIController):
             tiling_setting[f"{axis}_length"] = fov
 
         tiling_setting["theta_start"] = float(self.stage_position_vars["theta"].get())
-        # tiling_setting["theta_stop"] = float(self.stage_position_vars["theta"].get())
         tiling_setting["theta_tiles"] = 1
         tiling_setting["theta_length"] = 0
 
