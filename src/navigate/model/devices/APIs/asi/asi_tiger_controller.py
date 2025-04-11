@@ -1013,6 +1013,18 @@ class TigerController:
         self.send_command(f'CCA Z=0\r')
         self.read_response()
 
+    def logic_cell_on(self, axis : str):
+        self.send_command(f'M E = {axis}\r')
+        self.read_response()
+        self.send_command(f'CCA Z=1\r')
+        self.read_response()
+
+    def logic_cell_off(self, axis :str):
+        self.send_command(f'M E = {axis}\r')
+        self.read_response()
+        self.send_command(f'CCA Z=0\r')
+        self.read_response()
+
     def SA_waveform(self, axis:str, waveform=0, amplitude=1000, offset=500, frequency=1000):
         """Programs the analog waveforms using SAA, SAO, and SAP
         Default waveform is a sawtooth waveform with an amplitude of 1V with an offset of 0.5V

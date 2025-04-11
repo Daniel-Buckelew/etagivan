@@ -37,15 +37,9 @@ import traceback
 import time
 from typing import Union, Dict, Any
 
-# Third Party Imports
-import nidaqmx
-import nidaqmx.constants
-import nidaqmx.task
-import numpy as np
-import serial
 # Local Imports
-from navigate.model.devices.remote_focus.asi import remote_focus
-from navigate.model.devices.galvo.asi import galvo
+from navigate.model.devices.remote_focus.asi import ASIRemoteFocus
+from navigate.model.devices.galvo.asi import ASIGalvo
 from navigate.model.devices.daq.base import DAQBase
 from navigate.model.devices.device_types import SerialDevice
 from navigate.model.devices.APIs.asi.asi_tiger_controller import TigerController
@@ -93,6 +87,10 @@ class ASIDAQ(DAQBase, SerialDevice):
         #: str: Trigger mode. Self-trigger or external-trigger.
         self.trigger_mode = "self-trigger"
 
+        self.remote_focus = ASIRemoteFocus
+
+        self.galvo = ASIGalvo
+
     @classmethod
     def connect(cls, port, baudrate=115200, timeout=0.25):
         """Build ASILaser Serial Port connection
@@ -118,9 +116,6 @@ class ASIDAQ(DAQBase, SerialDevice):
             logger.error("ASI stage connection failed.")
             raise Exception("ASI stage connection failed.")
         return tiger_controller
-
-    
-
 
     def create_camera_task(self, channel_key: str) -> None:
         """
@@ -154,11 +149,9 @@ class ASIDAQ(DAQBase, SerialDevice):
         except Exception:
             logger.exception("Failed to send TTL command to ASI.")
 
-
-
     def prepare_acquisition(self, channel_key: str) -> None:
         self.create_analog_output_tasks(channel_key)
-        self.create_camera_task(channel_key)
+        # self.create_camera_task(channel_key)
         TigerController.setup_control_loop(self.analog_outputs)
         self.current_channel_key = channel_key
         self.is_updating_analog_task = False
@@ -166,14 +159,14 @@ class ASIDAQ(DAQBase, SerialDevice):
         #     self.wait_to_run_lock.release()
 
     def run_acquisition(self) -> None:
-        
+
         # if self.is_updating_analog_task:
         #     self.wait_to_run_lock.acquire()
         #     self.wait_to_run_lock.release()
 
         try:
         #send logic card on to cell 1
-            TigerController.logic_card_on(1)
+            TigerController.logic_cell_on("1")
         except Exception:
             logger.debug("Cannot turn on")
             pass
@@ -181,7 +174,7 @@ class ASIDAQ(DAQBase, SerialDevice):
     def stop_acquisition(self) -> None:
         #send logic card off to cell 1
         try:
-            TigerController.logic_card_off(1)                       
+            TigerController.logic_cell_off("1")                       
         except Exception:
             logger.debug("Cannot turn off")
             pass
