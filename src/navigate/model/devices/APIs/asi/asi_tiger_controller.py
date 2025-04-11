@@ -1047,6 +1047,7 @@ class TigerController:
         if channels:
             commands = [
                 'm e =42',
+                'cca y = 1',
                 'cca z=43',
                 'm e = 43',
                 'cca y = 1',
