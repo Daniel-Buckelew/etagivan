@@ -998,7 +998,7 @@ class TigerController:
         self.read_response()
         self.send_command(f'CCA Z=64\r')
         self.read_response()
-
+        
     def logic_card_off(self, axis : str):
         """Turn off the logic card
 
@@ -1013,20 +1013,22 @@ class TigerController:
         self.send_command(f'CCA Z=0\r')
         self.read_response()
 
-    def SA_waveform(self, axis:str, waveform=0, amplitude=1000, offset=500):
+    def SA_waveform(self, axis:str, waveform=0, amplitude=1000, offset=500, frequency=1000):
         """Programs the analog waveforms using SAA, SAO, and SAP
         Default waveform is a sawtooth waveform with an amplitude of 1V with an offset of 0.5V
 
         Parameters
         ----------
         axis: str
-            Laser axis
+            Tiger Controller axis
         waveform: 
             Type of waveform pattern according to https://asiimaging.com/docs/commands/sap
         amplitude:
-            amplitude of the waveform
+            amplitude of the waveform in mV
         offset:
-            sets the center position of the waveform        
+            sets the center position of the waveform in mV
+        frequency:
+            sets the period of the waveform in milliseconds       
         """
 
         "Verify if this is for synchronous or asynchronous"
@@ -1036,6 +1038,7 @@ class TigerController:
         self.read_response()
         self.send_command(f"SAO {axis}={offset}")
         self.read_response()
+        self.send_command(f"SAF {axis}={frequency}")
 
     def SAM(self, axis: str, mode: int):
         """Sets the single-axis mode according to the integer code.
@@ -1057,6 +1060,38 @@ class TigerController:
         self.send_command(f"SAM {axis}={mode}")
         self.read_response()
 
+    def setup_control_loop(self, analog_outputs: dict):
+        """
+        Sets up the control loop
+        
+        Arguments: self, waveform type dict (axis, waveform)
+
+        If/Else statements: send the right loop
+        
+        """
+        channels = analog_outputs.keys()
+        if channels:
+            commands = [
+                'm e =42',
+                'cca y = 1',
+                'cca z=43',
+                'm e = 43',
+                'cca y = 1',
+                'cca z=67',
+                'm e=2',
+                'cca y=5',
+                'ccb x=67',
+                'ccb y=1',
+                'm e=3',
+                'cca y=9',
+                'cca z=300',
+                'ccb x=2',
+                'ccb y=192',
+            ]
+            for command in commands:
+                # Send data
+                self.send_command(f'{command}\r')
+                self.read_response()
 
     def send_ttl_pulse(self, channel: int, pulse_width_ms: int, delay_ms: int) -> str:
     
@@ -1064,5 +1099,3 @@ class TigerController:
         self.send_command(command)
         response = self.read_response()
         return response
-    
-    
