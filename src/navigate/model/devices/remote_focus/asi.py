@@ -294,19 +294,10 @@ class ASIRemoteFocus(SerialDevice):
         amplitude=1,
         offset=0.5,
     ):
-        """Returns a numpy array with a sawtooth ramp - typically used for remote focusing.
-
-        The waveform starts at offset and stays there for the delay period, then
-        rises linearly to 2x amplitude (amplitude here refers to 1/2 peak-to-peak)
-        and drops back down to the offset voltage during the fall period.
-
-        Switching from a left to right remote focus ramp is possible by exchanging the
-        rise and fall periods.
+        """Sends the tiger controller commands to make the ramp wave
 
         Parameters
         ----------
-        sample_rate : Integer
-            Unit - Hz
         exposure_time : Float
             Unit - Seconds
         sweep_time : Float
@@ -321,16 +312,6 @@ class ASIRemoteFocus(SerialDevice):
             Unit - Volts
         offset : Float
             Unit - Volts
-
-        Returns
-        -------
-        waveform : np.array
-
-        Examples
-        --------
-        >>> etl_ramp = tunable_lens_ramp(sample_rate, exposure_time, sweep_time, etl_delay,
-            camera_delay, fall, amplitude, offset)
-
         """
 
         # rise period
@@ -348,7 +329,7 @@ class ASIRemoteFocus(SerialDevice):
         amplitude *= 1000
         offset *= 1000
 
-        self.remote_focus.SA_waveform(self.axis, 160, amplitude, offset, period)
+        self.remote_focus.SA_waveform(self.axis, 128, amplitude, offset, period)
         self.remote_focus.SAM(self.axis, 2)
         time.sleep(_delay_time)
 
