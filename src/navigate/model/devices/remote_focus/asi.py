@@ -257,7 +257,6 @@ class ASIRemoteFocus(SerialDevice):
 
                     self.ramp(exposure_time, sweep_time, remote_focus_delay, camera_delay, fall, amplitude, offset)
     
-
     def triangle(
         self,
         sweep_time=0.24,
@@ -280,9 +279,8 @@ class ASIRemoteFocus(SerialDevice):
         amplitude *= 1000
         offset *= 1000
 
-        self.remote_focus.SA_waveform(self.axis, 1, amplitude, offset, period)
-        self.remote_focus.SAM(self.axis, 1)
-
+        self.device_connection.SA_waveform(self.axis, 1, amplitude, offset, period)
+        self.device_connection.SAM(self.axis, 4)
 
     def ramp(
         self,
@@ -329,10 +327,9 @@ class ASIRemoteFocus(SerialDevice):
         amplitude *= 1000
         offset *= 1000
 
-        self.remote_focus.SA_waveform(self.axis, 128, amplitude, offset, period)
-        self.remote_focus.SAM(self.axis, 2)
+        self.device_connection.SA_waveform(self.axis, 128, amplitude, offset, period)
+        self.device_connection.SAM(self.axis, 2)
         time.sleep(_delay_time)
-
     
     def move(self, exposure_times, sweep_times, offset=None):
         """Move the remote focus.
@@ -350,12 +347,23 @@ class ASIRemoteFocus(SerialDevice):
         """
         
         self.adjust(exposure_times, sweep_times, offset)
+    
+    def turn_off(self): 
+        """Stops the remote focus waveform"""
+        self.device_connection.SAM(self.axis, 0)
+
+    def close(self):
+        """Close the ASI remote_focus serial port.
+
+        Stops the remote focus waveform and then closes the port.
+        """
+        if self.device_connection.is_open():
+            self.turn_off()
+            logger.debug("ASI Remote Focus - Closing Device.")
+            self.device_connection.disconnect_from_serial()
 
     def __del__(self):
         """Destructor for the ASIRemoteFocus class."""
-        if self.remote_focus.is_open():
-            self.set_power(0)
-            logger.debug("ASI Remote Focus - Closing Device.")
-            self.laser.disconnect_from_serial() 
+        self.close()
 
         
