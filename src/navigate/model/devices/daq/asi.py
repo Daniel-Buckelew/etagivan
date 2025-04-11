@@ -44,11 +44,14 @@ import nidaqmx.task
 import numpy as np
 import serial
 # Local Imports
+from navigate.model.devices.remote_focus.asi import remote_focus
+from navigate.model.devices.galvo.asi import galvo
 from navigate.model.devices.daq.base import DAQBase
 from navigate.model.devices.device_types import SerialDevice
 from navigate.model.devices.APIs.asi.asi_tiger_controller import TigerController
 from navigate.tools.decorators import log_initialization
 from navigate.tools.waveform_template_funcs import get_waveform_template_parameters
+
 
 # Logger Setup
 p = __name__.split(".")[1]
@@ -160,36 +163,44 @@ class ASIDAQ(DAQBase, SerialDevice):
         TigerController.setup_control_loop(self.analog_outputs)
         self.current_channel_key = channel_key
         self.is_updating_analog_task = False
-        if self.wait_to_run_lock.locked():
-            self.wait_to_run_lock.release()
+        # if self.wait_to_run_lock.locked():
+        #     self.wait_to_run_lock.release()
 
     def run_acquisition(self) -> None:
+        
+        # if self.is_updating_analog_task:
+        #     self.wait_to_run_lock.acquire()
+        #     self.wait_to_run_lock.release()
+
         try:
         #send logic card on to cell 1
-            self.daq.logic_card_on(1)
+            TigerController.logic_card_on(1)
         except Exception:
             logger.debug("Cannot turn on")
             pass
 
-
-
     def stop_acquisition(self) -> None:
-        #send logic card on to cell 1
+        #send logic card off to cell 1
         try:
-            self.daq.logic_card_off(1)
+            TigerController.logic_card_off(1)                       
         except Exception:
             logger.debug("Cannot turn off")
             pass
 
+        # if self.wait_to_run_lock.locked():
+        #     self.wait_to_run_lock.release()
+
     def create_analog_output_tasks(self, channel_key: str) -> None:
-        galvonometer_channel = self.configuration["configuration"]["microscopes"][self.microscope_name]["galvo"]["hardware"]["channel"]
-        if isinstance(galvonometer_channel, list):
-            for channel in galvonometer_channel:
-                self.analog_outputs.update({channel: "galvo"})
+        galvo_channel = self.configuration["configuration"]["microscopes"][self.microscope_name]["galvo"]["hardware"]["channel"]
+        if isinstance(galvo_channel, list):
+            for channel in galvo_channel:
+               self.analog_outputs.update({channel: "galvo"})
+               self.galvo.move(self.exposure_times,self.sweep_times,offset=None)
         else:
-            self.analog_outputs.update({galvonometer_channel: "galvo"})
-        remote_focus_channel = self.configuration["configuration"]["microscopes"][self.microscope_name]["remote_focus_device"]["hardware"]["channel"]
-        self.analog_outputs.update({remote_focus_channel: "remote_focus"})
+            self.analog_outputs.update({galvo_channel: "galvo"})
+            remote_focus_channel = self.configuration["configuration"]["microscopes"][self.microscope_name]["remote_focus_device"]["hardware"]["channel"]
+            self.analog_outputs.update({remote_focus_channel: "remote_focus"})
+            self.remote_focus.move(self.exposure_times,self.sweep_times,offset=None)
 
 
 
