@@ -355,7 +355,7 @@ class LoopByCount:
             The number of steps or a configuration reference to determine the loop
             count. Default is 1.
         step_by_frame : bool
-            Count by number of frames receieved/ the number of entering this node.
+            Count by number of frames received/ the number of entering this node.
         """
         #: MicroscopeModel: The microscope model associated with the loop control.
         self.model = model
@@ -423,7 +423,7 @@ class LoopByCount:
         """
         self.signals -= 1
         if self.signals <= 0:
-            self.syncronize("signal")
+            self.synchronize("signal")
             return False
         return True
 
@@ -449,7 +449,7 @@ class LoopByCount:
         else:
             self.data_frames -= 1
         if self.data_frames <= 0:
-            self.syncronize("data")
+            self.synchronize("data")
             return False
         return True
 
