@@ -95,6 +95,9 @@ class FeaturePopupController(GUIController):
             self.view.popup.protocol("WM_DELETE_WINDOW", self.cancel_acquisition)
             self.view.buttons["cancel"].configure(command=self.cancel_acquisition)
 
+        # Dismiss popup.
+        self.view.popup.bind("<Escape>", self.exit_func)
+
     def populate_feature_list(self, feature_list_id):
         """Populate the feature list
 
@@ -180,7 +183,7 @@ class FeaturePopupController(GUIController):
         content = self.view.inputs["content"].get("1.0", "end-1c")
         return verify_feature_list(content)
 
-    def exit_func(self):
+    def exit_func(self, *args):
         """Exit the popup"""
         self.close_child_popups()
         self.view.popup.dismiss()
@@ -490,23 +493,23 @@ class FeatureListGraphController:
             )
 
             if "true" in feature:
-                self.feature_list_graph_controllers_true[
-                    idx
-                ] = FeatureListGraphController(
-                    popup.feature_list_true_frame.feature_view_frame,
-                    popup.feature_list_true_frame.content,
-                    popup.preview_btn_true,
-                    self.child_popups,
+                self.feature_list_graph_controllers_true[idx] = (
+                    FeatureListGraphController(
+                        popup.feature_list_true_frame.feature_view_frame,
+                        popup.feature_list_true_frame.content,
+                        popup.preview_btn_true,
+                        self.child_popups,
+                    )
                 )
                 self.feature_list_graph_controllers_true[idx].update(feature["true"])
             if "false" in feature:
-                self.feature_list_graph_controllers_false[
-                    idx
-                ] = FeatureListGraphController(
-                    popup.feature_list_false_frame.feature_view_frame,
-                    popup.feature_list_false_frame.content,
-                    popup.preview_btn_false,
-                    self.child_popups,
+                self.feature_list_graph_controllers_false[idx] = (
+                    FeatureListGraphController(
+                        popup.feature_list_false_frame.feature_view_frame,
+                        popup.feature_list_false_frame.content,
+                        popup.preview_btn_false,
+                        self.child_popups,
+                    )
                 )
                 self.feature_list_graph_controllers_false[idx].update(feature["false"])
 
@@ -566,11 +569,11 @@ class FeatureListGraphController:
                             feature["args"][i] = ast.literal_eval(a.replace("'", '"'))
                         except (SyntaxError, ValueError):
                             spec = inspect.getfullargspec(feature["name"])
-                            arg_name = spec.args[i+2]
+                            arg_name = spec.args[i + 2]
                             messagebox.showerror(
                                 title="Upate Feature Parameter Error",
                                 message=f"The argument {arg_name} has something wrong!\n"
-                                    "Please make sure you input a correct value!"
+                                "Please make sure you input a correct value!",
                             )
                             return
                     elif a == "None":
@@ -709,9 +712,11 @@ class FeatureListGraphController:
             """
             self.features.insert(
                 idx,
-                dict(self.features[idx])
-                if type(self.features[idx]) == dict
-                else self.features[idx],
+                (
+                    dict(self.features[idx])
+                    if type(self.features[idx]) == dict
+                    else self.features[idx]
+                ),
             )
             i = self.feature_structure.index(idx)
             for _, c in enumerate(self.feature_structure):
