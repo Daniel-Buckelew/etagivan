@@ -344,7 +344,7 @@ class LoopByCount:
     dynamically determining it from configuration references.
     """
 
-    def __init__(self, model, steps=1, step_by_frame=False):
+    def __init__(self, model, steps=1, step_by_frame=False, is_nested=False):
         """Initialize the LoopByCount class.
 
         Parameters:
@@ -356,6 +356,8 @@ class LoopByCount:
             count. Default is 1.
         step_by_frame : bool
             Count by number of frames received/ the number of entering this node.
+        is_nested : bool
+            The flag indicates whether the loop is nested within another loop.
         """
         #: MicroscopeModel: The microscope model associated with the loop control.
         self.model = model
@@ -365,6 +367,9 @@ class LoopByCount:
 
         #: int: The remaining number of steps or frames.
         self.steps = steps
+
+        #: bool: Flags indicate if nested loops
+        self.is_nested = is_nested
 
         #: int: The remaining number of steps.
         self.signals = 1
@@ -423,7 +428,9 @@ class LoopByCount:
         """
         self.signals -= 1
         if self.signals <= 0:
-            self.synchronize("signal")
+            self.signals = self.steps
+            if self.is_nested:
+                self.synchronize("signal")
             return False
         return True
 
@@ -449,7 +456,9 @@ class LoopByCount:
         else:
             self.data_frames -= 1
         if self.data_frames <= 0:
-            self.synchronize("data")
+            self.data_frames = self.steps
+            if self.is_nested:
+                self.synchronize("data")
             return False
         return True
 
