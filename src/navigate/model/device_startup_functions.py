@@ -516,7 +516,7 @@ def start_daq(configuration: Dict[str, Any], device_type: str = "NI") -> DAQBase
 
         return NIDAQ(configuration)
     
-    if device_type == "ASI":
+    elif device_type == "ASI":
         from navigate.model.devices.daq.asi import ASIDAQ
 
         return ASIDAQ(configuration)

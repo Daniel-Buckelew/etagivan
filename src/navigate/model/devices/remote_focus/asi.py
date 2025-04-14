@@ -38,6 +38,7 @@ from typing import Any, Dict
 # Third Party Imports
 
 # Local Imports
+from navigate.model.devices.remote_focus.base import RemoteFocusBase
 from navigate.model.devices.device_types import SerialDevice
 from navigate.model.devices.APIs.asi.asi_tiger_controller import TigerController
 from navigate.tools.decorators import log_initialization
@@ -48,7 +49,7 @@ logger = logging.getLogger(p)
 
 
 @log_initialization
-class ASIRemoteFocus(SerialDevice):
+class ASIRemoteFocus(RemoteFocusBase , SerialDevice):
     """RemoteFocusNI Class - Analog control of the remote focus device."""
 
     def __init__(
@@ -71,8 +72,11 @@ class ASIRemoteFocus(SerialDevice):
             The configuration dictionary.
 
         """
+
+        super().__init__(microscope_name, device_connection, configuration)
+
         #: Any: Device connection object.
-        self.device_connection = device_connection
+        self.remote_focus = device_connection
 
         #: dict: Configuration dictionary.
         self.configuration = configuration
@@ -222,7 +226,7 @@ class ASIRemoteFocus(SerialDevice):
                     ]["offset"]
                 )
                 if offset is not None:
-                    remote_focus_offset += offset
+                    remote_focus_offset += offset    
 
                 if self.remote_focus_min_voltage < 0: 
                     self.remote_focus_min_voltage = 0
@@ -242,25 +246,28 @@ class ASIRemoteFocus(SerialDevice):
                     readout_direction == "Bidirectional"
                     or readout_direction == "Rev. Bidirectional"
                 ):
-                    # sweep_time=self.sweep_time
-                    # amplitude=amplitude
-                    # offset=remote_focus_offset
+                    sweep_time=self.sweep_time
+                    amplitude = amplitude
+                    offset = remote_focus_offset
                 
-                    self.triangle(self.sweep_time, amplitude, remote_focus_offset)
+                    self.triangle(sweep_time, amplitude, offset)
 
                 else:
-                    # exposure_time=exposure_time
-                    # sweep_time=self.sweep_time
-                    # remote_focus_delay=remote_focus_delay
-                    # offset=remote_focus_offset
+                    exposure_time=exposure_time
+                    sweep_time=self.sweep_time
+                    remote_focus_delay=remote_focus_delay
+                    camera_delay=self.camera_delay
+                    fall=remote_focus_ramp_falling
+                    amplitude = amplitude
+                    offset = remote_focus_offset
 
-                    self.ramp(exposure_time, self.sweep_time, remote_focus_delay, self.camera_delay, remote_focus_ramp_falling, amplitude, remote_focus_offset)
+                    self.ramp(exposure_time, sweep_time, remote_focus_delay, camera_delay, fall, amplitude, offset)
     
     def triangle(
         self,
         sweep_time=0.24,
-        amplitude=1.0,
-        offset=0.0,
+        amplitude=1,
+        offset=0,
     ):
         """Sends the tiger controller commands to initiate the triangle wave
 
@@ -278,8 +285,8 @@ class ASIRemoteFocus(SerialDevice):
         amplitude *= 1000
         offset *= 1000
 
-        self.device_connection.SA_waveform(self.axis, 1, amplitude, offset, period)
-        self.device_connection.SAM(self.axis, 4)
+        self.remote_focus.SA_waveform(self.axis, 1, amplitude, offset, period)
+        self.remote_focus.SAM(self.axis, 4)
 
     def ramp(
         self,
@@ -288,7 +295,7 @@ class ASIRemoteFocus(SerialDevice):
         remote_focus_delay=0.005,
         camera_delay=0.001,
         fall=0.05,
-        amplitude=1.0,
+        amplitude=1,
         offset=0.5,
     ):
         """Sends the tiger controller commands to make the ramp wave
@@ -326,8 +333,8 @@ class ASIRemoteFocus(SerialDevice):
         amplitude *= 1000
         offset *= 1000
 
-        self.device_connection.SA_waveform(self.axis, 128, amplitude, offset, period)
-        self.device_connection.SAM(self.axis, 2)
+        self.remote_focus.SA_waveform(self.axis, 128, amplitude, offset, period)
+        self.remote_focus.SAM(self.axis, 2)
         time.sleep(_delay_time)
     
     def move(self, exposure_times, sweep_times, offset=None):
@@ -349,17 +356,17 @@ class ASIRemoteFocus(SerialDevice):
     
     def turn_off(self): 
         """Stops the remote focus waveform"""
-        self.device_connection.SAM(self.axis, 0)
+        self.remote_focus.SAM(self.axis, 0)
 
     def close(self):
         """Close the ASI remote_focus serial port.
 
         Stops the remote focus waveform and then closes the port.
         """
-        if self.device_connection.is_open():
+        if self.remote_focus.is_open():
             self.turn_off()
             logger.debug("ASI Remote Focus - Closing Device.")
-            self.device_connection.disconnect_from_serial()
+            self.remote_focus.disconnect_from_serial()
 
     def __del__(self):
         """Destructor for the ASIRemoteFocus class."""
