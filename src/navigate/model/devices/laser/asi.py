@@ -59,9 +59,6 @@ class ASILaser(LaserBase, SerialDevice):
     def __init__(self, microscope_name, device_connection, configuration, device_id: 0):
         """Initialize the ASILaser class.
 
-        Analog modulation is performed solely with the tgdaq system as part of a
-        larger Tiger Controller buildout.
-
         Parameters
         ----------
         microscope_name : str
@@ -85,10 +82,33 @@ class ASILaser(LaserBase, SerialDevice):
 
         if analog == "asi.ASI" and digital == "asi.ASI":
             modulation_type = "mixed"
+            #: float: The minimum digital modulation voltage.
+            self.laser_min_do = self.device_config["onoff"]["hardware"]["min"]
+            #: float: The maximum digital modulation voltage.
+            self.laser_max_do = self.device_config["onoff"]["hardware"]["max"]
+            #: float: The minimum analog modulation voltage.
+            self.laser_min_ao = self.device_config["power"]["hardware"]["min"]
+            #: float: The maximum analog modulation voltage.
+            self.laser_max_ao = self.device_config["power"]["hardware"]["max"]
+            #: str: Output axes on Tiger Controller
+            self.analog_axis = self.device_config["power"]["hardware"]["axis"]
+            self.digital_axis = self.device_config["power"]["hardware"]["axis"]
         elif analog == "asi.ASI":
             modulation_type = "analog"
+            #: float: The minimum analog modulation voltage.
+            self.laser_min_ao = self.device_config["power"]["hardware"]["min"]
+            #: float: The maximum analog modulation voltage.
+            self.laser_max_ao = self.device_config["power"]["hardware"]["max"]
+            #: str: Output axis on Tiger Controller
+            self.analog_axis = self.device_config["power"]["hardware"]["axis"]
         elif digital == "asi.ASI":
             modulation_type = "digital"
+            #: float: The minimum digital modulation voltage.
+            self.laser_min_do = self.device_config["onoff"]["hardware"]["min"]
+            #: float: The maximum digital modulation voltage.
+            self.laser_max_do = self.device_config["onoff"]["hardware"]["max"]
+            #: str: Output axes on Tiger Controller
+            self.digital_axis = self.device_config["power"]["hardware"]["axis"]
         else:
             raise ValueError("Laser modulation type not recognized.")
 
@@ -98,38 +118,8 @@ class ASILaser(LaserBase, SerialDevice):
         #: TigerController: ASI Tiger Controller object.
         self.laser = device_connection
 
-        #: float: The minimum digital modulation voltage.
-        self.laser_min_do = self.device_config["onoff"]["hardware"].get("min", 0)
-
-        #: float: The maximum digital modulation voltage.
-        self.laser_max_do = self.device_config["onoff"]["hardware"].get("max", 5)
-
-        #: float: The minimum analog modulation voltage.
-        self.laser_min_ao = self.device_config["power"]["hardware"].get("min", 0)
-
-        #: float: The maximum analog modulation voltage.
-        self.laser_max_ao = self.device_config["power"]["hardware"].get("max", 5)
-
-        #: str: Output axis on Tiger Controller
-        self.axis = self.axis = self.device_config["power"]["hardware"]["axis"]
-
         #: float: Current laser intensity.
         self._current_intensity = 0
-
-        # Initialize the laser modulation type.
-        if self.modulation_type == "mixed":
-            # self.initialize_digital_modulation()
-            # self.initialize_analog_modulation()
-            logger.info(f"{str(self)} initialized with mixed modulation.")
-
-        elif self.modulation_type == "analog":
-            # self.initialize_analog_modulation()
-            logger.info(f"{str(self)} initialized with analog modulation.")
-
-        elif self.modulation_type == "digital":
-            # self.initialize_digital_modulation()
-            logger.info(f"{str(self)} initialized with digital modulation.")
-        
 
     def __str__(self):
         """String representation of the class."""
@@ -164,35 +154,51 @@ class ASILaser(LaserBase, SerialDevice):
     def set_power(self, laser_intensity: float):
         """Sets the analog laser power.
 
-        Set analog output voltage to the laser via tgdac system.
-
         Parameters
         ----------
         laser_intensity : float
             The laser intensity.
         """
-        if self.modulation_type == "analog" or self.modulation_type == "mixed":
-            output_voltage = (int(laser_intensity) / 100) * self.laser_max_ao * 1000
-            if output_voltage > (self.laser_max_ao * 1000):
-                output_voltage = self.laser_max_ao * 1000
-            self.laser.move_axis(self.axis, output_voltage)
-            self._current_intensity = laser_intensity
+        self.output_voltage = (int(laser_intensity) / 100) * self.laser_max_ao * 1000
+        if self.output_voltage > (self.laser_max_ao * 1000):
+            self.output_voltage = self.laser_max_ao * 1000
+        self.laser.move_axis(self.analog_axis, self.output_voltage)
+        self._current_intensity = laser_intensity
 
     def turn_on(self):
-        """Turns on the laser.
+        """Turns on the laser."""
+        if self.modulation_type == "mixed":
+            self.set_power(self._current_intensity)
+            self.laser.PLCon(self.digital_axis)
+            logger.info(f"{str(self)} initialized with mixed modulation.")
 
-        Mixed versus analog versus digital? """
+        elif self.modulation_type == "analog":
+            self.set_power(self._current_intensity)
+            logger.info(f"{str(self)} initialized with analog modulation.")
 
-        self.set_power(self._current_intensity)
+        elif self.modulation_type == "digital":
+            self.laser.PLCon(self.digital_axis)
+            logger.info(f"{str(self)} initialized with digital modulation.")
+        
 
     def turn_off(self):
-        """Turns off the laser.
+        """Turns off the laser."""
+        if self.modulation_type == "mixed":
+            tmp = self._current_intensity
+            self.set_power(0)
+            self._current_intensity = tmp
+            self.laser.PLCoff(self.digital_axis)
+            logger.info(f"{str(self)} initialized with mixed modulation.")
 
-        Should set to the minimum?
-        """
-        tmp = self._current_intensity
-        self.set_power(0)
-        self._current_intensity = tmp
+        elif self.modulation_type == "analog":
+            tmp = self._current_intensity
+            self.set_power(0)
+            self._current_intensity = tmp
+            logger.info(f"{str(self)} initialized with analog modulation.")
+
+        elif self.modulation_type == "digital":
+            self.laser.PLCoff(self.digital_axis)
+            logger.info(f"{str(self)} initialized with digital modulation.")
 
     
     def close(self):
