@@ -56,6 +56,8 @@ class ASIRemoteFocus(SerialDevice):
         microscope_name: str,
         device_connection: Any,
         configuration: Dict[str, Any],
+        *args,
+        **kwargs,
     ) -> None:
         """Initialize the RemoteFocusNI class.
 
@@ -69,8 +71,11 @@ class ASIRemoteFocus(SerialDevice):
             The configuration dictionary.
 
         """
+
+        super().__init__(microscope_name, device_connection, configuration)
+
         #: Any: Device connection object.
-        self.device_connection = device_connection
+        self.remote_focus = device_connection
 
         #: dict: Configuration dictionary.
         self.configuration = configuration
@@ -199,7 +204,7 @@ class ASIRemoteFocus(SerialDevice):
                         laser
                     ]["amplitude"] = "1000"
 
-                remote_focus_amplitude = float(
+                amplitude = float(
                     waveform_constants["remote_focus_constants"][imaging_mode][zoom][
                         laser
                     ]["amplitude"]
@@ -220,40 +225,40 @@ class ASIRemoteFocus(SerialDevice):
                     ]["offset"]
                 )
                 if offset is not None:
-                    remote_focus_offset += offset
+                    remote_focus_offset += offset    
 
                 if self.remote_focus_min_voltage < 0: 
                     self.remote_focus_min_voltage = 0
-                if (amplitude + offset) > self.remote_focus_max_voltage: 
-                    if offset > self.remote_focus_max_voltage:
+                if (amplitude + remote_focus_offset) > self.remote_focus_max_voltage: 
+                    if remote_focus_offset > self.remote_focus_max_voltage:
                         logger.error("Waveform offset is greater than device maximum voltage")
-                        offset = self.remote_focus_max_voltage
+                        remote_focus_offset = self.remote_focus_max_voltage
                     amplitude = self.remote_focus_max_voltage - offset
-                if (offset - amplitude) < self.remote_focus_min_voltage:
-                    if offset < self.remote_focus_min_voltage:
+                if (remote_focus_offset - amplitude) < self.remote_focus_min_voltage:
+                    if remote_focus_offset < self.remote_focus_min_voltage:
                         logger.error("Waveform offset is less than device minimum voltage")
-                        offset = self.remote_focus_min_voltage
-                    amplitude = offset - self.remote_focus_min_voltage
+                        remote_focus_offset = self.remote_focus_min_voltage
+                    amplitude = remote_focus_offset - self.remote_focus_min_voltage
 
                 # Calculate the Waveforms
                 if sensor_mode == "Light-Sheet" and (
                     readout_direction == "Bidirectional"
                     or readout_direction == "Rev. Bidirectional"
                 ):
-                    sweep_time=self.sweep_time,
-                    amplitude=remote_focus_amplitude,
-                    offset=remote_focus_offset,
+                    sweep_time=self.sweep_time
+                    amplitude = amplitude
+                    offset = remote_focus_offset
                 
                     self.triangle(sweep_time, amplitude, offset)
 
                 else:
-                    exposure_time=exposure_time,
-                    sweep_time=self.sweep_time,
-                    remote_focus_delay=remote_focus_delay,
-                    camera_delay=self.camera_delay,
-                    fall=remote_focus_ramp_falling,
-                    amplitude=remote_focus_amplitude,
-                    offset=remote_focus_offset,
+                    exposure_time=exposure_time
+                    sweep_time=self.sweep_time
+                    remote_focus_delay=remote_focus_delay
+                    camera_delay=self.camera_delay
+                    fall=remote_focus_ramp_falling
+                    amplitude = amplitude
+                    offset = remote_focus_offset
 
                     self.ramp(exposure_time, sweep_time, remote_focus_delay, camera_delay, fall, amplitude, offset)
     
@@ -279,8 +284,8 @@ class ASIRemoteFocus(SerialDevice):
         amplitude *= 1000
         offset *= 1000
 
-        self.device_connection.SA_waveform(self.axis, 1, amplitude, offset, period)
-        self.device_connection.SAM(self.axis, 4)
+        self.remote_focus.SA_waveform(self.axis, 1, amplitude, offset, period)
+        self.remote_focus.SAM(self.axis, 4)
 
     def ramp(
         self,
@@ -327,8 +332,8 @@ class ASIRemoteFocus(SerialDevice):
         amplitude *= 1000
         offset *= 1000
 
-        self.device_connection.SA_waveform(self.axis, 128, amplitude, offset, period)
-        self.device_connection.SAM(self.axis, 2)
+        self.remote_focus.SA_waveform(self.axis, 128, amplitude, offset, period)
+        self.remote_focus.SAM(self.axis, 2)
         time.sleep(_delay_time)
     
     def move(self, exposure_times, sweep_times, offset=None):
@@ -350,17 +355,17 @@ class ASIRemoteFocus(SerialDevice):
     
     def turn_off(self): 
         """Stops the remote focus waveform"""
-        self.device_connection.SAM(self.axis, 0)
+        self.remote_focus.SAM(self.axis, 0)
 
     def close(self):
         """Close the ASI remote_focus serial port.
 
         Stops the remote focus waveform and then closes the port.
         """
-        if self.device_connection.is_open():
+        if self.remote_focus.is_open():
             self.turn_off()
             logger.debug("ASI Remote Focus - Closing Device.")
-            self.device_connection.disconnect_from_serial()
+            self.remote_focus.disconnect_from_serial()
 
     def __del__(self):
         """Destructor for the ASIRemoteFocus class."""
