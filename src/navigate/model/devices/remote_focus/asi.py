@@ -56,6 +56,8 @@ class ASIRemoteFocus(SerialDevice):
         microscope_name: str,
         device_connection: Any,
         configuration: Dict[str, Any],
+        *args,
+        **kwargs,
     ) -> None:
         """Initialize the RemoteFocusNI class.
 
@@ -107,7 +109,7 @@ class ASIRemoteFocus(SerialDevice):
         ]["daq"]["trigger_source"]
 
         #: str: Output axis on Tiger Controller
-        self.axis = self.device_config["power"]["hardware"]["axis"]
+        self.axis = self.device_config["hardware"]["axis"]
 
     @classmethod
     def connect(cls, port, baudrate=115200, timeout=0.25):
@@ -199,7 +201,7 @@ class ASIRemoteFocus(SerialDevice):
                         laser
                     ]["amplitude"] = "1000"
 
-                remote_focus_amplitude = float(
+                amplitude = float(
                     waveform_constants["remote_focus_constants"][imaging_mode][zoom][
                         laser
                     ]["amplitude"]
@@ -224,44 +226,41 @@ class ASIRemoteFocus(SerialDevice):
 
                 if self.remote_focus_min_voltage < 0: 
                     self.remote_focus_min_voltage = 0
-                if (amplitude + offset) > self.remote_focus_max_voltage: 
-                    if offset > self.remote_focus_max_voltage:
+                if (amplitude + remote_focus_offset) > self.remote_focus_max_voltage: 
+                    if remote_focus_offset > self.remote_focus_max_voltage:
                         logger.error("Waveform offset is greater than device maximum voltage")
-                        offset = self.remote_focus_max_voltage
-                    amplitude = self.remote_focus_max_voltage - offset
-                if (offset - amplitude) < self.remote_focus_min_voltage:
-                    if offset < self.remote_focus_min_voltage:
+                        remote_focus_offset = self.remote_focus_max_voltage
+                    amplitude = self.remote_focus_max_voltage - remote_focus_offset
+                if (remote_focus_offset - amplitude) < self.remote_focus_min_voltage:
+                    if remote_focus_offset < self.remote_focus_min_voltage:
                         logger.error("Waveform offset is less than device minimum voltage")
-                        offset = self.remote_focus_min_voltage
-                    amplitude = offset - self.remote_focus_min_voltage
+                        remote_focus_offset = self.remote_focus_min_voltage
+                    amplitude = remote_focus_offset - self.remote_focus_min_voltage
 
                 # Calculate the Waveforms
                 if sensor_mode == "Light-Sheet" and (
                     readout_direction == "Bidirectional"
                     or readout_direction == "Rev. Bidirectional"
                 ):
-                    sweep_time=self.sweep_time,
-                    amplitude=remote_focus_amplitude,
-                    offset=remote_focus_offset,
+                    # sweep_time=self.sweep_time
+                    # amplitude=amplitude
+                    # offset=remote_focus_offset
                 
-                    self.triangle(sweep_time, amplitude, offset)
+                    self.triangle(self.sweep_time, amplitude, remote_focus_offset)
 
                 else:
-                    exposure_time=exposure_time,
-                    sweep_time=self.sweep_time,
-                    remote_focus_delay=remote_focus_delay,
-                    camera_delay=self.camera_delay,
-                    fall=remote_focus_ramp_falling,
-                    amplitude=remote_focus_amplitude,
-                    offset=remote_focus_offset,
+                    # exposure_time=exposure_time
+                    # sweep_time=self.sweep_time
+                    # remote_focus_delay=remote_focus_delay
+                    # offset=remote_focus_offset
 
-                    self.ramp(exposure_time, sweep_time, remote_focus_delay, camera_delay, fall, amplitude, offset)
+                    self.ramp(exposure_time, self.sweep_time, remote_focus_delay, self.camera_delay, remote_focus_ramp_falling, amplitude, remote_focus_offset)
     
     def triangle(
         self,
         sweep_time=0.24,
-        amplitude=1,
-        offset=0,
+        amplitude=1.0,
+        offset=0.0,
     ):
         """Sends the tiger controller commands to initiate the triangle wave
 
@@ -289,7 +288,7 @@ class ASIRemoteFocus(SerialDevice):
         remote_focus_delay=0.005,
         camera_delay=0.001,
         fall=0.05,
-        amplitude=1,
+        amplitude=1.0,
         offset=0.5,
     ):
         """Sends the tiger controller commands to make the ramp wave

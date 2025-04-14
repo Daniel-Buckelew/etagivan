@@ -37,14 +37,17 @@ import traceback
 import time
 from typing import Union, Dict, Any
 
+# Third Party Imports
+import numpy as np
+import serial
 # Local Imports
 from navigate.model.devices.remote_focus.asi import ASIRemoteFocus
-from navigate.model.devices.galvo.asi import ASIGalvo
+#from navigate.model.devices.galvo.asi import galvo
 from navigate.model.devices.daq.base import DAQBase
 from navigate.model.devices.device_types import SerialDevice
 from navigate.model.devices.APIs.asi.asi_tiger_controller import TigerController
 from navigate.tools.decorators import log_initialization
-from navigate.tools.waveform_template_funcs import get_waveform_template_parameters
+#from navigate.tools.waveform_template_funcs import get_waveform_template_parameters
 
 
 # Logger Setup
@@ -89,7 +92,7 @@ class ASIDAQ(DAQBase, SerialDevice):
 
         self.remote_focus = ASIRemoteFocus
 
-        self.galvo = ASIGalvo
+        #self.galvo = ASIGalvo
 
     @classmethod
     def connect(cls, port, baudrate=115200, timeout=0.25):
@@ -151,6 +154,7 @@ class ASIDAQ(DAQBase, SerialDevice):
 
     def prepare_acquisition(self, channel_key: str) -> None:
         self.create_analog_output_tasks(channel_key)
+
         # self.create_camera_task(channel_key)
         TigerController.setup_control_loop(self.analog_outputs)
         self.current_channel_key = channel_key
