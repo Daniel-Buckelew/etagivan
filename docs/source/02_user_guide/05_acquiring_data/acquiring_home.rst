@@ -5,6 +5,6 @@ Acquiring Data
 .. toctree::
    :maxdepth: 2
 
-   acquiring_guide
-   features/features
-   features/example_feature_lists
+   01_acquiring_guide/01_acquiring_guide
+   02_feature_container/features
+   03_example_features/example_feature_lists

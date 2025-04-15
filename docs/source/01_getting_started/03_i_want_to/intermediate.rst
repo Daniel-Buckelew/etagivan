@@ -15,9 +15,9 @@ Suppose there are two positions listed in the
 :ref:`multiposition table <user_guide/gui_walkthrough:multiposition>`, one containing
 tissue and one empty, as shown below.
 
-.. image:: images/multiposition_tissue.png
+.. image:: images/intermediate/multiposition_tissue.png
 
-.. image:: images/multiposition_empty.png
+.. image:: images/intermediate/multiposition_empty.png
 
 We will build a feature that scans both positions, but only takes a z-stack at the one
 containing tissue. To access the GUI feature list editor, navigate to

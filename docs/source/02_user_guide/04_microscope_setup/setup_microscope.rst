@@ -5,5 +5,5 @@ Setting Up A Microscope
 .. toctree::
    :maxdepth: 2
 
-   software_configuration
-   multiple_cameras
+   01_software_configuration/software_configuration
+   02_multiple_cameras/multiple_cameras

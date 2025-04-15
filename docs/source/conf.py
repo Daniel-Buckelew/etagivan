@@ -97,6 +97,10 @@ exclude_patterns = [
 # In docs/conf.py
 autodoc_mock_imports = [
     "navigate.model.devices.APIs",
+    "navigate.model.devices.camera.photometrics",
+    "navigate.model.devices.camera.ximea",
+    "pyvcam",
+    "ximea",
 ]
 
 

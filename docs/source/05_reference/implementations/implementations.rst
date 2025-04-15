@@ -22,7 +22,7 @@ please refer to the publications listed in the relevant sections.
 ASLM
 ****
 
-.. image:: ASLM.png
+.. image:: images/ASLM.png
    :width: 100%
    :align: center
 
@@ -97,11 +97,12 @@ The University of Texas Southwestern Medical Center, Dallas, TX
 
     .. collapse:: Configuration File
 
-        .. literalinclude:: ../user_guide/hardware/configurations/configuration_voodoo.yaml
+        .. literalinclude:: configurations/configuration_voodoo.yaml
            :language: yaml
 
 
         |
+
 ------------------
 
 
@@ -109,7 +110,7 @@ Optical Tiling OPM
 ******************
 
 
-.. image:: tiling_opm.png
+.. image:: images/tiling_opm.png
    :width: 100%
    :align: center
 
@@ -179,16 +180,17 @@ The University of Texas Southwestern Medical Center, Dallas, TX
 
     .. collapse:: Configuration File
 
-        .. literalinclude:: ../user_guide/hardware/configurations/configuration_OPMv2.yaml
+        .. literalinclude:: configurations/configuration_OPMv2.yaml
            :language: yaml
 
     |
+
 ------------------
 
 AO OPM
 *******
 
-.. image:: ao_opm.png
+.. image:: images/ao_opm.png
    :width: 100%
    :align: center
 
@@ -254,16 +256,17 @@ The University of Texas Southwestern Medical Center, Dallas, TX
 
     .. collapse:: Configuration File
 
-        .. literalinclude:: ../user_guide/hardware/configurations/configuration_OPMv3.yaml
+        .. literalinclude:: configurations/configuration_OPMv3.yaml
            :language: yaml
 
     |
+
 ------------------
 
 CT ASLM - v1
 ************
 
-.. image:: ctaslmv1.png
+.. image:: images/ctaslmv1.png
    :width: 100%
    :align: center
 
@@ -322,16 +325,17 @@ The University of Texas Southwestern Medical Center, Dallas, TX
 
     .. collapse:: Configuration File
 
-        .. literalinclude:: ../user_guide/hardware/configurations/configuration_ctaslmv1.yaml
+        .. literalinclude:: configurations/configuration_ctaslmv1.yaml
            :language: yaml
 
     |
+
 ------------------
 
 CT ASLM - v2
 ************
 
-.. image:: ctaslmv2.png
+.. image:: images/ctaslmv2.png
    :width: 100%
    :align: center
 
@@ -388,16 +392,17 @@ The University of Texas Southwestern Medical Center, Dallas, TX
 
     .. collapse:: Configuration File
 
-        .. literalinclude:: ../user_guide/hardware/configurations/configuration_ctaslmv2.yaml
+        .. literalinclude:: configurations/configuration_ctaslmv2.yaml
            :language: yaml
 
     |
+
 ------------------
 
 Expansion ASLM
 **************
 
-.. image:: expansion_aslm.png
+.. image:: images/expansion_aslm.png
    :width: 100%
    :align: center
 
@@ -466,17 +471,18 @@ The University of Texas Southwestern Medical Center, Dallas, TX
 
     .. collapse:: Configuration File
 
-        .. literalinclude:: ../user_guide/hardware/configurations/configuration_upright.yaml
+        .. literalinclude:: configurations/configuration_upright.yaml
            :language: yaml
 
     |
+
 ------------------
 
 
 MCT-ASLM
 ********
 
-.. image:: mct_aslm.png
+.. image:: images/mct_aslm.png
    :width: 100%
    :align: center
 
@@ -559,10 +565,12 @@ The University of Texas Southwestern Medical Center, Dallas, TX
 
     .. collapse:: Configuration File
 
-        .. literalinclude:: ../user_guide/hardware/configurations/configuration_multiscale.yaml
+        .. literalinclude:: configurations/configuration_multiscale.yaml
            :language: yaml
 
 
+
+    |
 
 ------------------
 
@@ -570,7 +578,7 @@ The University of Texas Southwestern Medical Center, Dallas, TX
 Spectral TIRF
 *************
 
-.. image:: spectral_tirf.png
+.. image:: images/spectral_tirf.png
    :width: 100%
    :align: center
 
@@ -627,17 +635,18 @@ The University of Texas Southwestern Medical Center, Dallas, TX
 
     .. collapse:: Configuration File
 
-        .. literalinclude:: ../user_guide/hardware/configurations/configuration_spectral_tirf.yaml
+        .. literalinclude:: configurations/configuration_spectral_tirf.yaml
            :language: yaml
 
 
-        |
+    |
+
 ------------------
 
 Robotic MesoSPIM
 ****************
 
-.. image:: robot.png
+.. image:: images/robot.png
    :width: 100%
    :align: center
 
@@ -695,7 +704,7 @@ The University of Texas Southwestern Medical Center, Dallas, TX
        * - Other
          - Meca500 robotic arm for sample loading and unloading.
 
-
+    |
 
 ----------------
 
@@ -757,11 +766,11 @@ The University of Colorado, Boulder, CO
 
     .. collapse:: Configuration File
 
-        .. literalinclude:: ../user_guide/hardware/configurations/configuration_biofrontiers.yaml
+        .. literalinclude:: configurations/configuration_biofrontiers.yaml
            :language: yaml
 
 
-        |
+    |
 
 ------------------
 
@@ -810,7 +819,7 @@ Arizona State University, Tempe, AZ
        * - Other
          - TBD
 
-
+    |
 
 ------------------
 
@@ -858,3 +867,6 @@ Arizona State University, Tempe, AZ
          - TBD
        * - Other
          - TBD
+
+    |
+

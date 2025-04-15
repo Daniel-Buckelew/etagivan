@@ -716,7 +716,7 @@ For an example of how to use the tiling wizard, see
 Autofocus Settings
 ------------------
 
-.. image:: case_studies/images/autofocus_settings.png
+.. image:: images/autofocus_settings.png
 
 The :guilabel:`Autofocus Settings` panel controls parameters of the autofocus
 :doc:`feature <features/features>`.

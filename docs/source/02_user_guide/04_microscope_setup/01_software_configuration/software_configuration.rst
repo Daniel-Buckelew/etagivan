@@ -9,8 +9,10 @@ This section outlines the ``configuration.yaml``, ``experiment.yml``,
 -----------------
 
 .. _configuration_file:
+
 Initial Configuration
 =====================
+
 In order for the **navigate** software to function, you will need to configure the
 specifications of the various hardware that you will be using in the
 ``configuration.yaml`` file.
@@ -100,6 +102,7 @@ study for a general walkthrough of how to build your own configuration file and 
 -----------------
 
 .. _multiple_microscopes:
+
 Microscope Configurations
 -------------------------
 

@@ -87,6 +87,6 @@ To save an image to disk, follow these steps:
     * Once complete, the data can be opened using standard image processing
       software such as `Fiji <https://imagej.net/software/fiji/>`_.
 
-.. image:: user_guide/images/save_dialog.png
+.. image:: 01_quick_start/images/save_dialog.png
     :align: center
     :alt: File Saving Dialog
