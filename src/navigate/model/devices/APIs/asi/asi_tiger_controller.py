@@ -1080,3 +1080,35 @@ class TigerController:
         self.SAM('c',1)
         self.SAM('b',1)
         self.SAM('c',3)
+
+    def setup_control_loop(self, analog_outputs: dict):
+        """
+        Sets up the control loop
+        
+        Arguments: self, waveform type dict (axis, waveform)
+
+        If/Else statements: send the right loop
+        
+        """
+        channels = analog_outputs.keys()
+        if channels:
+            commands = ['CCA X=0',
+             
+            'm e=2',
+            'cca y=5',
+            'ccb x=67',
+            'ccb y=1',
+
+            'm e=3',
+            'cca y=9',
+            'cca z=400',
+            'ccb x=2',
+            'ccb y=192',
+
+            'm e = 35',
+            'cca z = 3',
+            ]
+            for command in commands:
+                # Send data
+                self.send_command(f'{command}\r')
+                self.read_response()
