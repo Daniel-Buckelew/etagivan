@@ -1,0 +1,39 @@
+navigate.config.config
+======================
+
+.. automodule:: navigate.config.config
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+   
+      build_nested_dict
+      get_configuration_paths
+      get_navigate_path
+      load_configs
+      support_deceased_configuration
+      update_config_dict
+      verify_configuration
+      verify_experiment_config
+      verify_positions_config
+      verify_waveform_constants
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

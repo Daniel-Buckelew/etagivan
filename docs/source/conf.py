@@ -89,7 +89,15 @@ highlight_language = "python"
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["**/configurations_archive/*", "*archive*", "**/*_archive.rst"]
+exclude_patterns = [
+    "**/configurations_archive/*",
+    "*archive*",
+]
+
+# In docs/conf.py
+autodoc_mock_imports = [
+    "navigate.model.devices.APIs",
+]
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -114,6 +122,7 @@ linkcheck_ignore = [
     r"http://proxy\.your_university\.edu:1234",
     r"https://proxy\.your_university\.edu:1234",
 ]
+
 # -- LaTeX output options ----------------------------------------------------
 
 latex_elements = {

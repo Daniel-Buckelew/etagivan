@@ -1,0 +1,42 @@
+navigate.tools.common\_functions
+================================
+
+.. automodule:: navigate.tools.common_functions
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+   
+      build_ref_name
+      combine_funcs
+      copy_proxy_object
+      load_module_from_file
+      load_param_from_module
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom_class.rst
+   
+      VariableWithLock
+   
+   
+
+   
+   
+   
+
+
+

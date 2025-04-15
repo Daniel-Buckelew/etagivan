@@ -1,0 +1,39 @@
+navigate.model.features.volume\_search
+======================================
+
+.. automodule:: navigate.model.features.volume_search
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+   
+      draw_box
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom_class.rst
+   
+      VolumeSearch
+      VolumeSearch3D
+   
+   
+
+   
+   
+   
+
+
+

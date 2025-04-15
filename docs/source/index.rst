@@ -48,31 +48,39 @@ technology developers.
    :caption: Getting Started
    :maxdepth: 1
 
-   quick_start
-   software_installation
-   i_want_to
+   01_getting_started/01_quick_start
+   01_getting_started/02_software_installation
+   01_getting_started/03_i_want_to
 
 
 .. toctree::
    :caption: User Guide
    :maxdepth: 1
 
-   user_guide/hardware/hardware_home
-   user_guide/file_formats
-   user_guide/gui_walkthrough
-   user_guide/setup_microscope
-   user_guide/acquiring_home
-   user_guide/case_studies/case_studies_home
+   02_user_guide/01_supported_hardware/hardware_home
+   02_user_guide/02_file_formats/file_formats
+   02_user_guide/03_user_interface_walkthrough/user_interface_walkthrough
+   02_user_guide/04_microscope_setup/setup_microscope
+   02_user_guide/05_acquiring_data/acquiring_home
+   02_user_guide/06_case_studies/case_studies_home
 
 .. toctree::
    :caption: Development
    :maxdepth: 1
 
-   contributing/software_architecture
-   contributing/contributing_guidelines
-   contributing/feature_container
-   user_guide/restapi
-   plugin/plugin_home
+   03_contributing/01_contributing_guidelines
+   03_contributing/02_developer_install
+   03_contributing/software_architecture
+   03_contributing/feature_container
+   03_contributing/restapi
+   03_contributing/plugin/plugin_home
+
+.. toctree::
+   :caption: Troubleshooting & Known Issues
+   :maxdepth: 1
+
+   04_faq/troubleshooting/troubleshooting_home
+   04_faq/issues/issues_home
 
 .. toctree::
    :caption: Plugins
@@ -90,8 +98,8 @@ technology developers.
    :caption: Reference
    :maxdepth: 1
 
-   implementations/implementations
-   api
+   05_reference/implementations/implementations
+   05_reference/api
 
 
 **Authors**

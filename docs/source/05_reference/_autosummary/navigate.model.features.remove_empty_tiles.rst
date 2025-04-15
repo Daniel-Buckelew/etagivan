@@ -1,0 +1,42 @@
+navigate.model.features.remove\_empty\_tiles
+============================================
+
+.. automodule:: navigate.model.features.remove_empty_tiles
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+   
+      detect_tissue
+      detect_tissue2
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom_class.rst
+   
+      DetectTissueInStack
+      DetectTissueInStackAndRecord
+      DetectTissueInStackAndReturn
+      RemoveEmptyPositions
+   
+   
+
+   
+   
+   
+
+
+

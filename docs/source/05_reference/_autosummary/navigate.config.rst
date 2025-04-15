@@ -1,0 +1,33 @@
+﻿navigate.config
+===============
+
+.. automodule:: navigate.config
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :template: custom_module.rst
+   :recursive:
+
+   navigate.config.config
+   navigate.config.configuration_database
+

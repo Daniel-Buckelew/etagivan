@@ -1,0 +1,43 @@
+navigate.model.devices
+======================
+
+.. automodule:: navigate.model.devices
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :template: custom_module.rst
+   :recursive:
+
+   navigate.model.devices.camera
+   navigate.model.devices.daq
+   navigate.model.devices.device_types
+   navigate.model.devices.filter_wheel
+   navigate.model.devices.galvo
+   navigate.model.devices.laser
+   navigate.model.devices.mirror
+   navigate.model.devices.objectives
+   navigate.model.devices.remote_focus
+   navigate.model.devices.shutter
+   navigate.model.devices.stage
+   navigate.model.devices.zoom
+

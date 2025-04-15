@@ -1,0 +1,44 @@
+navigate.model.features.restful\_features.IlastikSegmentation
+=============================================================
+
+.. currentmodule:: navigate.model.features.restful_features
+
+.. autoclass:: IlastikSegmentation
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~IlastikSegmentation.__init__
+      ~IlastikSegmentation.data_func
+      ~IlastikSegmentation.init_func
+      ~IlastikSegmentation.mark_position
+      ~IlastikSegmentation.update_setting
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~IlastikSegmentation.model
+      ~IlastikSegmentation.service_url
+      ~IlastikSegmentation.project_file
+      ~IlastikSegmentation.resolution
+      ~IlastikSegmentation.zoom
+      ~IlastikSegmentation.pieces_num
+      ~IlastikSegmentation.pieces_size
+      ~IlastikSegmentation.high_res_microscope_name
+      ~IlastikSegmentation.high_res_zoom_value
+      ~IlastikSegmentation.config_table
+   
+   
