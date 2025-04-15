@@ -1013,7 +1013,7 @@ class TigerController:
         self.send_command(f'CCA Z=0\r')
         self.read_response()
 
-    def SA_waveform(self, axis:str, waveform=0, amplitude=1000, offset=500):
+    def SA_waveform(self, axis:str, waveform=0, amplitude=1000, offset=500,period=100):
         """Programs the analog waveforms using SAA, SAO, and SAP
         Default waveform is a sawtooth waveform with an amplitude of 1V with an offset of 0.5V
 
@@ -1036,6 +1036,8 @@ class TigerController:
         self.read_response()
         self.send_command(f"SAO {axis}={offset}")
         self.read_response()
+        self.send_command(f"SAF {axis}={period}")
+        self.read_response()
 
     def SAM(self, axis: str, mode: int):
         """Sets the single-axis mode according to the integer code.
@@ -1056,3 +1058,25 @@ class TigerController:
 
         self.send_command(f"SAM {axis}={mode}")
         self.read_response()
+
+    def test_one(self, amplitude=5000, offset=2500, period=100):
+        "RFVC in Triangle Mode, Galvo in Ramp"
+        "Amplitude=5v, Offset = 2.5v, Period=100ms"
+
+        self.SA_waveform("c",1,{amplitude},{offset},{period})
+        self.SA_waveform("a",0,{amplitude},{offset},{period})
+
+        self.SAM('c',1)
+        self.SAM('a',1)
+        self.SAM('c',3)
+
+    def test_two(self, amplitude=5000, offset=2500, period=100):
+        "RFVC in Triangle Mode, Galvo in Ramp"
+        "Amplitude=5v, Offset = 2.5v, Period=100ms"
+
+        self.SA_waveform("c",0,{amplitude},{offset},{period})
+        self.SA_waveform("b",3,{amplitude},{offset},{period})
+
+        self.SAM('c',1)
+        self.SAM('b',1)
+        self.SAM('c',3)
