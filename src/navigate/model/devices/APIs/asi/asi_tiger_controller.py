@@ -1062,10 +1062,11 @@ class TigerController:
     def test_one(self, amplitude=5000, offset=2500, period=100):
         "RFVC in Triangle Mode, Galvo in Ramp"
         "Amplitude=5v, Offset = 2.5v, Period=100ms"
-
+        self.setup_control_loop()
         self.SA_waveform("c",1,{amplitude},{offset},{period})
         self.SA_waveform("a",0,{amplitude},{offset},{period})
 
+        self.logic_cell_on(1)
         self.SAM('c',1)
         self.SAM('a',1)
         self.SAM('c',3)
@@ -1073,15 +1074,16 @@ class TigerController:
     def test_two(self, amplitude=5000, offset=2500, period=100):
         "RFVC in Triangle Mode, Galvo in Ramp"
         "Amplitude=5v, Offset = 2.5v, Period=100ms"
-
+        self.setup_control_loop()
         self.SA_waveform("c",0,{amplitude},{offset},{period})
         self.SA_waveform("b",3,{amplitude},{offset},{period})
 
+        self.logic_cell_on(1)
         self.SAM('c',1)
         self.SAM('b',1)
-        self.SAM('c',3)
+        #self.SAM('c',3)
 
-    def setup_control_loop(self, analog_outputs: dict):
+    def setup_control_loop(self):
         """
         Sets up the control loop
         
@@ -1090,25 +1092,35 @@ class TigerController:
         If/Else statements: send the right loop
         
         """
-        channels = analog_outputs.keys()
-        if channels:
-            commands = ['CCA X=0',
-             
-            'm e=2',
-            'cca y=5',
-            'ccb x=67',
-            'ccb y=1',
+        commands = ['CCA X=0',
+            
+        'm e=2',
+        'cca y=5',
+        'ccb x=67',
+        'ccb y=1',
 
-            'm e=3',
-            'cca y=9',
-            'cca z=400',
-            'ccb x=2',
-            'ccb y=192',
+        'm e=3',
+        'cca y=9',
+        'cca z=400',
+        'ccb x=2',
+        'ccb y=192',
 
-            'm e = 35',
-            'cca z = 3',
-            ]
-            for command in commands:
-                # Send data
-                self.send_command(f'{command}\r')
-                self.read_response()
+        'm e = 35',
+        'cca z = 3',
+        ]
+        for command in commands:
+            # Send data
+            self.send_command(f'{command}\r')
+            self.read_response()
+
+    def logic_cell_on(self, axis : str):
+        self.send_command(f'M E = {axis}\r')
+        self.read_response()
+        self.send_command(f'CCA Z=1\r')
+        self.read_response()
+
+    def logic_cell_off(self, axis :str):
+        self.send_command(f'M E = {axis}\r')
+        self.read_response()
+        self.send_command(f'CCA Z=0\r')
+        self.read_response()

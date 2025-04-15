@@ -87,6 +87,14 @@ class ASIShutter(ShutterBase, SerialDevice):
 
         self.port = configuration["configuration"]["microscopes"][microscope_name]["shutter"]["hardware"]["port"]
 
+        self.waveform = configuration["configuration"]["microscopes"][microscope_name]["galvo"][0]["waveform"]
+        self.waveform_max = configuration["configuration"]["microscopes"][microscope_name]["galvo"][0]["hardware"]["max"]
+        self.waveform_min = configuration["configuration"]["microscopes"][microscope_name]["galvo"][0]["hardware"]["min"]
+
+        self.amplitude = (self.waveform_max - self.waveform_min) * 1000
+        self.offset = (self.amplitude / 2.0 + self.waveform_min) * 1000
+        
+
     @classmethod
     def connect(cls, port, baudrate=115200, timeout=0.25):
         """Build ASILaser Serial Port connection
@@ -126,6 +134,10 @@ class ASIShutter(ShutterBase, SerialDevice):
         """Open the shutter."""
         try:
             self.shutter.logic_card_on(self.axis)
+            if self.waveform == "sine":
+                self.shutter.test_two(self.amplitude,self.offset,100)
+            else:
+                self.shutter.test_one(self.amplitude,self.offset,100)
             logger.debug("ShutterTTL - Shutter opened")
         except Exception as e:
             logger.exception(f"Shutter not open: {traceback.format_exc()}")
@@ -133,6 +145,10 @@ class ASIShutter(ShutterBase, SerialDevice):
     def close_shutter(self) -> None:
         """Close the shutter."""
         try:
+            self.shutter.SAM('c',0)
+            self.shutter.SAM('b',0)
+            self.shutter.SAM('a',0)
+            self.shutter.logic_cell_off(1)
             self.shutter.logic_card_off(self.axis)
             logger.debug("ShutterTTL - Shutter closed")
         except Exception as e:
