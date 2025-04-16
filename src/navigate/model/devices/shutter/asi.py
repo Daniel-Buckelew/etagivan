@@ -92,7 +92,7 @@ class ASIShutter(ShutterBase, SerialDevice):
         self.waveform_min = configuration["configuration"]["microscopes"][microscope_name]["galvo"][0]["hardware"]["min"]
 
         self.amplitude = (self.waveform_max - self.waveform_min) * 1000
-        self.offset = (self.amplitude / 2.0 + self.waveform_min) * 1000
+        self.offset = ((self.amplitude / 2.0) + self.waveform_min * 1000)
         
 
     @classmethod
