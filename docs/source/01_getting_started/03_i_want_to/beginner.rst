@@ -38,7 +38,7 @@ Launch the Software Package
 ---------------------------
 
 After activating the environment, **navigate** should now be shown in parentheses. After you have already
-:doc:`configured <user_guide/setup_microscope>` **navigate**, you can launch it by typing the following
+:ref:`configured <setup_microscope>` **navigate**, you can launch it by typing the following
 command into the Anaconda command window:
 
 .. code-block:: console
@@ -96,7 +96,7 @@ Configure the Camera Settings
 
     .. note::
         For more information on how to configure the rolling shutter
-        for ASLM operation, please refer to :doc:`ASLM <user_guide/case_studies/setup_voodoo>`.
+        for ASLM operation, please refer to :ref:`ASLM <setup_aslm>`.
 
     .. image:: images/beginner/sensor-mode.png
        :alt: Changing the camera sensor mode in **navigate**.
@@ -132,8 +132,7 @@ Configure the Camera Settings
 Acquire in a Continuous Scan Mode
 =================================
 
-* Select "Continuous Scan" in the dropdown next to the :guilabel:`Acquire` button in 
-  the :ref:`acquire bar <user_guide/gui_walkthrough:acquisition bar>`.
+* Select "Continuous Scan" in the dropdown next to the :guilabel:`Acquire` button in the :ref:`acquisition bar <ui_acquisition_bar>`.
 
     .. image:: images/beginner/continuous-scan-dropdown.png
          :alt: Selecting the continuous scan mode in **navigate**.
@@ -156,7 +155,7 @@ Acquire in a Continuous Scan Mode
       * The step size for each axis can be adjusted with the spinbox next to each button.
       * For stages loaded in a synthetic mode, buttons will be disabled.
       * Absolute positions can be entered in the text boxes next to each button.
-      * Check :doc:`configuration settings <user_guide/software_configuration>` for more information.
+      * Check :ref:`configuration settings <configuration_file>` for more information.
     * Alternatively, if available, use the manufacturer-provided joystick to position 
       the sample.
 
@@ -176,9 +175,7 @@ Acquire in a Continuous Scan Mode
 
         If the stage is moved too quickly, the sample and/or microscope may be damaged.
 
-        We strongly recommend that you implement stage limits in your configuration file. 
-        Please refer to the :doc:`configuration settings <user_guide/software_configuration>` 
-        for more information.
+        We strongly recommend that you implement stage limits in your configuration file. Please refer to the :ref:`configuration settings <configuration_file>` for more information.
 
     .. image:: images/beginner/stage-movement-panel.png
         :alt: Moving the stage in **navigate**.
@@ -233,7 +230,7 @@ Acquiring a Z-Stack
 
 * Using the :guilabel:`Stage Control`, go to the desired z-position in the sample. Make
   sure that the sample is in focus. To use the autofocus feature, please refer to the
-  :ref:`Autofocus Settings <user_guide/gui_walkthrough:autofocus settings>`.
+  :ref:`Autofocus Settings <ui_autofocus>`.
 
     .. image:: images/beginner/stage-control-start-pos-zstack.png
         :alt: Adjusting the stage position in **navigate**.
@@ -260,10 +257,10 @@ Acquiring a Z-Stack
         If there is a shift in ``F`` between the start and stop positions, the
         ``F`` axis will be ramped synchronously with ``Z`` to maintain focus.
 
-        Check :doc:`configuration settings <user_guide/software_configuration>`
+        Check :ref:`configuration settings <configuration_file>`
         for more information to determine if focus is enabled in hardware.
 
-        Refer to :doc:`Imaging on a mesoSPIM BT <user_guide/case_studies/acquire_mesospimbt>`
+        Refer to :ref:`Imaging on a mesoSPIM BT <acquire_mesospimbt>`
         section for an example of how to acquire a z-stack with a focus ramp.
 
 * Type the desired step size in microns in the :guilabel:`Step Size` dialog box in
@@ -272,7 +269,7 @@ Acquiring a Z-Stack
     .. note::
         The minimum step size, and increment between steps, are graphical user interface
         defaults that are specified in the ``configuration.yaml`` file. More information can
-        :doc:`configuration settings <user_guide/software_configuration>`
+        :ref:`configuration settings <configuration_file>`
 
         .. code-block:: yaml
 

@@ -1,3 +1,6 @@
+.. _configuration_file:
+
+
 ======================
 Configuration Overview
 ======================
@@ -7,8 +10,6 @@ This section outlines the ``configuration.yaml``, ``experiment.yml``,
 ``waveform_constants.yml`` files.
 
 -----------------
-
-.. _configuration_file:
 
 Initial Configuration
 =====================
@@ -173,6 +174,8 @@ Additional explanations of a few specific sections of the microscope configurati
 below. Notably, the ``zoom`` section of the ``configuration.yaml`` specifies effective
 pixel size.
 
+.. _configure_stages:
+
 Stage Subsection
 ^^^^^^^^^^^^^^^^
 
@@ -245,7 +248,7 @@ to move to a different offset in order to observe the sample at the same positio
 ``microscope1``.
 
 Finally, we set the flip flags. These are important for getting
-:ref:`multiposition <user_guide/gui_walkthrough:multiposition>` acquisitions to
+:ref:`multiposition <ui_multiposition>` acquisitions to
 run properly. We set a convention in the software to expect that increasing value along
 an axis brings the sample further into our field of view. That is, increasing the
 x-axis position should bring the sample further to the right in the frame (in the case
@@ -393,6 +396,8 @@ automatically and save changes automatically on exit.
 
 -----------------
 
+.. _configure_waveforms_constants:
+
 Waveform Constants File
 =======================
 
@@ -402,6 +407,8 @@ file does not need to be edited by the user. The program will update it automati
 and save changes automatically on exit.
 
 -----------------
+
+.. _configure_waveform_templates:
 
 Waveform Templates File
 =======================

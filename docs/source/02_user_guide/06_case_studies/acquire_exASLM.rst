@@ -24,7 +24,7 @@ scanning which removes the need for computational shearing.
 More information about this microscope and this method, which we refer to as mechanical shearing, can be found
 `here <https://pubmed.ncbi.nlm.nih.gov/38645073/>`_.
 
-.. Constant Velocity Acquisition:
+.. _Constant Velocity Acquisition:
 
 Imaging a Z-Stack using Constant Velocity Acquisition Mode
 ==========================================================

@@ -2,9 +2,9 @@
 Write A Smart Acquisition Routine (Intermediate)
 ================================================
 
-**navigate**'s :doc:`feature container <contributing/feature_container>` enables us to
+**navigate**'s :ref:`feature container <user_guide_features>` enables us to
 write acquisition routines on the fly by chaining existing 
-:doc:`features <user_guide/features/features>` into lists. Please see
+:ref:`features <user_guide_features>` into lists. Please see
 :ref:`Currently Implemented Features <contributing/feature_container:currently implemented features>`
 for a complete list of features. Users can build additional features within :doc:`plugins <plugin/plugin_home>`.
 
@@ -12,7 +12,7 @@ In this guide, we will use existing features to write a routine that scans throu
 imaging chamber and takes z-stacks only where it finds the sample.
 
 Suppose there are two positions listed in the 
-:ref:`multiposition table <user_guide/gui_walkthrough:multiposition>`, one containing
+:ref:`multiposition table <ui_multiposition>`, one containing
 tissue and one empty, as shown below.
 
 .. image:: images/intermediate/multiposition_tissue.png
@@ -137,7 +137,7 @@ decisions arising from this node.
 Close the node window and press :guilabel:`Add` in the "Add New Feature List" window.
 This feature is now available under :menuselection:`Features --> TestFeature` and 
 can be run in "Customized"
-:ref:`acquisition mode <user_guide/gui_walkthrough:acquisition bar>`.
+:ref:`acquisition mode <ui_acquisition_bar>`.
 
 Select "Customized" acquisition mode, select :menuselection:`Features --> TestFeature`,
 and press :guilabel:`Acquire`. For the positions shown at the start of this guide, the

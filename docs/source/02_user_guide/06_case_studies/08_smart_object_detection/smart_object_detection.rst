@@ -1,7 +1,7 @@
 
-========================================
-Smart 3D Object Detection with MCT-ASLM
-========================================
+=========================
+Smart 3D Object Detection
+=========================
 
 Smart 3D Object Detection in *navigate* enables automated, feature-driven imaging across spatial scales. In this workflow, a specimen is first imaged volumetrically at a user-defined magnification using one microscope configuration—typically in a low-resolution, large field-of-view mode. A custom segmentation algorithm is then applied to the dataset to identify objects of interest in 3D. The positions of these detected features are automatically populated into the multiposition table. The system then switches to an alternatively configured microscope object—often operating at higher magnification and resolution—and revisits each detected location to acquire high-resolution image stacks. This streamlined process enables efficient, targeted imaging of biologically relevant features while minimizing unnecessary data acquisition.
 
@@ -17,7 +17,7 @@ This guide provides a step-by-step overview of how to set up and utilize the **V
 
 2. **Load the Analysis Function**:
 
-   - Load the analysis function that will be used to detect the objects of interest. This function should be capable of processing the low-resolution images and identifying the features you want to target.
+   - Load the analysis function that will be used to detect the objects of interest. This function should be capable of processing the low-resolution images and identifying the features you want to target. Detailed directions on how to do this can be found in the :ref:`Loading Custom Functions <loading_custom_functions>` section of the documentation.
 
    .. image:: images/Picture2.PNG
      :width: 60%

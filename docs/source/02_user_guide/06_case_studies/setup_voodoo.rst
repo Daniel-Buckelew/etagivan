@@ -4,6 +4,8 @@
 Setting up an Axially Swept Light-Sheet Microscope
 ==================================================
 
+This case study describes Axially Swept Light-Sheet Microscope that scans the beam in both the laser propagation (``Y``) and detection (``Z``) directions synchronously with a piezo mounted objective. Tiling in ``X``, ``Y``, and ``Z`` is provided by a motorized stage.
+
 Important points
 ================
 The key to properly setting up the navigate software is to sequentially enable select

@@ -1,8 +1,10 @@
+.. _acquire_mesospimbt:
+
 ========================
 Imaging on a mesoSPIM BT
 ========================
 
-This is a case study in using the software to image with a `mesoSPIM BT microscope <https://pubmed.ncbi.nlm.nih.gov/38538644/>`_.
+This is a case study in using the software to image with a `mesoSPIM BT microscope <https://pubmed.ncbi.nlm.nih.gov/38538644/>`_. It is a Digitally Scanned, Axially Swept Light-Sheet Microscope that scans the beam laterally  (``X``) with galvanometric mirrors to create a virtual sheet of light, and axially (``Y``) with an electronically tunable lens. The sample is moved in the detection direction (``Z``) to acquire a stack. Tiling in ``X``, ``Y``, and ``Z`` is provided by a motorized stage.
 
 -----------------
 
@@ -170,6 +172,8 @@ Imaging a z-stack
    .. image:: images/save_dialog.png
 
 -----------------
+
+.. _acquire_mesospimbt_tiling:
 
 Tiling a sample larger than the field of view
 =============================================

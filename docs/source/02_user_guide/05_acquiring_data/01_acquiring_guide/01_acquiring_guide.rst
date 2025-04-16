@@ -16,12 +16,14 @@ and Z-Stack, which can be saved to TIFF, OME-TIFF, HDF5, N5, and OME-Zarr data f
 Saving is toggled under the GUI's :ref:`timepoint settings <user_guide/gui_walkthrough:timepoint settings>`.
 
 These modes (and other custom modes) can be selected in the program's
-:ref:`acquisition bar <user_guide/gui_walkthrough:acquisition bar>` dropdown list.
+:ref:`acquisition bar <ui_acquisition_bar>` dropdown list.
 
-Each acquisition mode is implemented as a :doc:`feature list <features/features>` and can be used in sequence with other features that can, for example,
+Each acquisition mode is implemented as a :ref:`feature list <user_guide_features>` and can be used in sequence with other features that can, for example,
 :doc:`make smart decisions <../intermediate>`.
 
 ----------------
+
+.. _user_guide_continuous:
 
 Continuous Scan
 ---------------
@@ -31,8 +33,8 @@ this mode, only to preview what is in focus. This mode is helpful for alignment,
 parameter tuning, and scrolling around the sample with the stage.
 
 It is implemented as
-a :doc:`feature list <features/features>`, shown in its
-:ref:`textual form <user_guide/features/features:text representation of feature lists>` below.
+a :ref:`feature list <user_guide_features>`, shown in its
+:ref:`textual form <user_guide_features:text representation of feature lists>` below.
 
 .. code-block:: python
 
@@ -93,7 +95,7 @@ Note that in the z-stack the color channel looping is abstracted into
 ``ZStackAcquisition``, but we will take one set of z-stacks at each
 :ref:`timepoint <user_guide/gui_walkthrough:timepoint settings>`. It is also
 worth noting that ``ZStackAcquisition`` handles moving through
-:ref:`multiple positions <user_guide/gui_walkthrough:multiposition>`.
+:ref:`multiple positions <ui_multiposition>`.
 ``ZStackAcquisition`` will loop over ``Z`` or ``C`` first, as decided by "Per Stack"
 or "Per Z", and then will loop over positions.
 
@@ -104,7 +106,7 @@ Customized
 
 The customized acquisition mode can be used to run any feature list of the user's choosing.
 Data acquisition with **navigate** is almost infinitely reconfigurable with the either the
-:doc:`feature container <features/features>`, if a desired acquisition can be
+:ref:`feature container <user_guide_features>`, if a desired acquisition can be
 performed using a reconfiguration of existing features and saving formats, or the
 :doc:`plugin architecture <../plugin/plugin_home>`, if new features or saving formats are
 required. We strongly recommend the reader check through the
