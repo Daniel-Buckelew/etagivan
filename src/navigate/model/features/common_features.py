@@ -319,6 +319,93 @@ class WaitToContinue:
         if self.pause_data_lock.locked():
             self.pause_data_lock.release()
 
+class FlexibleLoopByParameter:
+    """FlexibleLoopByParameter class for flexible parameter-based looping.
+
+    This class only loops via the signal thread, but refreshes the number of steps
+    each time it is entered via an outer loop. This is useful if some previous feature
+    changes, for example, the multiposition table.
+    
+    Notes:
+    ------
+    - LoopByCount establishes self.steps in the __init__, so it is fixed even if the user
+    wants to change it for each iteration of an outer loop. FlexibleLoopByParameter gets
+    around this by only using the signal thread and parsing the parameter string on 
+    self.initialize. To reset, just set self.steps back to a string.
+
+    - Of course, this means this can only work on the signal thread. Ideally, LoopByCount
+    would be able to do this, but also having the data thread complicates things. But, if
+    you're only using this to loop by some parameter, maybe signal is all you need?
+
+    - USE CASE: I have an outer loop which annotates all tumor positions in a fish, and an
+    inner loop which is the standard MoveToNextPosition... The number of positions will be
+    different for each new fish, so something like this is neeeded.
+    """
+    def __init__(self, model, par_string="experiment.MicroscopeState.multiposition_count"):
+        """Initialize the FlexibleLoopByParameter class.
+
+        Parameters:
+        ----------
+        model : MicroscopeModel
+            The microscope model object used for loop control.
+        par_string : str, optional
+            String defining a reference to a parameter in the configuration.
+            Default is multiposition_count.
+        """        
+        self.model = model
+
+        self.par_string = par_string
+        self.steps = par_string
+        self.signal = 1
+
+        self.loop_start = True
+
+        self.config_table = {
+            "signal": {
+                "init": self.initialize,
+                "main": self.signal_func,
+                },
+            }
+
+    def initialize(self):
+        # if type(self.steps) is str:
+        #     try:
+        #         parameters = self.steps.split(".")
+        #         config_ref = reduce((lambda pre, n: f"{pre}['{n}']"), parameters, "")
+        #         exec(f"self.steps = int(self.model.configuration{config_ref})")
+        #     except:  # noqa
+        #         self.steps = 1
+
+        #     self.signal = self.steps
+
+        if type(self.steps) is int:
+            return self.steps
+        if self.steps == "channels":
+            self.steps = len(self.model.active_microscope.available_channels)
+        elif self.steps == "positions":
+            self.steps = len(self.model.configuration["multi_positions"]) - 1
+        else:
+            try:
+                parameters = self.steps.split(".")
+                config_ref = reduce((lambda pre, n: f"{pre}['{n}']"), parameters, "")
+                exec(f"self.steps = self.model.configuration{config_ref}")
+            except:  # noqa
+                self.steps = 1
+
+            if type(self.steps) in [list, ListProxy]:
+                self.steps = len(self.steps)
+            else:
+                self.steps = int(self.steps)
+        self.signal = self.steps
+
+        print(f"FlexibleLoopByParameter > Steps: {self.signal}")
+
+    def signal_func(self):
+        self.signal -= 1
+        if self.signal <= 0:
+            self.steps = self.par_string
+            return False
+        return True
 
 class LoopByCount:
     """LoopByCount class for controlling signal and data acquisition loops.
@@ -411,6 +498,8 @@ class LoopByCount:
             self.signals = self.steps
             self.data_frames = self.steps
             initialized.value = True
+
+            print(f"LoopByCount > Steps: {self.signals}")
 
             logger.debug(f"LoopByCount-initialize: {self.signals}, {self.data_frames}")
 
