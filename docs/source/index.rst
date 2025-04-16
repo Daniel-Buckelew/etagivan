@@ -48,9 +48,9 @@ technology developers.
    :caption: Getting Started
    :maxdepth: 1
 
-   01_getting_started/01_quick_start
-   01_getting_started/02_software_installation
-   01_getting_started/03_i_want_to
+   01_getting_started/01_quick_start/01_quick_start
+   01_getting_started/02_software_installation/02_software_installation
+   01_getting_started/03_i_want_to/03_i_want_to
 
 
 .. toctree::
@@ -68,12 +68,12 @@ technology developers.
    :caption: Development
    :maxdepth: 1
 
-   03_contributing/01_contributing_guidelines
-   03_contributing/02_developer_install
-   03_contributing/software_architecture
-   03_contributing/feature_container
-   03_contributing/restapi
-   03_contributing/plugin/plugin_home
+   03_contributing/01_contributing_guidelines/01_contributing_guidelines
+   03_contributing/02_developer_install/02_developer_install
+   03_contributing/03_software_architecture/software_architecture
+   03_contributing/04_feature_container/feature_container
+   03_contributing/05_restapi/restapi
+   03_contributing/06_plugin/plugin_home
 
 .. toctree::
    :caption: Troubleshooting & Known Issues

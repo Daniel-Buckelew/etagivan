@@ -2,7 +2,7 @@
 Write a Custom Device Plugin (Advanced)
 =======================================
 
-**navigate**'s :doc:`plugin system <plugin/plugin_home>` enables users to
+**navigate**'s :ref:`plugin system <plugin>` enables users to
 easily incorporate new devices and integrate new features and acquisition modes. In
 this guide, we will add a new device type, titled ``CustomDevice``, and a dedicated GUI
 window to control it. This hypothetical ``CustomDevice`` is capable of moving a certain
@@ -493,3 +493,4 @@ The plugin is ready to use. For this plugin, you can now specify a CustomDevice 
 
 The ``custom_device`` will be loaded when **navigate** is launched, and it can be
 controlled through the GUI.
+

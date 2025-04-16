@@ -1,3 +1,5 @@
+.._setup_microscope:
+
 =======================
 Setting Up A Microscope
 =======================

@@ -89,12 +89,8 @@ highlight_language = "python"
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = [
-    "**/configurations_archive/*",
-    "*archive*",
-]
+exclude_patterns = ["**/configurations_archive/*", "*archive*", "_templates/*"]
 
-# In docs/conf.py
 autodoc_mock_imports = [
     "navigate.model.devices.APIs",
     "navigate.model.devices.camera.photometrics",

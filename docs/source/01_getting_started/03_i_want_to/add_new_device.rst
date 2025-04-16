@@ -49,7 +49,7 @@ There are two primary approaches to integrating new hardware into **navigate**:
     integrating your new hardware device as a plugin. This allows you to pull
     updates from the main repository without losing your custom hardware integration.
     It also allows you to integrate non-standard device types.
-    Learn more about the plugin architecture :doc:`here <plugin/plugin_home>`, and
+    Learn more about the plugin architecture :doc:`here <../../03_contributing/06_plugin/plugin_home>`, and
     how to write a custom plugin :doc:`here <advanced>`.
 - **Fork**:
     Alternatively, you can fork the **navigate** repository on GitHub and modify it

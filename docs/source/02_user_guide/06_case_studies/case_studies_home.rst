@@ -1,6 +1,21 @@
 Case Studies
 ============
 
+Setting Up a Microscope
+------------------------
+
+In the first case study, we demonstrate how to set up a microscope using the **navigate** software. This is shown using the 'configuration.yaml' file, which provides very granular control over the microscope settings.
+
+.. toctree::
+   :maxdepth: 2
+
+   setup_voodoo
+
+------------------
+
+Operating a Microscope
+------------------------
+
 Light sheet microscopy is a very versatile technique. Here we present some case studies
 that demonstrate how **navigate** can be used to acquire data from different types of
 light sheet microscopes. These include:
@@ -25,13 +40,34 @@ light sheet microscopes. These include:
   specimens with very large lateral extents without the overhead associated with stepping and settling
   the sample stage. Tiling in ``X``, ``Y``, and ``Z`` is provided by a motorized stage.
 
--------------------
+.. toctree::
+   :maxdepth: 2
+
+   acquire_mesospimbt
+   acquire_CT-ASLM-V1_and_CT-ASLM-V2
+   acquire_exASLM
+
+
+------------------
+
+
+Using the REST-API
+------------------------
 
 .. toctree::
    :maxdepth: 2
 
-   setup_voodoo
-   acquire_mesospimbt
-   acquire_CT-ASLM-V1_and_CT-ASLM-V2
-   acquire_exASLM
    ilastik_segmentation
+
+
+------------------
+
+Performing Smart Microscopy
+---------------------------
+
+.. toctree::
+   :maxdepth: 2
+
+   06_human_in_the_loop/human_in_the_loop
+   07_smart_tiling/smart_tiling
+   08_smart_object_detection/smart_object_detection

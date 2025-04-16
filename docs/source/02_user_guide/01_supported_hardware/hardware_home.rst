@@ -15,7 +15,7 @@ Additional devices are available by installing the
 
 .. toctree::
    :caption: Devices
-   :maxdepth: 3
+   :maxdepth: 4
 
    daq.rst
    camera.rst
