@@ -1,3 +1,5 @@
+.. _human_in_the_loop:
+
 ====================================
 Human-in-the-Loop Multiscale Imaging
 ====================================

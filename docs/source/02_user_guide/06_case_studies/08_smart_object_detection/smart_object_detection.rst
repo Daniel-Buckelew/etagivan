@@ -1,3 +1,4 @@
+.. _smart_object_detection:
 
 =========================
 Smart 3D Object Detection
