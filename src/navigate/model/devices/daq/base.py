@@ -37,6 +37,7 @@ from typing import Any, Dict
 # Third Party Imports
 
 # Local Imports
+from navigate.model.devices.APIs.asi.asi_tiger_controller import TigerController
 from navigate.model.waveforms import camera_exposure
 from navigate.tools.decorators import log_initialization
 
@@ -99,6 +100,8 @@ class DAQBase:
 
         #: int: Number of times to expand the waveform
         self.waveform_expand_num = 1
+
+        self.tiger_controller = TigerController("COM4", 115200)
 
     def __str__(self) -> str:
         """Returns the string representation of the DAQBase class"""
@@ -168,3 +171,30 @@ class DAQBase:
         self.sample_rate = self.configuration["configuration"]["microscopes"][
             microscope_name
         ]["daq"]["sample_rate"]
+
+    def prepare_acquisition(self, channel_key: str) -> None:
+        """Prepare the acquisition.
+
+        Creates and configures the DAQ tasks.
+        Writes the waveforms to each task.
+
+        Parameters
+        ----------
+        channel_key : str
+            Channel key for current channel.
+        """
+        self.tiger_controller.TTL_Trigger()
+        
+        
+
+    def stop_acquisition(self) -> None:
+        """Stop Acquisition.
+
+        Stop all tasks and close them.
+        """
+        try:
+            self.tiger_controller.SAM("Galvo axis",0)
+        except:
+            print("Oh shoot, something went wrong!")
+
+        self.analog_output_tasks = {}

@@ -37,6 +37,7 @@ from typing import Any, Dict
 
 
 # Local Imports
+from navigate.model.devices.galvo.base import GalvoBase
 from navigate.model.devices.device_types import SerialDevice
 from navigate.model.devices.APIs.asi.asi_tiger_controller import TigerController
 from navigate.tools.decorators import log_initialization
@@ -47,8 +48,8 @@ logger = logging.getLogger(p)
 
 
 @log_initialization
-class ASIGalvo(SerialDevice):
-    """GalvoNI Class - NI DAQ Control of Galvanometers"""
+class ASIGalvo(GalvoBase , SerialDevice):
+    """GalvoASI Class - ASI DAQ Control of Galvanometers"""
 
     def __init__(
         self,
@@ -90,7 +91,7 @@ class ASIGalvo(SerialDevice):
         ]["daq"]["trigger_source"]
 
         #: obj: NI DAQ device connection.
-        self.daq = device_connection
+        # self.daq = device_connection
 
         #: str: Name of the galvo.
         self.galvo_name = "Galvo " + str(device_id)
@@ -125,6 +126,8 @@ class ASIGalvo(SerialDevice):
         # Galvo Waveform Information
         #: str: Galvo waveform. Waveform or Sawtooth.
         self.galvo_waveform = self.device_config.get("waveform", "sawtooth")
+
+        self.axis = self.device_config["hardware"].get("axis","B")
 
     def __str__(self) -> str:
         """Return string representation of the GalvoASI."""
@@ -358,8 +361,8 @@ class ASIGalvo(SerialDevice):
         offset *= 1000
 
         self.device_connection.SA_waveform(self.axis, 128, amplitude, offset, period)
-        self.device_connection.SAM(self.axis, 2)
         time.sleep(1/frequency)
+        self.device_connection.SAM(self.axis, 2)
 
     def turn_off(self): 
         """Stops the galvo waveform"""
