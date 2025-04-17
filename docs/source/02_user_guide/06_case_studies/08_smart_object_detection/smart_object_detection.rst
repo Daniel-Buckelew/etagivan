@@ -10,7 +10,6 @@ This guide provides a step-by-step overview of how to set up and utilize the **V
 
 ---------------
 
-
 1. **Configure the Low-Resolution Imaging Parameters**:
 
    - Set the Z-scan range and step size. This low-resolution overview is used to identify targets.
@@ -20,9 +19,9 @@ This guide provides a step-by-step overview of how to set up and utilize the **V
 
    - Load the analysis function that will be used to detect the objects of interest. This function should be capable of processing the low-resolution images and identifying the features you want to target. Detailed directions on how to do this can be found in the :ref:`Loading Custom Functions <loading_custom_functions>` section of the documentation.
 
-   .. image:: images/Picture2.PNG
-     :width: 60%
-     :align: center
+    .. image:: images/Picture2.PNG
+       :width: 60%
+       :align: center
 
    - For the following example, we developed our own segmentation method:
 
@@ -96,11 +95,11 @@ This guide provides a step-by-step overview of how to set up and utilize the **V
 
 |
 
-3. Select the **VolumeSearch3D** feature from the **Features** menu in *navigate*.
+3. **Select the VolumeSearch3D feature from the Features menu in navigate.**
 
-   .. image:: images/Picture1.PNG
-     :width: 60%
-     :align: center
+    .. image:: images/Picture1.PNG
+       :width: 60%
+       :align: center
 
    - If the feature is not available, you may need create your own version of the feature, which can be done by selecting the **Add New Feature** menu from the **Features** menu. This can be done by copying the following code into the **Feature Popup Window**.
 
@@ -123,20 +122,24 @@ This guide provides a step-by-step overview of how to set up and utilize the **V
             {"name": ZStackAcquisition, "args": (
                 False,False,"z-stack",True,),},]
 
+    |
 
 4. **Confirm that the Feature is Selected**:
 
    - Ensure that the **VolumeSearch3D** feature is selected in the features list menu.
    - Change the acquisition mode to **Customized**, and select **Acquire**.
+
+    .. image:: images/Picture3.PNG
+       :width: 60%
+       :align: center
+
    - This will open the **Feature List Configuration Window**.
 
-   .. image:: images/Picture3.PNG
-     :align: center
+    .. image:: images/Picture4.PNG
+       :width: 100%
+       :align: center
 
-   .. image:: images/Picture4.PNG
-     :align: center
-
-2. **Press the VolumeSearch3D Button in the Feature List Configuration Window**:
+5. **Press the VolumeSearch3D Button in the Feature List Configuration Window**:
 
    - This will open the **Feature Parameters** window, which is where you configure the **VolumeSearch3D** feature. It includes the following entries:
 
@@ -151,26 +154,25 @@ This guide provides a step-by-step overview of how to set up and utilize the **V
         - **current_pixel_size**: Set to **1.01**. This is the pixel size of the low-resolution imaging.
         - **filter_pixel_number**: Set to **10**. This is the minimum number of pixels that must be present in a detected object for it to be considered valid.
 
-    - Once you have configured the parameters, close the window to save the settings.
+   - Once you have configured the parameters, close the window to save the settings.
 
-   .. image:: images/Picture6.PNG
-     :align: center
+    .. image:: images/Picture6.PNG
+       :width: 60%
+       :align: center
 
+6. **Press the SetCameraParameters button in the Feature List Configuration Window**:
 
-5. **Press the SetCameraParameters button in the Feature List Configuration Window**:
-
-   - If you need to adjust the camera settings between the two imaging modalities, you can do so here. This is typically done to ensure that the camera settings are appropriate for the resolution and magnification of the imaging mode. Here, we specify the target microscope, the sensor_mode (e.g., Light-Sheet or Normal). If imaging in the light-sheet mode, you will also need to specify the readout direction (Top-to-Bottom, or Bottom-to-Top, etc.), and the Rolling Shutter Width.
+    - If you need to adjust the camera settings between the two imaging modalities, you can do so here. This is typically done to ensure that the camera settings are appropriate for the resolution and magnification of the imaging mode. Here, we specify the target microscope, the sensor_mode (e.g., Light-Sheet or Normal). If imaging in the light-sheet mode, you will also need to specify the readout direction (Top-to-Bottom, or Bottom-to-Top, etc.), and the Rolling Shutter Width.
 
     - Once the settings are configured, close the window to save the settings.
 
+    .. image:: images/Picture7.PNG
+       :width: 60%
+       :align: center
 
-   .. image:: images/Picture7.PNG
-     :align: center
+7. **Press the UpdateExperimentSetting button in the Feature List Configuration Window**:
 
-
-5. **Press the UpdateExperimentSetting button in the Feature List Configuration Window**:
-
-   - If you need to change which channels are selected, you can do so here. In this example, the low-resolution imaging was performed for as single channel. Once the microscope switched to the nanoscale microscope object, we select two channels for imaging. This is done by specifying the channel names in the format of a dictionary, where the keys are the channel names and the values are booleans indicating whether the channel is selected (True) or not (False). For example, to select channels 1 and 3, you would use:
+    - If you need to change which channels are selected, you can do so here. In this example, the low-resolution imaging was performed for as single channel. Once the microscope switched to the nanoscale microscope object, we select two channels for imaging. This is done by specifying the channel names in the format of a dictionary, where the keys are the channel names and the values are booleans indicating whether the channel is selected (True) or not (False). For example, to select channels 1 and 3, you would use:
 
     .. code-block:: python
 
@@ -180,17 +182,13 @@ This guide provides a step-by-step overview of how to set up and utilize the **V
         }
 
 
-8. **Update Experiment Setting**:
-
-   - Use this if different settings are needed for each imaging mode, laser power, or channels of interest. *(Must follow the code below to set it up.)*
+|
 
     .. image:: images/Picture8.PNG
-      :align: center
+       :width: 60%
+       :align: center
 
-9. **Press Confirm to Begin Imaging**:
+8. **Press Confirm to Begin Imaging**:
 
    - Once all the parameters are set, press the **Confirm** button to start the imaging process. The system will first perform low-resolution imaging to identify the objects of interest, apply the segmentation algorithm, and then switch to the high-resolution imaging mode to acquire detailed images of the detected features.
-
-
-
 

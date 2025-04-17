@@ -79,7 +79,7 @@ This guide provides a step-by-step overview of how to set up and perform human-g
    .. image:: images/Picture5.png
       :align: center
 
-7. **Start Human-in-the-Loop Imaging**
+6. **Start Human-in-the-Loop Imaging**
 
    - Click **Confirm** to begin acquisition.
    - The system will automatically move to each marked position and acquire a Z-stack at the selected high-resolution settings.
