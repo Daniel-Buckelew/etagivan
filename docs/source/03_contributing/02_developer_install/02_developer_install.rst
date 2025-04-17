@@ -11,11 +11,13 @@ The following sections provide detailed guidance for developers that wish to con
 
 
 .. _download_git:
+
 **Download Git**
 
 If you do not have `Git already installed <https://git-scm.com/downloads>`_, you will need to do so before cloning the repo. We also recommend installing `GitHub Desktop <https://github.com/apps/desktop>`_ for a more user-friendly experience.
 
 .. _create_directory:
+
 **Create a directory where the repository will be cloned**
 
 We recommend a path/location that is easy to find and access such as the your Desktop or Documents. Once the folder is created, we will want to change that to our working directory (e.g., ``cd``).
@@ -36,6 +38,7 @@ We recommend a path/location that is easy to find and access such as the your De
       (navigate) MyComputer ~ $ cd ~/Desktop/Code
 
 .. _fork_repository:
+
 **Working with a Fork**
 
 For external contributors, we recommend forking the repository first. If you do not intend to contribute to the project, you can skip this step and clone the main repository directly.
@@ -61,6 +64,7 @@ For external contributors, we recommend forking the repository first. If you do 
     git checkout -b your-feature-branch
 
 .. _clone_repository:
+
 **Clone the GitHub repository**
 
 For those who do not want to fork the repository, you can clone the main repository directly. This will create a local copy of the repository on your machine.
@@ -70,6 +74,7 @@ For those who do not want to fork the repository, you can clone the main reposit
     C:\Users\Username\Code> $ git clone https://github.com/TheDeanLab/navigate.git
 
 .. _virtual_environment:
+
 **Install navigate in a Virtual Environment**
 
 We strongly recommend using a virtual environment for development. This can be accomplished either with Python's built-in `venv` or `conda`.

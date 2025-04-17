@@ -150,6 +150,8 @@ Acquiring a Single Image
     .. image:: images/beginner/save-dialog-box-acquire.png
         :alt: Saving data in **navigate**.
 
+.. _i_want_to_z_stack:
+
 Acquiring a Z-Stack
 ===================
 

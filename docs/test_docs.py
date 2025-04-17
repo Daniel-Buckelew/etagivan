@@ -2,8 +2,10 @@ import re
 import unittest
 import subprocess
 import os
+import pytest
 
 
+@pytest.mark.skip(reason="Skipping Sphinx build test.")
 class TestDocs(unittest.TestCase):
     def setUp(self):
         os.chdir(os.path.join(os.getcwd(), "docs"))

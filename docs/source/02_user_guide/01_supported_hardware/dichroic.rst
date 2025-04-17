@@ -63,4 +63,5 @@ wheel. It holds a maximum of 4 dichroics.
                 560LP: 1
                 600LP: 2
                 660LP: 3
+
 |

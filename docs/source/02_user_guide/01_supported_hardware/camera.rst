@@ -1,5 +1,5 @@
-
 .. _camera_configuration:
+
 =======
 Cameras
 =======
@@ -182,6 +182,7 @@ Iris 15
 ------------------
 
 .. _synthetic_camera:
+
 Synthetic Camera
 ----------------
 

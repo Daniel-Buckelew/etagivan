@@ -36,7 +36,7 @@ This guide provides a step-by-step overview of how to set up and perform human-g
    .. image:: images/Picture3.png
       :align: center
 
-    - If the feature is not available, you may need create your own version of the feature, which can be done by selecting the **Add New Feature** menu from the **Features** menu. This can be done by copying the following code into the **Feature Popup Window**. In this example, the microscope automatically switches back to the low-resolution imaging system upon completing the high-resolution imaging.
+   - If the feature is not available, you may need create your own version of the feature, which can be done by selecting the **Add New Feature** menu from the **Features** menu. This can be done by copying the following code into the **Feature Popup Window**. In this example, the microscope automatically switches back to the low-resolution imaging system upon completing the high-resolution imaging.
 
     .. code-block:: python
 
@@ -69,7 +69,7 @@ This guide provides a step-by-step overview of how to set up and perform human-g
       :align: center
 
 
-    - Once you have configured the parameters, close the window to save the settings.
+   - Once you have configured the parameters, close the window to save the settings.
 
 5. **Click ZStackAcquisition**
 

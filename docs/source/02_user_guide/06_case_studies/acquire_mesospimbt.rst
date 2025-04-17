@@ -104,7 +104,7 @@ Loading and finding the sample
 
 -----------------
 
-.. _z_stack:
+.. _z_stack_mesospim:
 
 Imaging a z-stack
 =================
@@ -130,7 +130,7 @@ Imaging a z-stack
 Tiling a sample larger than the field of view
 =============================================
 
-This assumes you have already set the start and end positions in :guilabel:`Stack Acquisition Settings (um)` (see :ref:`Imaging a Z-Stack <z_stack>`).
+This assumes you have already set the start and end positions in :guilabel:`Stack Acquisition Settings (um)` (see :ref:`Imaging a Z-Stack <i_want_to_z_stack>`).
 
 #. Under the :guilabel:`Channels` tab, press :guilabel:`Launch Tiling Wizard`.
 

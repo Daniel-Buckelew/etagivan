@@ -17,4 +17,3 @@ Below is a comprehensive list of all the available features that can be utilized
    ../../../05_reference/_autosummary/navigate.model.features.restful_features
    ../../../05_reference/_autosummary/navigate.model.features.volume_search
 
------------------

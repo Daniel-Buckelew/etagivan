@@ -26,7 +26,7 @@ Imaging a Z-Stack using Constant Velocity Acquisition Mode
 #. Enter the sample parameters in the :guilabel:`File Saving Dialog` that pops up. Make sure to save to SSD drive or change buffer size in configuration file to prevent any overwriting of images. Then Press :guilabel:`Acquire Data`. The stage will move from its current position to beyond the start position. The stage then ramps up to the desired stage velocity as the stage reaches the start position. Once the stage is at the start position, the stage will send an external trigger which is received by the DAQ to begin image acquisition. The number of frames required for each channel scan is precalculated from the stage velocity, scan distance, and single frame acquisition time. Acquisition will automatically stop when the desired number of frames are acquired which also corresponds to when the stage reaches its end position. For multichannel scans, the stage returns to the start position and the process repeats until all channels are acquired.
 #. To change frame buffer size, in the :guilabel:`CameraParameters` section in the :guilabel:`experiment.yaml` file in your local navigate directory in the :guilabel:`config` folder, change :guilabel:`databuffer_size` to desired number of frames. Make sure the size of the desired number of frames isn't above the available RAM in the computer.
 
-.. _z_stack:
+.. _z_stack_exaslm:
 
 Imaging a Z-Stack using two-axis scanning
 =========================================

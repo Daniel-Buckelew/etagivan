@@ -42,6 +42,7 @@ file as follows:
                 YFP: 1
                 RFP: 2
                 Far-Red: 3
+
 |
 
 .. note::
