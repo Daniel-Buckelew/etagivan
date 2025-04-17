@@ -44,7 +44,7 @@ Make sure the imaging chamber is empty or, if a sample is mounted, the sample is
 
    .. image:: images/meso_beam_6.png
 
-#. Go to :guilabel:`Camera Settings` and ensure that :guilabel:`Light-Sheet` is selected under :guilabel:`Sensor Mode`. Slowly increase the wavelength's :guilabel:`Amplitude` until the beam becomes a straight line across the screen. If the beam does not become straighter, try changing the camera's :ref:`Readout Direction <user_guide/gui_walkthrough:camera modes>`.
+#. Go to :guilabel:`Camera Settings` and ensure that :guilabel:`Light-Sheet` is selected under :guilabel:`Sensor Mode`. Slowly increase the wavelength's :guilabel:`Amplitude` until the beam becomes a straight line across the screen. If the beam does not become straighter, try changing the camera's :ref:`Readout Direction <ui_camera_modes>`.
 
    .. image:: images/meso_beam_7.png
 

@@ -1,3 +1,5 @@
+.. _intermediate:
+
 ================================================
 Write A Smart Acquisition Routine (Intermediate)
 ================================================

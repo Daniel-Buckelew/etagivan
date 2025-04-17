@@ -12,7 +12,7 @@ If you are considering refactoring part of the code, please reach out to us prio
 General Principles
 ==================
 
-- We use a `model-view-controller architecture <https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller>`_. New functionality should keep this strong separation. More information can be found in the :doc:`software architecture <../03_software_architecture/software_architecture>` section.
+- We use a `model-view-controller architecture <https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller>`_. New functionality should keep this strong separation. More information can be found in the :ref:`software architecture <software-architecture-section>` section.
 - Please do not create new configuration variables unless absolutely necessary, especially in the ``configuration.yaml`` and ``experiment.yaml`` files. A new variable is necessary only if no variable stores similar information or there is no way to use the most similar variable without disrupting another part of the code base.
 - We are happy to discuss code refactors for improved clarity and speed. However, please do not modify something that is already working without discussing this with the software team in advance.
 - All code that modifies microscope control behavior must be reviewed and tested on a live system prior to merging into the ``develop`` branch.
@@ -74,7 +74,7 @@ To avoid this error, add a ``# noqa`` comment to the end of the line to tell Ruf
 Dictionary Parsing
 ==================
 
-The :doc:`configuration file </02_user_guide/04_microscope_setup/01_software_configuration/software_configuration>` is loaded as a large dictionary object, and it is easy to create small errors in the dictionary that can crash the program. To avoid this, when getting properties from the configuration dictionary, it is best to use the ``.get()`` command, which provides you with the opportunity to also have a default value should the key provided not be found. For example,
+The :ref:`configuration file <configuration_file>` is loaded as a large dictionary object, and it is easy to create small errors in the dictionary that can crash the program. To avoid this, when getting properties from the configuration dictionary, it is best to use the ``.get()`` command, which provides you with the opportunity to also have a default value should the key provided not be found. For example,
 
 .. code-block:: python
 

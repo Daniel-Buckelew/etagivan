@@ -127,7 +127,7 @@ There should always have a ``plugin_config.yml`` file under the plugin folder, w
 Plugin GUI Elements
 --------------------
 
-**navigate** supports plugins with their own GUIs. A custom plugin GUI can be integrated as a tab or a popup. Users should specify a view option in ``plugin_config.yml``. If it is a popup, users can find the plugin under the :guilabel:`Plugins` menu in the **navigate** window. If it is a tab, it will appear next to the :ref:`Settings Notebooks <user_guide/gui_walkthrough:settings notebooks>`.
+**navigate** supports plugins with their own GUIs. A custom plugin GUI can be integrated as a tab or a popup. Users should specify a view option in ``plugin_config.yml``. If it is a popup, users can find the plugin under the :guilabel:`Plugins` menu in the **navigate** window. If it is a tab, it will appear next to the :ref:`Settings Notebooks <ui_settings_notebooks>`.
 
 When creating a new plugin with a GUI, ensure that the plugin name is consistent with the naming conventions for the associated Python files (``plugin_name_controller.py`` and ``plugin_name_frame.py``). Both Python filenames should be in lowercase.
 

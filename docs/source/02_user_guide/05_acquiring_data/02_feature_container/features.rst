@@ -92,6 +92,8 @@ Deleting Feature Lists
 
 -----------
 
+.. _text_representation_features:
+
 Text Representation of Feature Lists
 -------------------------------------
 
@@ -119,7 +121,7 @@ Here, we have a sequence defined by ``[]`` containing one element, a loop, indic
 
 Loading Custom Functions
 ------------------------
-You can load custom Python-based functions into the software, which will then be used to provide image-based feedback to the microscope. This allows you to easily adapt what the microscope responds to, thus tailoring the acquisition to your needs. 
+You can load custom Python-based functions into the software, which will then be used to provide image-based feedback to the microscope. This allows you to easily adapt what the microscope responds to, thus tailoring the acquisition to your needs.
 
 #. You can load customized functions in the software by selecting the menu :menuselection:`Features --> Advanced Setting`.
 

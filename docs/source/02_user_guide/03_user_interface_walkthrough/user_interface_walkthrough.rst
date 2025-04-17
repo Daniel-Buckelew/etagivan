@@ -459,7 +459,7 @@ Image Metrics
 Image Display
 ^^^^^^^^^^^^^
 
-This should toggle in between live mode and maximum projections in multiple dimensions, but it is currently not implemented. This is useful for visual inspection of the data as it is being acquired, and will be implemented in future releases of the software.
+This toggles between a live mode and maximum projections in multiple dimensions. This is useful for visual inspection of the data as it is being acquired, and will be implemented in future releases of the software.
 
 -------------------
 
