@@ -1080,6 +1080,7 @@ class TigerController:
 
         self.logic_cell_on(1)
         self.SAM('c',1)
+        time.sleep(0.05)
         self.SAM('b',1)
         #self.SAM('c',3)
 
