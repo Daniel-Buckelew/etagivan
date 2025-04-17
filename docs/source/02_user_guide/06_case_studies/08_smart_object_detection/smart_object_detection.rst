@@ -19,7 +19,7 @@ This guide provides a step-by-step overview of how to set up and utilize the **V
 
    - Load the analysis function that will be used to detect the objects of interest. This function should be capable of processing the low-resolution images and identifying the features you want to target. Detailed directions on how to do this can be found in the :ref:`Loading Custom Functions <loading_custom_functions>` section of the documentation.
 
-    .. image:: images/Picture2.PNG
+    .. image:: images/Picture2.png
        :width: 60%
        :align: center
 
@@ -97,7 +97,7 @@ This guide provides a step-by-step overview of how to set up and utilize the **V
 
 3. **Select the VolumeSearch3D feature from the Features menu in navigate.**
 
-    .. image:: images/Picture1.PNG
+    .. image:: images/Picture1.png
        :width: 60%
        :align: center
 
@@ -129,13 +129,13 @@ This guide provides a step-by-step overview of how to set up and utilize the **V
    - Ensure that the **VolumeSearch3D** feature is selected in the features list menu.
    - Change the acquisition mode to **Customized**, and select **Acquire**.
 
-    .. image:: images/Picture3.PNG
+    .. image:: images/Picture3.png
        :width: 60%
        :align: center
 
    - This will open the **Feature List Configuration Window**.
 
-    .. image:: images/Picture4.PNG
+    .. image:: images/Picture4.png
        :width: 100%
        :align: center
 
@@ -156,7 +156,7 @@ This guide provides a step-by-step overview of how to set up and utilize the **V
 
    - Once you have configured the parameters, close the window to save the settings.
 
-    .. image:: images/Picture6.PNG
+    .. image:: images/Picture6.png
        :width: 60%
        :align: center
 
@@ -166,7 +166,7 @@ This guide provides a step-by-step overview of how to set up and utilize the **V
 
     - Once the settings are configured, close the window to save the settings.
 
-    .. image:: images/Picture7.PNG
+    .. image:: images/Picture7.png
        :width: 60%
        :align: center
 
@@ -184,11 +184,10 @@ This guide provides a step-by-step overview of how to set up and utilize the **V
 
 |
 
-    .. image:: images/Picture8.PNG
+    .. image:: images/Picture8.png
        :width: 60%
        :align: center
 
 8. **Press Confirm to Begin Imaging**:
 
    - Once all the parameters are set, press the **Confirm** button to start the imaging process. The system will first perform low-resolution imaging to identify the objects of interest, apply the segmentation algorithm, and then switch to the high-resolution imaging mode to acquire detailed images of the detected features.
-
