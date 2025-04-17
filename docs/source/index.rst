@@ -6,42 +6,25 @@
 ############
 
 
-**navigate** is an open-source Python software for light-sheet microscope control. It
-focuses on smart microscopy applications by providing reusable acquisition and
-analysis routines, termed :ref:`features <features>`, that can be chained
-in arbitrary orders to create custom acquisition protocols.
-**navigate** is designed to accommodate the needs of
-a diverse user base, from biologists with no programming experience to advanced
-technology developers.
+**navigate** is an open-source Python software for light-sheet microscope control. It focuses on smart microscopy applications by providing reusable acquisition and analysis routines, termed :ref:`features <features>`, that can be chained in arbitrary orders to create custom acquisition protocols. **navigate** is designed to accommodate the needs of a diverse user base, from biologists with no programming experience to advanced technology developers.
 
 **Project Philosophy**
 =========================
 
-* Prioritize standard library imports for maximum stability, and minimize external
-  dependencies.
+* Prioritize standard library imports for maximum stability, and minimize external dependencies.
 * Abstraction layer to drive different camera types, etc.
 * Plugin architecture for extensibility.
-* Maximize productivity for biological users through robust graphical user
-  interface-based workflows.
+* Maximize productivity for biological users through robust graphical user interface-based workflows.
 * Performant and responsive.
-* Brutally obvious, well-documented, clean code organized in an industry standard
-  Model-View-Controller architecture.
+* Brutally obvious, well-documented, clean code organized in an industry standard Model-View-Controller architecture.
 
 .. note::
 
-   This project is under active development. See our `GitHub repository for updates
-   <https://github.com/TheDeanLab/navigate>`_.
+   This project is under active development. See our `GitHub repository for updates <https://github.com/TheDeanLab/navigate>`_.
 
 .. warning::
 
-    Please be advised that while the Dean Lab has implemented several safeguards in the
-    automation of hardware, including but not limited to stage limits, voltage minimums,
-    and maximums, are more, there are inherent risks associated with the use of such
-    automated systems. Despite these precautions, the complexity and nature of automated
-    hardware can lead to unpredictable outcomes. Therefore, the Dean Lab and UT
-    Southwestern expressly disclaim any responsibility for any damages, losses, or
-    injuries that may arise from or be related to the use of **navigate**.
-    Users should be aware of these risks and agree to utilize **navigate** at their own risk.
+    Please be advised that while the Dean Lab has implemented several safeguards in the automation of hardware, including but not limited to stage limits, voltage minimums, and maximums, are more, there are inherent risks associated with the use of such automated systems. Despite these precautions, the complexity and nature of automated hardware can lead to unpredictable outcomes. Therefore, the Dean Lab and UT Southwestern expressly disclaim any responsibility for any damages, losses, or injuries that may arise from or be related to the use of **navigate**. Users should be aware of these risks and agree to utilize **navigate** at their own risk.
 
 
 .. toctree::
@@ -104,9 +87,7 @@ technology developers.
 
 **Authors**
 ============
-**navigate** includes key contributions from numerous individuals, both past and
-present, in `The Dean Lab <https://www.dean-lab.org>`_. Please see the accompanying manuscript
-for a full list of contributors. :ref:`Outside contributors  <contributing_guidelines>` are welcome.
+**navigate** includes key contributions from numerous individuals, both past and present, in `The Dean Lab <https://www.dean-lab.org>`_. Please see the accompanying manuscript for a full list of contributors. :ref:`Outside contributors  <contributing_guidelines>` are welcome.
 
 **Funding**
 ============

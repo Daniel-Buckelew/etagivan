@@ -3,8 +3,7 @@ Proxy Configuration
 
 Overview
 --------
-If the software is run at an institution with a proxy, you may need to update your proxy
-settings to allow ``pip`` and ``conda`` to install the proper packages.
+If the software is run at an institution with a proxy, you may need to update your proxy settings to allow ``pip`` and ``conda`` to install the proper packages.
 
 Solution and Verification
 -------------------------
@@ -17,10 +16,7 @@ Solution and Verification
 
 * If you continue to have issues then change the value of Variable HTTPS_PROXY to https://proxy.your_university.edu:1234
 
-* If you still have issues then you will need to create/update both configuration
-  files for conda and pip to include proxy settings, if they are not in the paths
-  below you will need to create them. This assumes a Windows perspective. Mac/Linux
-  users will have different paths, they can be found online.
+* If you still have issues then you will need to create/update both configuration files for conda and pip to include proxy settings, if they are not in the paths below you will need to create them. This assumes a Windows perspective. Mac/Linux users will have different paths, they can be found online.
 
     * The ``conda`` configuration file can be found at C:\\Users\\UserProfile\\.condarc
     * The ``pip`` configuration file can be found at C:\\Users\\UserProfile\\pip\\pip.ini

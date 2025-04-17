@@ -1,3 +1,5 @@
+.. _currently_implemented_features:
+
 Currently Implemented Features
 ==============================
 

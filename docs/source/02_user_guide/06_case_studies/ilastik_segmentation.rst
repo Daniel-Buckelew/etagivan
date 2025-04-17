@@ -1,19 +1,12 @@
+.. _case_study_ilastik:
+
 =============================
 Analyzing Images via REST-API
 =============================
 
-**navigate** has the ability to communicate with other image analysis software through REST-API interfaces.
-In general, the REST-API is used to communicate with software that has different or conflicting
-dependencies with the **navigate** codebase. Data is transferred via HTTP requests and responses,
-which is faster and more efficient than locally saving the data and then loading it into another
-piece of software, but slower than direct access of the data in memory.
+**navigate** has the ability to communicate with other image analysis software through REST-API interfaces. In general, the REST-API is used to communicate with software that has different or conflicting dependencies with the **navigate** codebase. Data is transferred via HTTP requests and responses, which is faster and more efficient than locally saving the data and then loading it into another piece of software, but slower than direct access of the data in memory.
 
-Here is an example using `ilastik <https://www.nature.com/articles/s41592-019-0582-9>`_ to segment
-images and mark positions for higher resolution in a multiscale
-microscope. ilastik is a powerful image analysis software that enables users to train
-a support vector machine learning classifier to segment images using a combination of
-intensity, texture, and shape features. More information about ilastik can be found
-`here <https://www.ilastik.org/>`_.
+Here is an example using `ilastik <https://www.nature.com/articles/s41592-019-0582-9>`_ to segment images and mark positions for higher resolution in a multiscale microscope. ilastik is a powerful image analysis software that enables users to train a support vector machine learning classifier to segment images using a combination of intensity, texture, and shape features. More information about ilastik can be found `here <https://www.ilastik.org/>`_.
 
 Install navigate-ilastik server
 ###########################################
@@ -52,14 +45,12 @@ If want to specify a specific port, add parameter ``--port port-number``.
 Set REST-API configuration
 ######################################
 
-Specify url address of the ilastik server in the configuration file (.navigate/config/rest_api_config.yml).
-If the ilastik server runs on the same machine as navigate, set the configuration as follow:
+Specify url address of the ilastik server in the configuration file (.navigate/config/rest_api_config.yml). If the ilastik server runs on the same machine as navigate, set the configuration as follow:
 
 .. code-block::
 
     ilastik:
     url: 'http://127.0.0.1:5000/ilastik'
-
 
 If the ilastik server runs on a different machine, set the configuration as follow:
 
@@ -81,7 +72,7 @@ Load and set ilastik project
      :width: 400px
      :align: center
 
-#. Load one ilastik segmentation project file from the pop-up window
+#. Load one ilastik segmentation project file from the pop-up window.
 
     .. image:: images/ilastik_2.png
      :width: 400px
@@ -106,18 +97,15 @@ Use ilastik feature
      :width: 400px
      :align: center
 
-#. Click :guilabel:`Acquire` to run acquisition.
+#. Click :guilabel:`Acquire` to run acquisition. If you choose to show segmentation only, click :guilabel:`Confirm` in the popup window directly.
 
-If you choose to show segmentation only, click :guilabel:`Confirm` in the popup window directly.
-
-   .. image:: images/ilastik_7.png
+    .. image:: images/ilastik_7.png
      :width: 400px
      :align: center
 
-   .. image:: images/ilastik_9.png
+    .. image:: images/ilastik_9.png
      :width: 400px
      :align: center
-
 
 If you choose to :guilabel:`Mark Position`, please click :guilabel:`ilastik` in the pop-up window and set the target microscope name and zoom value.
 
@@ -135,7 +123,7 @@ The positions will be populated to the multi-position table.
      :width: 400px
      :align: center
 
-The positions looks like the following if saves it in a CSV file.
+The positions look like the following if saved in a CSV file.
 
     .. image:: images/ilastik_12.png
      :width: 400px

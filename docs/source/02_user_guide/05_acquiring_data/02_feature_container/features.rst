@@ -18,37 +18,6 @@ Features can be optionally customized within the GUI. For example instead of rep
 
 -----------
 
-.. _loading_custom_functions:
-
-Loading Custom Functions
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-#. You can load customized functions in the software by selecting the menu :menuselection:`Features --> Advanced Setting`.
-
-   .. image:: images/step_10.png
-
-#. In the :guilabel:`Advanced Setting` popup window, choose the feature name with which you want to use the dynamic customized functions as feature parameters.
-
-   .. image:: images/step_11.png
-
-
-   .. image:: images/step_12.png
-
-#. Click :guilabel:`Add`, A new line will appear and allow you to edit the parameter options. Type the function name which is defined in your python file.
-
-   .. image:: images/step_13.png
-
-#. Then click :guilabel:`Load` to choose your Python file.
-
-   .. image:: images/step_14.png
-
-#. When you run a feature list containing the feature you just set, the new function name will appear and you can choose the one you just added.
-
-   .. image:: images/step_15.png
-
-
------------
-
 Creating a Custom Feature List in the GUI
 -----------------------------------------
 
@@ -145,3 +114,33 @@ As an example, let's look at the feature list that describes the :ref:`Continuou
     ]
 
 Here, we have a sequence defined by ``[]`` containing one element, a loop, indicated by the closed parentheses. There are two features within this loop. One feature has the name :doc:`PrepareNextChannel <../../../05_reference/_autosummary/navigate.model.features.common_features.PrepareNextChannel>` and the other :doc:`LoopByCount <../../../05_reference/_autosummary/navigate.model.features.common_features.LoopByCount>`. The parentheses indicate we will keep looping through both of these features until stopping criteria is met. In this case, the looping will stop when ``LoopByCount`` returns ``False`` due to running out of  ``selected_channels`` to loop through. That is, it will end once all :ref:`selected channel <ui_channel_settings>` have been imaged.
+
+.. _loading_custom_functions:
+
+Loading Custom Functions
+------------------------
+You can load custom Python-based functions into the software, which will then be used to provide image-based feedback to the microscope. This allows you to easily adapt what the microscope responds to, thus tailoring the acquisition to your needs. 
+
+#. You can load customized functions in the software by selecting the menu :menuselection:`Features --> Advanced Setting`.
+
+   .. image:: images/step_10.png
+
+#. In the :guilabel:`Advanced Setting` popup window, choose the feature name with which you want to use the dynamic customized functions as feature parameters.
+
+   .. image:: images/step_11.png
+
+
+   .. image:: images/step_12.png
+
+#. Click :guilabel:`Add`, A new line will appear and allow you to edit the parameter options. Type the function name which is defined in your python file.
+
+   .. image:: images/step_13.png
+
+#. Then click :guilabel:`Load` to choose your Python file.
+
+   .. image:: images/step_14.png
+
+#. When you run a feature list containing the feature you just set, the new function name will appear and you can choose the one you just added.
+
+   .. image:: images/step_15.png
+

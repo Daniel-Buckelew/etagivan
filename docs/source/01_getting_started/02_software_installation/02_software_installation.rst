@@ -4,7 +4,6 @@ Software Installation
 
 .. _software_installation:
 
-
 Computer Specifications
 =======================
 
@@ -14,9 +13,9 @@ Operating System Compatibility
 ------------------------------
 
 .. important::
-   **navigate** is developed for use on Windows-based systems. This is due to the compatibility of device drivers for various microscope hardware components, such as cameras, stages, and data acquisition cards, which are predominantly designed for the Windows environment. The software is only partially tested on MacOS and Linux systems. Users considering the use of **navigate** software on Linux should proceed with caution and be prepared for potential compatibility issues.
+   **navigate** is developed for use on Windows-based systems. This is due to the compatibility of device drivers for various microscope hardware components, such as cameras, stages, and data acquisition cards, which are predominantly designed for the Windows environment. The software is only partially tested on MacOS and Linux systems. Users considering the use of **navigate** software on Linux should proceed with caution and be prepared for potential compatibility issues. For optimal performance and compatibility, it is strongly recommended to run **navigate** on a Windows machine.
 
-   For optimal performance and compatibility, it is strongly recommended to run **navigate** on a Windows machine.
+.. _computer_considerations:
 
 Computer Considerations
 -----------------------
@@ -24,8 +23,7 @@ Computer Considerations
 **navigate** will run on a mid-range laptop with at least 8 GB of RAM and a processor with two cores. Most of its operations are undemanding. Saving data at a reasonable rate, however, will require an SSD. The hardware configuration for an example microscope control machine is shown below.
 
 .. important::
-   Scientific cameras are capable of rapidly generating large amounts of high-resolution data.    As such, the read/write speed of the data storage device is a critical for smooth operation    of the software. For example, for a standard Hamamatsu camera with a 2048 x 2048 sensor,    operating at 16-bit depth and 20 frames per second, the data save rate is approximately ~167 MB/s. While such capabilities are well within the capabilities of modern SSDs, they are beyond the capabilities of most HDDs. Therefore, it is recommended to use a fast SSD data saving operations.
-
+   Scientific cameras are capable of rapidly generating large amounts of high-resolution data. As such, the read/write speed of the data storage device is critical for smooth operation of the software. For example, for a standard Hamamatsu camera with a 2048 x 2048 sensor, operating at 16-bit depth and 20 frames per second, the data save rate is approximately ~167 MB/s. While such capabilities are well within the capabilities of modern SSDs, they are beyond the capabilities of most HDDs. Therefore, it is recommended to use a fast SSD for data saving operations.
 
 .. collapse:: Example Computer Configuration
 
@@ -78,8 +76,7 @@ Computer Considerations
         - **Interface**: PCI-E x 8
 
     .. note::
-       The specifications listed are based on an example system configuration and can
-       be adjusted based on specific needs and availability.
+       The specifications listed are based on an example system configuration and can be adjusted based on specific needs and availability.
 
 ---------------------
 
@@ -91,7 +88,6 @@ Quick install
 Head over to the `miniconda website <https://docs.conda.io/en/latest/miniconda.html>`_ and install the appropriate version based on your operating system.
 
 .. tip::
-
     It is also handy to have the `conda cheatsheet <https://docs.conda.io/projects/conda/en/4.6.0/_downloads/52a95608c49671267e40c689e0bc00ca/conda-cheatsheet.pdf>`_ open when first using miniconda to get accustomed to the commands available.
 
 * Windows: Use the Windows taskbar search to find ``Anaconda Prompt (Miniconda3)``. Given how frequently you will use this, we recommend pinning it to your taskbar. * Linux/Mac: Open a Terminal.
@@ -108,7 +104,7 @@ Head over to the `miniconda website <https://docs.conda.io/en/latest/miniconda.h
 
     (base) MyComputer ~ $ conda activate navigate
 
-The active environment is shown in parentheses on the far-left.  Originally, we were in the miniconda ``(base)`` environment. After activating the navigate environment, it should now show ``(navigate)``.
+The active environment is shown in parentheses on the far-left. Originally, we were in the miniconda ``(base)`` environment. After activating the navigate environment, it should now show ``(navigate)``.
 
 **Install navigate via pip**
 
@@ -131,7 +127,6 @@ To install the bleeding edge version of **navigate**, run the following command:
     (navigate) MyComputer ~ $ navigate
 
 .. note::
-
     If you are running the software on a computer that is not connected to microscope hardware, you can add the flag ``-sh`` (``--synthetic-hardware``) to launch the program:
 
     .. code-block:: console
@@ -149,9 +144,6 @@ Open an ``Anaconda Prompt (Miniconda3)`` and enter the following.
     (navigate) navigate
 
 .. tip::
-
     If you are running Windows, you can create a desktop shortcut to **navigate** by right-clicking the Desktop, navigating to New and then Shortcut and entering ``%windir%\system32\cmd.exe "/c" C:\path\to\miniconda\Scripts\activate.bat navigate && navigate`` into the location text box.
 
     This provides a convenient executable shortcut to launch the software, which is advantageous for users who are not comfortable with the command line.
-
-
