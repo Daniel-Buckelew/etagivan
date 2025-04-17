@@ -6,9 +6,7 @@ import os
 
 class TestDocs(unittest.TestCase):
     def setUp(self):
-        # os.chdir(os.path.join(os.getcwd(), "docs"))
-        os.chdir(os.getcwd())
-        print("Current Directory:", os.getcwd())
+        os.chdir(os.path.join(os.getcwd(), "docs"))
 
     def test_sphinx_build(self):
         cmd = [
