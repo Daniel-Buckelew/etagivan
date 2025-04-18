@@ -493,13 +493,11 @@ class LoopByCount:
             if initialized.value:
                 return
 
-            self.get_steps()
+            steps = self.get_steps()
 
-            self.signals = self.steps
-            self.data_frames = self.steps
+            self.signals = steps
+            self.data_frames = steps
             initialized.value = True
-
-            print(f"LoopByCount > Steps: {self.signals}")
 
             logger.debug(f"LoopByCount-initialize: {self.signals}, {self.data_frames}")
 
@@ -517,7 +515,6 @@ class LoopByCount:
         """
         self.signals -= 1
         if self.signals <= 0:
-            self.signals = self.steps
             if self.is_nested:
                 self.synchronize("signal")
             return False
@@ -545,7 +542,6 @@ class LoopByCount:
         else:
             self.data_frames -= 1
         if self.data_frames <= 0:
-            self.data_frames = self.steps
             if self.is_nested:
                 self.synchronize("data")
             return False
@@ -559,25 +555,26 @@ class LoopByCount:
         int
             Number of steps.
         """
-        if type(self.steps) is int:
-            return self.steps
-        if self.steps == "channels":
-            self.steps = len(self.model.active_microscope.available_channels)
-        elif self.steps == "positions":
-            self.steps = len(self.model.configuration["multi_positions"]) - 1
+        steps = self.steps
+
+        if type(steps) is int:
+            return steps
+        if steps == "channels":
+            return len(self.model.active_microscope.available_channels)
+        elif steps == "positions":
+            return len(self.model.configuration["multi_positions"]) - 1
         else:
             try:
-                parameters = self.steps.split(".")
+                parameters = steps.split(".")
                 config_ref = reduce((lambda pre, n: f"{pre}['{n}']"), parameters, "")
-                exec(f"self.steps = self.model.configuration{config_ref}")
+                steps = eval(f"self.model.configuration{config_ref}")
             except:  # noqa
-                self.steps = 1
+                return 1
 
-            if type(self.steps) in [list, ListProxy]:
-                self.steps = len(self.steps)
+            if type(steps) in [list, ListProxy]:
+                return len(steps)
             else:
-                self.steps = int(self.steps)
-        return self.steps
+                return int(steps)
     
     def synchronize(self, thread_name):
         """Synchronize signal and data function
