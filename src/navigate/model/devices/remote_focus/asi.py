@@ -253,15 +253,17 @@ class ASIRemoteFocus(RemoteFocusBase , SerialDevice):
                     self.triangle(sweep_time, amplitude, offset)
 
                 else:
-                    exposure_time=exposure_time
-                    sweep_time=self.sweep_time
-                    remote_focus_delay=remote_focus_delay
-                    camera_delay=self.camera_delay
-                    fall=remote_focus_ramp_falling
-                    amplitude = amplitude
-                    offset = remote_focus_offset
-
-                    self.ramp(exposure_time, sweep_time, remote_focus_delay, camera_delay, fall, amplitude, offset)
+                    values = [exposure_time, self.sweep_time, remote_focus_delay,
+                          self.camera_delay, remote_focus_ramp_falling, amplitude, remote_focus_offset]
+                    for value in values:
+                        print(type(value))
+                    self.ramp(exposure_time=exposure_time,
+                              sweep_time=self.sweep_time,
+                              remote_focus_delay=remote_focus_delay,
+                              camera_delay=self.camera_delay,
+                              fall=remote_focus_ramp_falling,
+                              amplitude=amplitude, offset=remote_focus_offset
+                              )
     
     def triangle(
         self,
@@ -319,6 +321,8 @@ class ASIRemoteFocus(RemoteFocusBase , SerialDevice):
         """
 
         # rise period
+
+
         period = int(
             (exposure_time + camera_delay - remote_focus_delay) * 1000
         )
