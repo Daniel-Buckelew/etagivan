@@ -1051,6 +1051,7 @@ class TigerController:
         self.send_command(f"SAO {axis}={offset}")
         self.read_response()
         self.send_command(f"SAF {axis}={frequency}")
+        self.read_response()
 
     def SAM(self, axis: str, mode: int):
         """Sets the single-axis mode according to the integer code.
