@@ -252,6 +252,13 @@ def verify_experiment_config(manager, configuration):
         microscope_config = device_config[microscope_name]
         device_dict[microscope_name] = {}
         if (
+            "shutter" in microscope_config.keys()
+            and microscope_config["shutter"]["hardware"]["type"] == ["ASI"]
+        ):
+            device_dict[microscope_name]["shutter"] = {}
+            device_ref = microscope_config["shutter"]["hardware"].get("channel", "default")
+            device_dict[microscope_name]["shutter"][device_ref] = True
+        if (
             "remote_focus" in microscope_config.keys()
             and microscope_config["remote_focus"]["hardware"]["type"] == "NI"
         ):
