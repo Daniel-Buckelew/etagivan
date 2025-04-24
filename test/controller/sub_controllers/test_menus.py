@@ -217,7 +217,7 @@ class TestMenuController(unittest.TestCase):
 
     def test_switch_tabs(self):
         for i in range(1, 4):
-            self.menu_controller.switch_tabs(i)
+            self.menu_controller.switch_tabs(window="left", tab=i)
             assert (
                 self.menu_controller.parent_controller.view.settings.index("current")
                 == i - 1
