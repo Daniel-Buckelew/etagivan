@@ -32,12 +32,14 @@
 
 # Standard Library Imports
 import logging
+import functools
 import platform
 import os
 import tkinter as tk
 from tkinter import messagebox, filedialog
 import subprocess
 import webbrowser
+from typing import Callable
 
 # Third Party Imports
 
@@ -79,6 +81,17 @@ from navigate.config.config import (
 # Logger Setup
 p = __name__.split(".")[1]
 logger = logging.getLogger(p)
+
+
+def log_function_call(func):
+    """Decorator that logs the name of the function being called."""
+
+    @functools.wraps(func)  # Preserves metadata
+    def wrapper(*args, **kwargs):
+        logger.debug(f"Called function: {func.__name__}")
+        return func(*args, **kwargs)
+
+    return wrapper
 
 
 class FakeEvent:
@@ -244,13 +257,7 @@ class MenuController(GUIController):
                     None,
                 ],
                 "add_separator_1": [None, None, None, None, None],
-                "Open Log Files": [
-                    "standard",
-                    self.open_log_files,
-                    None,
-                    None,
-                    None
-                ],
+                "Open Log Files": ["standard", self.open_log_files, None, None, None],
                 "Open Configuration Files": [
                     "standard",
                     self.open_configuration_files,
@@ -264,7 +271,7 @@ class MenuController(GUIController):
                     lambda *args: self.parent_controller.acquire_bar_controller.exit_program(),
                     "Control+q",
                     "<Control-q>",
-                    "<Control_L-q>"
+                    "<Control_L-q>",
                 ],
             }
         }
@@ -392,35 +399,86 @@ class MenuController(GUIController):
         # Window menu
         windows_menu = {
             self.view.menubar.menu_window: {
-                "Channel Settings": [
+                "Online Documentation": ["standard", self.popup_help, None, None, None],
+                "add_separator_0": ["standard", None, None, None, None],
+                "Select Channel Settings": [
                     "standard",
-                    lambda *args: self.switch_tabs(1),
+                    lambda *args: self.switch_tabs(window="left", tab=1),
                     "Ctrl+1",
                     "<Control-Key-1>",
                     "<Control_L-Key-1",
                 ],
-                "Camera Settings": [
+                "Select Camera Settings": [
                     "standard",
-                    lambda *args: self.switch_tabs(2),
+                    lambda *args: self.switch_tabs(window="left", tab=2),
                     "Ctrl+2",
                     "<Control-Key-2>",
                     "<Control_L-Key-2",
                 ],
-                "Stage Control": [
+                "Select Stage Control": [
                     "standard",
-                    lambda *args: self.switch_tabs(3),
+                    lambda *args: self.switch_tabs(window="left", tab=3),
                     "Ctrl+3",
                     "<Control-Key-3>",
                     "<Control_L-Key-3",
                 ],
-                "Multiposition Table": [
+                "Select Multiposition Table": [
                     "standard",
-                    lambda *args: self.switch_tabs(4),
+                    lambda *args: self.switch_tabs(window="left", tab=4),
                     "Ctrl+4",
                     "<Control-Key-4>",
                     "<Control_L-Key-4",
                 ],
-                "add_separator": ["standard", None, None, None, None],
+                "Select Camera Display": [
+                    "standard",
+                    lambda *args: self.switch_tabs(window="right", tab=1),
+                    "Ctrl+5",
+                    "<Control-Key-5>",
+                    "<Control_L-Key-5",
+                ],
+                "Select MIP Display": [
+                    "standard",
+                    lambda *args: self.switch_tabs(window="right", tab=2),
+                    "Ctrl+6",
+                    "<Control-Key-6>",
+                    "<Control_L-Key-6",
+                ],
+                "Select Waveform Display": [
+                    "standard",
+                    lambda *args: self.switch_tabs(window="right", tab=3),
+                    "Ctrl+7",
+                    "<Control-Key-7>",
+                    "<Control_L-Key-7",
+                ],
+                "add_separator_1": ["standard", None, None, None, None],
+                "Popout Channel Settings": [
+                    "standard",
+                    lambda: self.popout_channel_settings(),
+                    None,
+                    None,
+                    None,
+                ],
+                "Popout Camera Settings": [
+                    "standard",
+                    lambda: self.popout_camera_settings(),
+                    None,
+                    None,
+                    None,
+                ],
+                "Popout Stage Control": [
+                    "standard",
+                    lambda: self.popout_stage_settings(),
+                    None,
+                    None,
+                    None,
+                ],
+                "Popout Multiposition Table": [
+                    "standard",
+                    lambda: self.popout_multiposition_settings(),
+                    None,
+                    None,
+                    None,
+                ],
                 "Popout Camera Display": [
                     "standard",
                     lambda: self.popout_camera_display(),
@@ -428,10 +486,72 @@ class MenuController(GUIController):
                     None,
                     None,
                 ],
-                "Help": ["standard", self.popup_help, None, None, None],
+                "Popout MIP Display": [
+                    "standard",
+                    lambda: self.popout_mip_display(),
+                    None,
+                    None,
+                    None,
+                ],
+                "Popout Waveform Display": [
+                    "standard",
+                    lambda: self.popout_waveform_display(),
+                    None,
+                    None,
+                    None,
+                ],
+                "add_separator_2": ["standard", None, None, None, None],
             }
         }
         self.populate_menu(windows_menu)
+
+        # Histogram toggles
+        histogram_menu = tk.Menu(self.view.menubar.menu_window)
+        self.view.menubar.menu_window.add_cascade(
+            label="Histogram", menu=histogram_menu
+        )
+
+        # Create a variable to track histogram state
+        self.histogram_enabled = tk.BooleanVar(
+            value=self.parent_controller.configuration["gui"]["histogram"].get(
+                "enabled", True
+            )
+        )
+
+        # Add radiobuttons to the histogram submenu
+        histogram_menu.add_radiobutton(
+            label="Enable Histogram",
+            variable=self.histogram_enabled,
+            value=True,
+            command=self.toggle_histogram,
+        )
+        histogram_menu.add_radiobutton(
+            label="Disable Histogram",
+            variable=self.histogram_enabled,
+            value=False,
+            command=self.toggle_histogram,
+        )
+
+        # MIP toggles
+        mip_menu = tk.Menu(self.view.menubar.menu_window)
+        self.view.menubar.menu_window.add_cascade(label="MIP Display", menu=mip_menu)
+
+        # Create a variable to track histogram state
+        self.mip_enabled = tk.BooleanVar()
+
+        # Add radiobuttons to the histogram submenu
+        mip_menu.add_radiobutton(
+            label="Enable MIP",
+            variable=self.mip_enabled,
+            value=True,
+            command=self.toggle_mip,
+        )
+        mip_menu.add_radiobutton(
+            label="Disable MIP",
+            variable=self.mip_enabled,
+            value=False,
+            command=self.toggle_mip,
+        )
 
         # Zoom menu
         for microscope_name in self.parent_controller.configuration["configuration"][
@@ -598,7 +718,30 @@ class MenuController(GUIController):
         # Note: Any menu items added below this return statement will not
         # be populated if feature_records does not exist.
 
-    def toggle_save(self, *args):
+    @log_function_call
+    def toggle_histogram(self) -> None:
+        """Enable or disable histogram display.
+
+        Gets the current value from the menu, updates the configuration,
+        and communicates the changes to the histogram sub-controller.
+        """
+        histogram_menu_state = self.histogram_enabled.get()
+        self.parent_controller.histogram_controller.histogram_enabled.set(
+            histogram_menu_state
+        )
+        self.parent_controller.histogram_controller.update_experiment()
+
+    @log_function_call
+    def toggle_mip(self) -> None:
+        """Enable or disable MIP display."""
+        mip_menu_state = self.mip_enabled.get()
+        self.parent_controller.mip_setting_controller.display_enabled.set(
+            mip_menu_state
+        )
+        self.parent_controller.mip_setting_controller.update_experiment()
+
+    @log_function_call
+    def toggle_save(self, *args) -> None:
         """Toggle save button
 
         Parameters
@@ -616,7 +759,8 @@ class MenuController(GUIController):
         )
         self.parent_controller.channels_tab_controller.update_save_setting()
 
-    def open_folder(self, path):
+    @log_function_call
+    def open_folder(self, path: str) -> None:
         """Open folder in file explorer.
 
         Parameters
@@ -634,17 +778,19 @@ class MenuController(GUIController):
         except subprocess.CalledProcessError:
             pass
 
-    def open_log_files(self):
+    @log_function_call
+    def open_log_files(self) -> None:
         """Open log files folder."""
         path = os.path.join(get_navigate_path(), "logs")
         self.open_folder(path)
 
-    def open_configuration_files(self):
+    @log_function_call
+    def open_configuration_files(self) -> None:
         """Open configuration files folder."""
         path = os.path.join(get_navigate_path(), "config")
         self.open_folder(path)
 
-    def populate_menu(self, menu_dict):
+    def populate_menu(self, menu_dict: dict) -> None:
         """Populate the menus from a dictionary.
 
         Parameters
@@ -722,13 +868,15 @@ class MenuController(GUIController):
                     ]:
                         menu.entryconfig(label, state=menu_items[label][5])
 
-    def new_experiment(self, *args):
+    @log_function_call
+    def new_experiment(self, *args) -> None:
         """Create a new experiment file."""
         self.parent_controller.populate_experiment_setting(
             self.parent_controller.default_experiment_file
         )
 
-    def load_experiment(self, *args):
+    @log_function_call
+    def load_experiment(self, *args) -> None:
         """Load an experiment file."""
         filename = filedialog.askopenfilename(
             defaultextension=".yml", filetypes=[("Yaml files", "*.yml *.yaml")]
@@ -737,7 +885,8 @@ class MenuController(GUIController):
             return
         self.parent_controller.populate_experiment_setting(filename)
 
-    def save_experiment(self, *args):
+    @log_function_call
+    def save_experiment(self, *args) -> None:
         """Save an experiment file.
 
         Updates model.experiment and saves it to file.
@@ -757,7 +906,8 @@ class MenuController(GUIController):
             return
         save_yaml_file("", self.parent_controller.configuration["experiment"], filename)
 
-    def save_waveform_constants(self):
+    @log_function_call
+    def save_waveform_constants(self) -> None:
         """Save a waveform constants file
 
         Updates model.waveform_constants and saves it to file
@@ -772,7 +922,8 @@ class MenuController(GUIController):
             "", self.parent_controller.configuration["waveform_constants"], filename
         )
 
-    def load_waveform_constants(self):
+    @log_function_call
+    def load_waveform_constants(self) -> None:
         """Load a waveform constants file"""
 
         filename = filedialog.askopenfilename(
@@ -796,7 +947,8 @@ class MenuController(GUIController):
                 force_update=True
             )
 
-    def load_images(self):
+    @log_function_call
+    def load_images(self) -> None:
         """Load images from a file."""
         filenames = filedialog.askopenfilenames(
             defaultextension=".tif", filetypes=[("tiff files", "*.tif *.tiff")]
@@ -805,7 +957,8 @@ class MenuController(GUIController):
             return
         self.parent_controller.model.load_images(filenames)
 
-    def popup_camera_map_setting(self):
+    @log_function_call
+    def popup_camera_map_setting(self) -> None:
         """Pop up the Camera Map setting window."""
         if hasattr(self.parent_controller, "camera_map_popup_controller"):
             self.parent_controller.camera_map_popup_controller.showup()
@@ -815,7 +968,8 @@ class MenuController(GUIController):
             CameraMapSettingPopupController(map_popup, self.parent_controller)
         )
 
-    def popup_adaptiveoptics(self):
+    @log_function_call
+    def popup_adaptiveoptics(self) -> None:
         """Pop up the Adaptive Optics setting window."""
         if hasattr(self.parent_controller, "adaptiveoptics_popup_controller"):
             self.parent_controller.ao_popup_controller.showup()
@@ -825,7 +979,8 @@ class MenuController(GUIController):
             ao_popup, self.parent_controller
         )
 
-    def popup_ilastik_setting(self):
+    @log_function_call
+    def popup_ilastik_setting(self) -> None:
         """Pop up the Ilastik setting window."""
         ilastik_popup_window = ilastik_setting_popup(self.view)
         ilastik_url = self.parent_controller.configuration["rest_api_config"][
@@ -838,11 +993,13 @@ class MenuController(GUIController):
                 ilastik_popup_window, self.parent_controller, ilastik_url
             )
 
-    def popup_help(self):
+    @log_function_call
+    def popup_help(self) -> None:
         """Open a web browser to the Navigate documentation."""
         webbrowser.open_new_tab("https://thedeanlab.github.io/navigate/")
 
-    def toggle_stage_limits(self, *args):
+    @log_function_call
+    def toggle_stage_limits(self, *args) -> None:
         """Toggle stage limits."""
         if self.disable_stage_limits.get() == 1:
             self.parent_controller.configuration["experiment"]["StageParameters"][
@@ -857,7 +1014,8 @@ class MenuController(GUIController):
             logger.debug("Enabling stage limits")
             self.parent_controller.execute("stage_limits", True)
 
-    def popup_autofocus_setting(self, *args):
+    @log_function_call
+    def popup_autofocus_setting(self, *args) -> None:
         """Pop up the Autofocus setting window."""
         if hasattr(self.parent_controller, "af_popup_controller"):
             self.parent_controller.af_popup_controller.showup()
@@ -867,7 +1025,8 @@ class MenuController(GUIController):
             af_popup, self.parent_controller
         )
 
-    def popup_waveform_setting(self):
+    @log_function_call
+    def popup_waveform_setting(self) -> None:
         """Pop up the Waveform setting window.
 
         If the window is already open, show it. Otherwise, create a new one."""
@@ -886,7 +1045,8 @@ class MenuController(GUIController):
         waveform_popup_controller.populate_experiment_values()
         self.parent_controller.waveform_popup_controller = waveform_popup_controller
 
-    def popup_microscope_setting(self):
+    @log_function_call
+    def popup_microscope_setting(self) -> None:
         """Pop up the microscope setting window."""
         if hasattr(self.parent_controller, "microscope_popup_controller"):
             self.parent_controller.microscope_popup_controller.showup()
@@ -896,15 +1056,18 @@ class MenuController(GUIController):
             self.view, self.parent_controller, microscope_info
         )
 
-    def acquire_data(self, *args):
+    @log_function_call
+    def acquire_data(self, *args) -> None:
         """Acquire data/Stop acquiring data."""
         self.parent_controller.acquire_bar_controller.launch_popup_window()
 
-    def not_implemented(self, *args):
+    @log_function_call
+    def not_implemented(self, *args) -> None:
         """Not implemented."""
         print("Not implemented")
 
-    def stage_movement(self, char):
+    @log_function_call
+    def stage_movement(self, char: str) -> None:
         """Stage movement.
 
         Should not be run if we are in a validated combobox, or a validate entry.
@@ -926,22 +1089,94 @@ class MenuController(GUIController):
             # Avoids KeyError if the user is in a popdown menu.
             pass
 
-    def switch_tabs(self, tab):
-        """Switch tabs."""
-        self.parent_controller.view.settings.select(tab - 1)
+    @log_function_call
+    def switch_tabs(self, window: str, tab: int) -> None:
+        """Switch tabs.
 
-    def popout_camera_display(self):
+        Parameters
+        ----------
+        window: str
+            "left" or "right"
+        tab: int
+            Tab index to switch to.
+        """
+        if window == "left":
+            self.parent_controller.view.settings.select(tab - 1)
+        elif window == "right":
+            self.parent_controller.view.camera_waveform.select(tab - 1)
+
+    @log_function_call
+    def _popout_tab(self, tab_name: str, window: str) -> None:
+        """Identify tab by name and pop it out.
+
+        Parameters
+        ----------
+        tab_name: str
+            Name of the tab to identify
+        window: str
+            "left" or "right"
+        """
+        if window == "left":
+            context = self.parent_controller.view.settings
+        elif window == "right":
+            context = self.parent_controller.view.camera_waveform
+        else:
+            return
+
+        tabs = context.tabs()
+
+        for i, tab_id in enumerate(tabs):
+            # Get the tab name from the notebook
+            name = context.tab(tab_id, "text")
+            if name == tab_name:
+                context.selected_tab_id = i
+                context.popout()
+
+    @log_function_call
+    def popout_camera_display(self) -> None:
         """Pop out camera display."""
-        self.parent_controller.view.camera_waveform.popout()
+        tab_index = self._popout_tab(tab_name="Camera", window="right")
 
-    def popup_feature_list_setting(self):
+    @log_function_call
+    def popout_mip_display(self) -> None:
+        """Pop out MIP display."""
+        tab_index = self._popout_tab(tab_name="MIP", window="right")
+
+    @log_function_call
+    def popout_waveform_display(self) -> None:
+        """Pop out waveform display."""
+        tab_index = self._popout_tab(tab_name="Waveforms", window="right")
+
+    @log_function_call
+    def popout_channel_settings(self) -> None:
+        """Pop out camera display."""
+        tab_index = self._popout_tab(tab_name="Channels", window="left")
+
+    @log_function_call
+    def popout_camera_settings(self) -> None:
+        """Pop out camera display."""
+        tab_index = self._popout_tab(tab_name="Camera Settings", window="left")
+
+    @log_function_call
+    def popout_stage_settings(self) -> None:
+        """Pop out camera display."""
+        tab_index = self._popout_tab(tab_name="Stage Control", window="left")
+
+    @log_function_call
+    def popout_multiposition_settings(self) -> None:
+        """Pop out camera display."""
+        tab_index = self._popout_tab(tab_name="Multiposition", window="left")
+
+    @log_function_call
+    def popup_feature_list_setting(self) -> None:
         """Show feature list popup window"""
         feature_list_popup = FeatureListPopup(self.view, title="Add New Feature List")
         self.parent_controller.features_popup_controller = FeaturePopupController(
             feature_list_popup, self.parent_controller
         )
 
-    def load_feature_list(self):
+    @log_function_call
+    def load_feature_list(self) -> None:
         """Load feature lists from a python file"""
         filename = filedialog.askopenfilename(
             defaultextension=".py", filetypes=[("Python files", "*.py")]
@@ -1007,7 +1242,8 @@ class MenuController(GUIController):
             filename, added_features
         )
 
-    def add_feature_list(self, feature_list_name, feature_list_str):
+    @log_function_call
+    def add_feature_list(self, feature_list_name: str, feature_list_str: str) -> bool:
         """Add feature list to the software and system yaml files
 
         Parameters
@@ -1055,7 +1291,8 @@ class MenuController(GUIController):
         save_yaml_file(feature_lists_path, feature_records, "__sequence.yml")
         return True
 
-    def delete_feature_list(self):
+    @log_function_call
+    def delete_feature_list(self) -> None:
         """Delete a selected customized feature list from the software and system
         yaml file"""
         feature_id = self.feature_id_val.get()
@@ -1079,13 +1316,15 @@ class MenuController(GUIController):
         del feature_records[feature_id - self.system_feature_list_count]
         save_yaml_file(feature_lists_path, feature_records, "__sequence.yml")
 
-    def popup_feature_advanced_setting(self):
+    @log_function_call
+    def popup_feature_advanced_setting(self) -> None:
         """Show feature advanced setting window"""
         self.parent_controller.feature_advanced_setting_controller = (
             FeatureAdvancedSettingController(self.view, self.parent_controller)
         )
 
-    def install_plugin(self, *args):
+    @log_function_call
+    def install_plugin(self, *args) -> None:
         """Install a plugin"""
         folder_path = filedialog.askdirectory()
         if not folder_path:
@@ -1124,14 +1363,31 @@ class MenuController(GUIController):
                     "Please restart Navigate!",
                 )
 
-    def popup_uninstall_plugin(self, *args):
+    @log_function_call
+    def popup_uninstall_plugin(self, *args) -> None:
         """Uninstall plugin"""
         if hasattr(self, "uninstall_plugin_controller"):
             self.uninstall_plugin_controller.showup()
             return
         self.uninstall_plugin_controller = UninstallPluginController(self.view, self)
 
-    def popup_camera_setting(self, microscope_name):
+    @log_function_call
+    def popup_camera_setting(self, microscope_name: str) -> Callable:
+        """Pop up the Camera setting window.
+
+        If the window is already open, show it. Otherwise, create a new one.
+
+        Parameters
+        ----------
+        microscope_name : str
+            Name of the microscope.
+
+        Returns
+        -------
+        Callable
+            Function to be called when the menu item is selected.
+        """
+
         def func(*args):
             controller_name = f"{microscope_name.lower()}_camera_setting_controller"
             if hasattr(self.parent_controller, controller_name):
