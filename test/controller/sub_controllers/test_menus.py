@@ -65,6 +65,10 @@ class TestStageMovement(unittest.TestCase):
         # Initialize the menu controller
         self.mc = MenuController(self.view, self.parent_controller)
 
+        # Mock the histogram configuration entry.
+        self.parent_controller.configuration["gui"]["histogram"] = MagicMock()
+        self.parent_controller.configuration["gui"]["histogram"].get.return_value = True
+
     def tearDown(self):
         self.root.destroy()
 
