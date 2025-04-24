@@ -158,17 +158,16 @@ shutter_device_types = {
 }
 
 shutter_hardware_widgets = {
-    "hardware/com_port": ["COM Port", "Input", "string", None, "e.g., COM3"],
-    "hardware/axis": ["Shutter Axis", "Input", "string", None, "e.g., A, B, C"],
     "type": ["Device Type", "Combobox", "string", shutter_device_types, None],
     "channel": ["NI Channel", "Input", "string", None, "Example: PXI6259/port0/line0"],
+    "port": ["COM Port", "Input", "string", None, "e.g., COM3"],
+    "axis": ["Shutter Axis", "Input", "string", None, "e.g., A, B, C"],
     "min": ["Minimum Voltage", "Spinbox", "float", None, "Example: 0"],
     "max": ["Maximum Voltage", "Spinbox", "float", None, "Example: 5"],
     "frame_config": {"ref": "hardware"},
 }
 
 stage_device_types = {
-    "ASI Stage": ("ASI", "asi"),
     "Applied Scientific Instrumentation": ("ASI", "asi"),
     "ASI MFC2000": ("MFC2000", "asi"),
     "ASI MS2000": ("MS2000", "asi"),
@@ -182,8 +181,6 @@ stage_device_types = {
 }
 
 stage_hardware_widgets = {
-    "hardware/com_port": ["COM Port", "Input", "string", None, "e.g., COM4"],
-    "hardware/axis": ["Stage Axis", "Input", "string", None, "e.g., X, Y, Z"],
     "type": ["Device Type", "Combobox", "string", stage_device_types, None],
     "serial_number": ["Serial Number", "Input", "string", None, None],
     "axes": [
