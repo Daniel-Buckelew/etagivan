@@ -735,7 +735,9 @@ class MenuController(GUIController):
     def toggle_mip(self) -> None:
         """Enable or disable MIP display."""
         mip_menu_state = self.mip_enabled.get()
-        self.parent_controller.mip_setting_controller.display_enabled.set(mip_menu_state)
+        self.parent_controller.mip_setting_controller.display_enabled.set(
+            mip_menu_state
+        )
         self.parent_controller.mip_setting_controller.update_experiment()
 
     @log_function_call

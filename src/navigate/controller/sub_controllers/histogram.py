@@ -234,7 +234,7 @@ class HistogramController:
         actual_pixels = image.size
 
         # Downsample data to the required number of pixels to meet accuracy.
-        down_sampling_constant = int(actual_pixels // required_pixels)
+        down_sampling_constant = max(1, int(actual_pixels // required_pixels))
         data = image.flatten()
         data = data[::down_sampling_constant]
 
