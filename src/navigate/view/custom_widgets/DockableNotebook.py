@@ -87,10 +87,7 @@ class DockableNotebook(ttk.Notebook):
         else:
             self.bind("<ButtonPress-3>", self.find)
 
-    def set_tablist(
-            self,
-            tab_list: list
-    ) -> None:
+    def set_tablist(self, tab_list: list) -> None:
         """Setter for tab list
 
         Parameters
@@ -147,31 +144,32 @@ class DockableNotebook(ttk.Notebook):
         if self.selected_tab_id is None:
             return
 
-        selected_text = self.tab(self.selected_tab_id, "text")
+        # Get the selected tab's text. e.g., "Camera", "MIP", "Waveforms".
+        selected_text: str = self.tab(self.selected_tab_id, "text")
+
+        # Check if the selected tab is in the tab list
         tab_widget = None
         for t in self.tab_list:
             if self.tab(t, "text") == selected_text:
-                tab_widget = t
+                tab_widget: tk.Frame = t
                 break
 
+        # If the tab is not in the list, return
         if not tab_widget:
             return
 
         # Save the original index and the tab's text
         tab_widget._original_index = self.selected_tab_id
-        tab_widget._saved_text = selected_text
+        tab_widget._saved_text: str = selected_text
 
+        # Remove the tab from the notebook
         if tab_widget in self.tab_list:
             self.tab_list.remove(tab_widget)
         self.hide(tab_widget)
         self.root.wm_manage(tab_widget)
 
         tk.Wm.title(tab_widget, selected_text)
-        tk.Wm.protocol(
-            tab_widget,
-            "WM_DELETE_WINDOW",
-            lambda: self.dismiss(tab_widget)
-        )
+        tk.Wm.protocol(tab_widget, "WM_DELETE_WINDOW", lambda: self.dismiss(tab_widget))
 
         if selected_text == "Camera View":
             tk.Wm.minsize(tab_widget, 663, 597)
@@ -180,10 +178,15 @@ class DockableNotebook(ttk.Notebook):
             tab_widget.is_docked = False
 
     def dismiss(self, tab_widget):
-        """
-        Called when the popout window is closed.
-        We 'forget' the window manager, re‐insert the tab into the notebook,
-        and restore its label text and position.
+        """Dismiss the popout window.
+
+        This is called when the popout window is closed.
+        It destroys the popout window and re‐inserts the tab into the notebook.
+
+        Parameters
+        ----------
+        tab_widget : ttk.Frame
+            The tab widget to be dismissed.
         """
         popout = getattr(tab_widget, "_popout_window", None)
         if popout:
@@ -205,6 +208,7 @@ class DockableNotebook(ttk.Notebook):
             current_count = self.index("end")
             if original_index >= current_count:
                 original_index = "end"
+
             self.insert(original_index, tab_widget)
 
         else:
