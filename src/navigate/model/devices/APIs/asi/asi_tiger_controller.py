@@ -1073,7 +1073,8 @@ class TigerController:
         self.send_command(f"SAM {axis}={mode}")
         self.read_response()
 
-    def setup_control_loop(self, analog_outputs: dict):
+    def setup_control_loop(self):
+    # def setup_control_loop(self, analog_outputs: dict):
         """
         Sets up the control loop
         
@@ -1082,29 +1083,29 @@ class TigerController:
         If/Else statements: send the right loop
         
         """
-        channels = analog_outputs.keys()
-        if channels:
-            commands = [
-                'm e =42',
-                'cca y = 1',
-                'cca z=43',
-                'm e = 43',
-                'cca y = 1',
-                'cca z=67',
-                'm e=2',
-                'cca y=5',
-                'ccb x=67',
-                'ccb y=1',
-                'm e=3',
-                'cca y=9',
-                'cca z=300',
-                'ccb x=2',
-                'ccb y=192',
-            ]
-            for command in commands:
-                # Send data
-                self.send_command(f'{command}\r')
-                self.read_response()
+        # channels = analog_outputs.keys()
+        # if channels:
+        commands = [
+            'm e =42',
+            'cca y = 1',
+            'cca z=43',
+            'm e = 43',
+            'cca y = 1',
+            'cca z=67',
+            'm e=2',
+            'cca y=5',
+            'ccb x=67',
+            'ccb y=1',
+            'm e=3',
+            'cca y=9',
+            'cca z=300',
+            'ccb x=2',
+            'ccb y=192',
+        ]
+        for command in commands:
+            # Send data
+            self.send_command(f'{command}\r')
+            self.read_response()
 
     def send_ttl_pulse(self, channel: int, pulse_width_ms: int, delay_ms: int) -> str:
     

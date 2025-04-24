@@ -253,10 +253,6 @@ class ASIRemoteFocus(RemoteFocusBase , SerialDevice):
                     self.triangle(sweep_time, amplitude, offset)
 
                 else:
-                    values = [exposure_time, self.sweep_time, remote_focus_delay,
-                          self.camera_delay, remote_focus_ramp_falling, amplitude, remote_focus_offset]
-                    for value in values:
-                        print(type(value))
                     self.ramp(exposure_time=exposure_time,
                               sweep_time=self.sweep_time,
                               remote_focus_delay=remote_focus_delay,

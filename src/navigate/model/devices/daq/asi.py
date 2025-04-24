@@ -153,10 +153,10 @@ class ASIDAQ(DAQBase, SerialDevice):
             logger.exception("Failed to send TTL command to ASI.")
 
     def prepare_acquisition(self, channel_key: str) -> None:
-        self.create_analog_output_tasks(channel_key)
+        # self.create_analog_output_tasks(channel_key)
 
         # self.create_camera_task(channel_key)
-        TigerController.setup_control_loop(self.analog_outputs)
+        TigerController.setup_control_loop(TigerController) #self.analog_outputs
         self.current_channel_key = channel_key
         self.is_updating_analog_task = False
         # if self.wait_to_run_lock.locked():
@@ -168,35 +168,37 @@ class ASIDAQ(DAQBase, SerialDevice):
         #     self.wait_to_run_lock.acquire()
         #     self.wait_to_run_lock.release()
 
-        try:
+        # try:
         #send logic card on to cell 1
-            TigerController.logic_cell_on("1")
-        except Exception:
-            logger.debug("Cannot turn on")
-            pass
+        TigerController.logic_cell_on("1")
+        # except Exception:
+        #     logger.debug("DAQ cannot turn on")
+        #     pass
 
     def stop_acquisition(self) -> None:
         #send logic card off to cell 1
         try:
             TigerController.logic_cell_off("1")                       
         except Exception:
-            logger.debug("Cannot turn off")
+            logger.debug("DAQ cannot turn off")
             pass
 
         # if self.wait_to_run_lock.locked():
         #     self.wait_to_run_lock.release()
 
-    def create_analog_output_tasks(self, channel_key: str) -> None:
-        galvo_channel = self.configuration["configuration"]["microscopes"][self.microscope_name]["galvo"]["hardware"]["channel"]
-        if isinstance(galvo_channel, list):
-            for channel in galvo_channel:
-               self.analog_outputs.update({channel: "galvo"})
-               self.galvo.move(self.exposure_times,self.sweep_times,offset=None)
-        else:
-            self.analog_outputs.update({galvo_channel: "galvo"})
-            remote_focus_channel = self.configuration["configuration"]["microscopes"][self.microscope_name]["remote_focus_device"]["hardware"]["channel"]
-            self.analog_outputs.update({remote_focus_channel: "remote_focus"})
-            self.remote_focus.move(self.exposure_times,self.sweep_times,offset=None)
+    # def create_analog_output_tasks(self, channel_key: str) -> None:
+    #     galvo_channel = self.configuration["configuration"]["microscopes"][self.microscope_name]["galvo"][0]["hardware"]["axis"]
+    #     if isinstance(galvo_channel, list):
+    #         for channel in galvo_channel:
+    #            self.analog_outputs.update({channel: "galvo"})
+    #            self.galvo.move(self.exposure_times,self.sweep_times,offset=None)
+    #     else:
+    #         self.analog_outputs.update({galvo_channel: "galvo"})
+    #     remote_focus_channel = self.configuration["configuration"]["microscopes"][self.microscope_name]["remote_focus"]["hardware"]["axis"]
+    #     self.analog_outputs.update({remote_focus_channel: "remote_focus"})
+    #     print(self.exposure_times)
+    #     print(self.sweep_times)
+    #     self.remote_focus.move(self.exposure_times, self.sweep_times)
 
 
 
