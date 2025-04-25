@@ -939,51 +939,6 @@ class TigerController:
         self.send_filter_wheel_command(f"MOVE {dichroic_id}={dichroic_position}")
         self.read_response()
 
-    def square_wave(self, on_time, delay_time):
-        """Square wave modulation.
-
-        For testing only.
-
-        Parameters
-        ----------
-        on_time : int
-            On time in quarter milliseconds
-        delay_time : int
-            Delay time in quarter milliseconds
-        """
-
-        commands = ['CCA X=0',
-
-        'M E=2',
-        'CCA Y=15',
-        f'CCA Z={delay_time}',
-        'CCB X=68 Y=192 Z=0',
-
-        'M E=3',
-        'CCA Y=5',
-        'CCB X=1 Y=66',
-
-        'M E=4',
-        'CCA Y=14',
-        f'CCA Z={on_time}',
-        'CCB X=3 Y=192 Z=0',
-
-        'M E=33',
-        'CCA Z=1',
-        'M E=34',
-        'CCA Z=2',
-        'M E=35',
-        'CCA Z=3',
-        'M E=36',
-        'CCA Z=4',
-
-        'M E=1',
-        'CCA Z=1']
-        for command in commands:
-            # Send data
-            self.send_command(f'{command}\r')
-            self.read_response()
-
     def logic_card_on(self, axis : str):
         """Turn on the logic card
 
@@ -1011,48 +966,4 @@ class TigerController:
         self.send_command(f'6 M E = {axis}\r')
         self.read_response()
         self.send_command(f'6 CCA Z=0\r')
-        self.read_response()
-
-    def SA_waveform(self, axis:str, waveform=0, amplitude=1000, offset=500):
-        """Programs the analog waveforms using SAA, SAO, and SAP
-        Default waveform is a sawtooth waveform with an amplitude of 1V with an offset of 0.5V
-
-        Parameters
-        ----------
-        axis: str
-            Laser axis
-        waveform: 
-            Type of waveform pattern according to https://asiimaging.com/docs/commands/sap
-        amplitude:
-            amplitude of the waveform
-        offset:
-            sets the center position of the waveform        
-        """
-
-        "Verify if this is for synchronous or asynchronous"
-        self.send_command(f"SAP {axis}={waveform}")
-        self.read_response()
-        self.send_command(f"SAA {axis}={amplitude}")
-        self.read_response()
-        self.send_command(f"SAO {axis}={offset}")
-        self.read_response()
-
-    def SAM(self, axis: str, mode: int):
-        """Sets the single-axis mode according to the integer code.
-
-        0: stops waveforms if they are running
-        1: starts generating the waveform pattern
-        2: waveform only runs for one cycle, then waits for another trigger
-        3: starts generating the waveform pattern, restarts the other waveform on the same card
-        4: starts generating the waveform, free running after the trigger
-
-        Parameters
-        ----------
-        axis: str
-            Laser axis
-        mode: 
-            Integer code     
-        """
-
-        self.send_command(f"SAM {axis}={mode}")
         self.read_response()
