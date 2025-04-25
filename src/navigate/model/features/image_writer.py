@@ -156,6 +156,8 @@ class ImageWriter:
         #: float: Time of last disk space check
         self.last_disk_space_check = 0
 
+        #: bool: Flag to indicate if initialized before
+        self.initialized = False
         # initialize saving
         self.initialize_saving(sub_dir, image_name)
 
@@ -342,23 +344,24 @@ class ImageWriter:
             self.sub_dir,
         )
         logger.info(f"Save Directory: {self.save_directory}")
-        try:
-            if not os.path.exists(self.save_directory):
-                try:
-                    os.makedirs(self.save_directory)
-                    logger.debug(f"Save Directory Created - {self.save_directory}")
-                except OSError:
-                    logger.debug(
-                        f"Unable to Create Save Directory - {self.save_directory}"
-                    )
-                    self.model.stop_acquisition = True
-                    self.model.event_queue.put(
-                        "warning",
-                        "Unable to Create Save Directory. Acquisition Terminated",
-                    )
-                    return
-        except FileNotFoundError:
-            logger.error(f"Unable to Create Save Directory - {self.save_directory}")
+        if not os.path.exists(self.save_directory):
+            try:
+                os.makedirs(self.save_directory)
+                logger.debug(f"Save Directory Created - {self.save_directory}")
+            except (PermissionError, OSError, FileNotFoundError):
+                logger.debug(
+                    f"Unable to Create Save Directory - {self.save_directory}"
+                )
+                self.model.stop_acquisition = True
+                self.model.event_queue.put(
+                    "warning",
+                    "Unable to Create Save Directory. Acquisition Terminated",
+                )
+                return
+        elif self.initialized:
+            # If the directory already exists, add a timestamp to the directory name
+            current_time = datetime.now().strftime("%H-%M-%S")
+            return self.get_saving_file_name(f"{sub_dir}-{current_time}", image_name)
 
         # Set up the file name and path in the save directory
         #: str : File type for saving data.
@@ -370,10 +373,6 @@ class ImageWriter:
         if image_name is None:
             image_name = self.generate_image_name(current_channel, ext=ext)
         file_name = os.path.join(self.save_directory, image_name)
-
-        if os.path.exists(file_name):
-            current_time = datetime.now().strftime("%H-%M")
-            return self.create_saving_directory(f"{sub_dir}-{current_time}")
 
         return file_name
 
@@ -389,23 +388,20 @@ class ImageWriter:
 
         # create the MIP directory if it doesn't already exist
         self.mip_directory = os.path.join(self.save_directory, "MIP")
-        try:
-            if not os.path.exists(self.mip_directory):
-                try:
-                    os.makedirs(self.mip_directory)
-                    logger.debug(f"MIP Directory Created - {self.mip_directory}")
-                except OSError:
-                    logger.debug(
-                        f"Unable to Create MIP Directory - {self.mip_directory}"
-                    )
-                    self.model.stop_acquisition = True
-                    self.model.event_queue.put(
-                        "warning",
-                        "Unable to create MIP Directory. Acquisition Terminated.",
-                    )
-                    return
-        except FileNotFoundError:
-            logger.error("Image Writer: Unable to create MIP directory.")
+        if not os.path.exists(self.mip_directory):
+            try:
+                os.makedirs(self.mip_directory)
+                logger.debug(f"MIP Directory Created - {self.mip_directory}")
+            except (PermissionError, OSError, FileNotFoundError):
+                logger.debug(
+                    f"Unable to Create MIP Directory - {self.mip_directory}"
+                )
+                self.model.stop_acquisition = True
+                self.model.event_queue.put(
+                    "warning",
+                    "Unable to create MIP Directory. Acquisition Terminated.",
+                )
+                return
 
         # Initialize data source, pointing to the new file name
         #: navigate.model.data_sources.DataSource : Data source for saving data to disk.
@@ -422,3 +418,5 @@ class ImageWriter:
 
         # Make sure that there is enough disk space to save the data.
         self.calculate_and_check_disk_space()
+
+        self.initialized = True

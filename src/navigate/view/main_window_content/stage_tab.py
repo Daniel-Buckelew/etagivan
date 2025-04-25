@@ -187,6 +187,7 @@ class StageControlTab(tk.Frame):
 
         uniform_grid(self)
 
+        self.default_axes = ["x", "y", "z", "theta", "f"]
 
     def load_images(self) -> None:
         """Load images for the stage control tab."""
@@ -230,7 +231,9 @@ class StageControlTab(tk.Frame):
             Dictionary of widgets
         """
         temp = {**self.position_frame.get_widgets()}
-        for axis in ["xy", "z", "theta", "f"]:
+        for axis in self.default_axes:
+            if axis == "x" or axis == "y":
+                axis = "xy"
             temp[axis + "_step"] = getattr(self, axis + "_frame").get_widget()
         return temp
 
@@ -254,7 +257,9 @@ class StageControlTab(tk.Frame):
             Dictionary of buttons
         """
         result = {**self.xy_frame.get_buttons()}
-        for axis in ["z", "theta", "f"]:
+        for axis in self.default_axes:
+            if axis == "x" or axis == "y":
+                continue
             temp = getattr(self, axis + "_frame").get_buttons()
             result.update({k + "_" + axis + "_btn": temp[k] for k in temp})
         result.update(self.stop_frame.get_buttons())
@@ -278,20 +283,48 @@ class StageControlTab(tk.Frame):
             joystick_axes = []
 
         self.xy_frame.toggle_button_states(joystick_is_on, joystick_axes)
-        self.z_frame.toggle_button_states(joystick_is_on, joystick_axes)
-        self.f_frame.toggle_button_states(joystick_is_on, joystick_axes)
-        self.theta_frame.toggle_button_states(joystick_is_on, joystick_axes)
+        for axis in self.default_axes:
+            if axis == "x" or axis == "y":
+                continue
+            getattr(self, axis + "_frame").toggle_button_states(
+                joystick_is_on, joystick_axes
+            )
         self.position_frame.toggle_entry_states(joystick_is_on, joystick_axes)
         self.stop_frame.toggle_button_states(joystick_is_on, joystick_axes)
 
     def force_enable_all_axes(self) -> None:
         """Enable all buttons and entries in the stage control tab."""
         self.xy_frame.toggle_button_states(False, ["x", "y"])
-        self.z_frame.toggle_button_states(False, ["z"])
-        self.f_frame.toggle_button_states(False, ["f"])
-        self.theta_frame.toggle_button_states(False, ["theta"])
-        self.position_frame.toggle_entry_states(False, ["x", "y", "z", "theta", "f"])
+        for axis in self.default_axes:
+            if axis == "x" or axis == "y":
+                continue
+            getattr(self, axis + "_frame").toggle_button_states(False, [axis])
+        self.position_frame.toggle_entry_states(False, self.default_axes)
         self.stop_frame.toggle_button_states(False, [])
+
+    def add_additional_stage(self, stage_name: str) -> None:
+        """Add an additional stage to the stage control tab.
+
+        Parameters
+        ----------
+        stage_name: str
+            Name of the additional stage
+        """
+        self.default_axes.append(stage_name)
+        additional_stage = OtherAxisFrame(self, stage_name.upper())
+        additional_stage.grid(
+            row=(len(self.default_axes) % 2) * 2,
+            column=len(self.default_axes) // 2 + 1,
+            sticky=tk.NSEW,
+            rowspan=2,
+            padx=3,
+            pady=3,
+        )
+        setattr(self, f"{stage_name}_frame", additional_stage)
+
+        self.position_frame.add_position_entry(stage_name, stage_name.upper())
+
+        uniform_grid(self)
 
 
 class OtherAxisFrame(ttk.Labelframe):
@@ -515,20 +548,13 @@ class PositionFrame(ttk.Labelframe):
         #: list: List of labels for the position entries.
         entry_labels = ["X", "Y", "Z", "\N{Greek Capital Theta Symbol}", "F"]
 
+        #: ttk.Style: Style for the position entries.
+        self.position_style = ttk.Style()
+        self.position_style.configure("Position.TEntry", fieldbackground="white")
+
         #: list: List of frames for the position entries.
         for i in range(len(entry_names)):
-            self.inputs[entry_names[i]] = LabelInput(
-                parent=self,
-                label=entry_labels[i],
-                input_class=ValidatedEntry,
-                input_var=tk.StringVar(),
-                input_args={
-                    "required": True,
-                    "precision": 0.1,
-                    "takefocus": False,
-                },
-            )
-            self.inputs[entry_names[i]].grid(row=i, column=0, sticky=tk.EW)
+            self.add_position_entry(entry_names[i], entry_labels[i])
 
         uniform_grid(self)
 
@@ -582,16 +608,43 @@ class PositionFrame(ttk.Labelframe):
         else:
             entry_state = "normal"
             frame_back_color = "#f0f0f0"
+        self.position_style.configure("Position.TEntry", fieldbackground=frame_back_color)
 
         for variable in self.get_variables():
             if variable in joystick_axes:
-                self.frame_back_list[frame_back_counter]["bg"] = frame_back_color
                 try:
+                    self.inputs[f"{variable}"].widget.config(style="Position.TEntry")
                     self.inputs[f"{variable}"].widget["state"] = entry_state
 
                 except KeyError:
                     pass
             frame_back_counter += 1
+
+    def add_position_entry(self, entry_name: str, entry_label: str) -> None:
+        """Add a position entry to the position frame.
+
+        Parameters
+        ----------
+        entry_name : str
+            Name of the entry
+        entry_label : str
+            Label of the entry
+        """
+
+        self.inputs[entry_name] = LabelInput(
+            parent=self,
+            label=entry_label,
+            input_class=ValidatedEntry,
+            input_var=tk.StringVar(),
+            input_args={
+                "required": True,
+                "precision": 0.1,
+                "takefocus": False,
+            },
+        )
+        self.inputs[entry_name].grid(row=len(self.inputs), column=0, sticky=tk.EW)
+
+        uniform_grid(self)
 
 
 class StackShortcuts(ttk.LabelFrame):

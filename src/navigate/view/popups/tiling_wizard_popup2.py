@@ -72,12 +72,15 @@ class TilingWizardPopup:
 
         # Grab the axes we want to grid out. Optionally,
         # we can pass these in the kwargs
-        axes = list(kwargs.get("axes", "XYZF"))
+        axes = kwargs.get("axes", ["X", "Y", "Z", "F"])
 
         nrow = len(axes) + 2  # +2 for percent overlay, total number of tiles, populate
         # <set x-start> [x-start] <set-x-end> [x-end]
         # [x-distance] [x-fov-width] [x-tiles]
         ncol = 7
+
+        # Set the size of the popup
+        self.popup.geometry(f"800x{40*nrow}+10+10")
 
         # Set up the grid on the popup's frame
         for col in range(ncol):

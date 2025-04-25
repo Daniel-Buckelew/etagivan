@@ -380,6 +380,9 @@ class Controller:
         if img_width == self.img_width and img_height == self.img_height:
             return
 
+        if self.data_buffer is not None:
+            for i in range(len(self.data_buffer)):
+                self.data_buffer[i].shared_memory.close()
         self.data_buffer = self.model.get_data_buffer(img_width, img_height)
         self.img_width = img_width
         self.img_height = img_height

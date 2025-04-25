@@ -34,12 +34,14 @@ import platform
 import threading
 import tkinter as tk
 from typing import Any
+import time
 
 # Third Party Imports
 import numpy as np
 from matplotlib.ticker import FuncFormatter
 
 from navigate.config import update_config_dict
+
 # Local Imports
 from navigate.model.concurrency.concurrency_tools import SharedNDArray
 from navigate.view.main_window_content.display_notebook import HistogramFrame
@@ -90,7 +92,6 @@ class HistogramController:
 
         #: bool: Histogram enabled
         self.histogram_enabled = tk.BooleanVar()
-        # self.histogram_enabled = tk.BooleanVar(value=True)
 
         #: bool: Logarithmic X-axis
         self.log_x = False
@@ -142,18 +143,34 @@ class HistogramController:
 
         # Default location for communicating with the plugin in the model.
         if "histogram" not in self.parent_controller.configuration["gui"].keys():
-            update_config_dict(manager=self.parent_controller.manager,
-                               parent_dict=self.parent_controller.configuration["gui"],
-                               config_name="histogram",
-                               new_config={"enabled": True}
-                               )
+            update_config_dict(
+                manager=self.parent_controller.manager,
+                parent_dict=self.parent_controller.configuration["gui"],
+                config_name="histogram",
+                new_config={"enabled": True},
+            )
 
         # Set histogram according to the experiment.yaml file. If disabled, stays disabled upon restart.
-        self.histogram_enabled.set(self.parent_controller.configuration["gui"]["histogram"].get("enabled", True))
+        self.histogram_enabled.set(
+            self.parent_controller.configuration["gui"]["histogram"].get(
+                "enabled", True
+            )
+        )
 
     def update_experiment(self) -> None:
-        """Update the experiment.yaml file"""
-        self.parent_controller.configuration["gui"]["histogram"]["enabled"] = self.histogram_enabled.get()
+        """Update the experiment.yaml file. Also communicate any changes to the menu
+        controller."""
+        print("histogram controller updated the experiment.yaml file")
+        # Get the state of the histogram enabled variable.
+        histogram_state = self.histogram_enabled.get()
+
+        # Update the experiment.yaml file.
+        self.parent_controller.configuration["gui"]["histogram"][
+            "enabled"
+        ] = histogram_state
+
+        # Communicate changes to the menu controller.
+        self.parent_controller.menu_controller.histogram_enabled.set(histogram_state)
 
     def update_scale(self) -> None:
         """Update the scale of the histogram"""
@@ -182,27 +199,48 @@ class HistogramController:
             Image data
         """
         if not self.histogram_enabled.get():
+            # Draw a disabled state
+            if self.histogram_thread is None or not self.histogram_thread.is_alive():
+                self.histogram_thread = threading.Thread(target=self._clear_histogram)
+                self.histogram_thread.start()
             return
 
         if self.histogram_thread and self.histogram_thread.is_alive():
             return
 
-        self.histogram_thread = threading.Thread(target=self._populate_histogram, args=(image,))
+        self.histogram_thread = threading.Thread(
+            target=self._populate_histogram, args=(image,)
+        )
         self.histogram_thread.start()
 
     def _populate_histogram(self, image: SharedNDArray) -> None:
         """Populate the histogram
+
+        We continue to reduce the size of the histogram to make it more efficient.
+        To estimate a distribution within ±ε accuracy in total variation distance (
+        TVD), you typically need O(B / ε²) samples, where B is the number of
+        histogram bins, and ε is the desired accuracy.
 
         Parameters
         ----------
         image : SharedNDArray
             Image Data
         """
-        down_sampling_constant = 8
+
+        # Estimate total variation distance.
+        number_bins = 20
+        accuracy = 0.05  # 5% accuracy in histogram.
+        required_pixels = number_bins / (accuracy**2)
+        actual_pixels = image.size
+
+        # Downsample data to the required number of pixels to meet accuracy.
+        down_sampling_constant = max(1, int(actual_pixels // required_pixels))
         data = image.flatten()
         data = data[::down_sampling_constant]
+
+        # Plot histogram.
         self.ax.cla()
-        counts, bins = np.histogram(data, bins=20)
+        counts, bins = np.histogram(data, bins=number_bins)
         self.ax.bar(bins[:-1], counts, width=np.diff(bins), color="black", align="edge")
 
         x_maximum = np.max(data) + np.std(data)
@@ -224,4 +262,20 @@ class HistogramController:
                 lambda val, pos: f"$10^{{{int(np.log10(val))}}}$" if val > 0 else ""
             )
         )
+        self.histogram.figure_canvas.draw()
+
+    def _clear_histogram(self) -> None:
+        """Clear the histogram but keep canvas interactive."""
+        self.ax.cla()
+        self.ax.text(
+            0.5,
+            0.5,
+            "Histogram Disabled\nRight Click to Enable",
+            fontstyle="italic",
+            ha="center",
+            va="center",
+            transform=self.ax.transAxes,
+        )
+        self.ax.set_xticks([])
+        self.ax.set_yticks([])
         self.histogram.figure_canvas.draw()

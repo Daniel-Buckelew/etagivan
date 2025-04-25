@@ -72,7 +72,7 @@ class ASIFilterWheel(FilterWheelBase, SerialDevice):
             The ID of the device. Default is 0.
         """
 
-        super().__init__(microscope_name, device_connection, configuration)
+        super().__init__(microscope_name, device_connection, configuration, device_id)
 
         #: float: Delay for filter wheel to change positions.
         self.wait_until_done_delay = self.device_config["filter_wheel_delay"]

@@ -55,8 +55,8 @@ class TestZStack:
         position_list = self.model.configuration["multi_positions"]
         if len(position_list) < 5:
             for i in range(5):
-                pos = [0] * 5
-                for i in range(5):
+                pos = [0] * len(position_list[0])
+                for i in range(len(position_list[0])):
                     pos[i] = random.randint(1, 10000)
                 position_list.append(pos)
 
@@ -94,7 +94,7 @@ class TestZStack:
         mode = self.config["stack_cycling_mode"]  # per_z/pre_stack
         is_multiposition = self.config["is_multiposition"]
         if is_multiposition:
-            positions = self.model.configuration["multi_positions"]
+            positions = self.model.configuration["multi_positions"][1:]
         else:
             pos_dict = self.model.configuration["experiment"]["StageParameters"]
             positions = [

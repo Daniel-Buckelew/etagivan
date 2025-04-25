@@ -136,10 +136,10 @@ class CameraMode(ttk.Labelframe):
         self.inputs = {}
 
         #: list: List of all the labels for the widgets.
-        self.labels = ["Sensor Mode", "Readout Direction", "Number of Pixels"]
+        self.labels = ["Trigger Mode", "Sensor Mode", "Readout Direction", "Number of Pixels"]
 
         #: list: List of all the names for the widgets.
-        self.names = ["Sensor", "Readout", "Pixels"]
+        self.names = ["Trigger", "Sensor", "Readout", "Pixels"]
 
         for i in range(len(self.labels)):
             self.rowconfigure(i, weight=1, uniform="1")
@@ -183,7 +183,8 @@ class CameraMode(ttk.Labelframe):
         """
         variables = {}
         for key, widget in self.inputs.items():
-            variables[key] = widget.get()
+            if isinstance(widget, LabelInput):
+                variables[key] = widget.get()
         return variables
 
     def get_widgets(self) -> dict:

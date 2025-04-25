@@ -199,7 +199,7 @@ class WaveformParameterPopupWindow:
             map(lambda i: f"Galvo {i}", range(self.configuration_controller.galvo_num))
         )
 
-        title_labels = ["Galvo", "Amplitude", "Offset", "Frequency"]
+        title_labels = ["Galvo", "Amplitude", "Offset", "Rising Ramp(%)", "Frequency"]
         # Loop for widgets
         for i in range(len(title_labels)):
             # Title labels
@@ -235,6 +235,17 @@ class WaveformParameterPopupWindow:
                 row=i + 1, column=2, sticky=tk.NSEW, pady=(10, 0), padx=(0, 5)
             )
 
+            self.inputs[galvo_labels[i] + " Rising"] = LabelInput(
+                parent=self.galvo_frame,
+                input_class=ValidatedSpinbox,
+                input_var=tk.StringVar(),
+                input_args={"from_": 0, "to": 100, "increment": 1}
+            )
+
+            self.inputs[galvo_labels[i] + " Rising"].grid(
+                row=i + 1, column=3, sticky=tk.NSEW, pady=(10, 0), padx=(0, 5)
+            )
+
             self.inputs[galvo_labels[i] + " Freq"] = LabelInput(
                 parent=self.galvo_frame,
                 input_class=ValidatedSpinbox,
@@ -243,7 +254,7 @@ class WaveformParameterPopupWindow:
             )
 
             self.inputs[galvo_labels[i] + " Freq"].grid(
-                row=i + 1, column=3, sticky=tk.NSEW, pady=(10, 0), padx=(0, 5)
+                row=i + 1, column=4, sticky=tk.NSEW, pady=(10, 0), padx=(0, 5)
             )
 
             # Button for automatic estimate of galvo frequency
@@ -252,7 +263,7 @@ class WaveformParameterPopupWindow:
             )
 
             self.buttons[galvo_labels[i] + " Freq"].grid(
-                row=i + 1, column=4, sticky=tk.NE, pady=(10, 0)
+                row=i + 1, column=5, sticky=tk.NE, pady=(10, 0)
             )
 
         self.inputs["galvo_info"] = LabelInput(
@@ -273,7 +284,7 @@ class WaveformParameterPopupWindow:
         )
         self.inputs["all_channels"].grid(
             row=len(galvo_labels) + 1,
-            column=2,
+            column=3,
             columnspan=2,
             sticky=tk.NE,
             pady=(10, 0),
@@ -286,7 +297,7 @@ class WaveformParameterPopupWindow:
         )
         self.buttons["advanced_galvo_setting"].grid(
             row=len(galvo_labels) + 1,
-            column=4,
+            column=5,
             sticky=tk.NSEW,
             pady=(10, 0),
         )

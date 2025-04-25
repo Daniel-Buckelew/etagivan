@@ -13,14 +13,14 @@
 import os
 import sys
 from navigate import __version__
+import datetime
 
 sys.path.insert(0, os.path.abspath("../../src"))
 
-
 # -- Project information -----------------------------------------------------
-
+year = datetime.datetime.now().year
 project = "navigate"
-copyright = "2024, Dean Lab, UT Southwestern Medical Center"
+copyright = f"{year}, Dean Lab, UT Southwestern Medical Center"
 author = "Dean Lab, UT Southwestern Medical Center"
 
 # The full version, including alpha/beta/rc tags
@@ -89,7 +89,15 @@ highlight_language = "python"
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["**/configurations_archive/*", "*archive*", "**/*_archive.rst"]
+exclude_patterns = ["**/configurations_archive/*", "*archive*", "_templates/*"]
+
+autodoc_mock_imports = [
+    "navigate.model.devices.APIs",
+    "navigate.model.devices.camera.photometrics",
+    "navigate.model.devices.camera.ximea",
+    "pyvcam",
+    "ximea",
+]
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -111,9 +119,10 @@ pygments_style = "sphinx"
 
 # -- Linkcheck Options ---------------------------------------------
 linkcheck_ignore = [
-    r'http://proxy\.your_university\.edu:1234',
-    r'https://proxy\.your_university\.edu:1234'
+    r"http://proxy\.your_university\.edu:1234",
+    r"https://proxy\.your_university\.edu:1234",
 ]
+
 # -- LaTeX output options ----------------------------------------------------
 
 latex_elements = {
