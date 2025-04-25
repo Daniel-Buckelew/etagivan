@@ -938,3 +938,32 @@ class TigerController:
         """
         self.send_filter_wheel_command(f"MOVE {dichroic_id}={dichroic_position}")
         self.read_response()
+
+    def logic_card_on(self, axis : str):
+        """Turn on the logic card
+
+        Parameters
+        ----------
+        axis : str
+            The axis of the logic card
+        """
+
+        axis = int(axis) + 32
+        self.send_command(f'6 M E = {axis}\r')
+        self.read_response()
+        self.send_command(f'6 CCA Z=64\r')
+        self.read_response()
+
+    def logic_card_off(self, axis : str):
+        """Turn off the logic card
+
+        Parameters
+        ----------
+        axis : str
+            The axis of the logic card
+        """
+        axis = int(axis) + 32
+        self.send_command(f'6 M E = {axis}\r')
+        self.read_response()
+        self.send_command(f'6 CCA Z=0\r')
+        self.read_response()
