@@ -397,8 +397,8 @@ class Microscope:
                 axis
                 + "_abs": (
                     pos_dict[axis + "_pos"]
-                    + self_offset_dict[axis + "_offset"]
-                    - former_offset_dict[axis + "_offset"]
+                    + self_offset_dict.get(axis + "_offset", 0)
+                    - former_offset_dict.get(axis + "_offset", 0)
                 )
                 for axis in axes
             }
@@ -416,8 +416,9 @@ class Microscope:
 
         Returns
         -------
-        waveform : dict
-            Dictionary of all the waveforms.
+        waveform : dict/None
+            Dictionary of all the waveforms. None if the camera ROI and binning are
+            not set successfully.
         """
         self.current_channel = 0
         self.central_focus = None
@@ -425,13 +426,11 @@ class Microscope:
 
         if self.camera.is_acquiring:
             self.camera.close_image_series()
-        self.set_camera_roi()
+        # set camera trigger source
+        self.set_camera_trigger_mode()
         self.set_camera_sensor_mode()
-        self.camera.set_binning(
-            self.configuration["experiment"]["CameraParameters"][self.microscope_name][
-                "binning"
-            ]
-        )
+        if not self.set_camera_roi_and_binning():
+            return None
         logger.debug(f"Running microscope {self.microscope_name}")
         self.report_camera_settings()
         # Initialize Image Series - Attaches camera buffer and start imaging
@@ -475,6 +474,15 @@ class Microscope:
         )
         logger.info(f"Preparing Acquisition. Camera Parameters: {camera_info}")
 
+    def set_camera_trigger_mode(self) -> None:
+        """Set the camera trigger mode.
+        
+        This function sets the camera trigger source, trigger mode."""
+        trigger_source = self.configuration["experiment"]["CameraParameters"][
+            self.microscope_name
+        ].get("trigger_source", "External")
+        self.camera.set_trigger_mode(trigger_source)
+
     def set_camera_sensor_mode(self) -> None:
         """Set the camera sensor mode.
 
@@ -494,14 +502,19 @@ class Microscope:
                 ]["readout_direction"]
             )
 
-    def set_camera_roi(self) -> None:
-        """Set the camera ROI.
+    def set_camera_roi_and_binning(self) -> bool:
+        """Set the camera ROI and binning.
 
         This function sets the camera region of interest (ROI) based on the camera
         parameters specified in the configuration file. It sets the image width,
         image height, and the center of the image. The camera ROI is used to define
         the area of the image sensor that will be used to capture images during the
-        acquisition process.
+        acquisition process. The function also sets the camera binning value.
+
+        Returns
+        -------
+        bool
+            True if the camera ROI and binning are set successfully, False otherwise.
         """
 
         img_width = self.configuration["experiment"]["CameraParameters"][
@@ -517,6 +530,15 @@ class Microscope:
             self.microscope_name
         ]["center_y"]
         self.camera.set_ROI(img_width, img_height, center_x, center_y)
+        return self.camera.set_ROI_and_binning(
+            img_width,
+            img_height,
+            center_x,
+            center_y,
+            self.configuration["experiment"]["CameraParameters"][self.microscope_name][
+                "binning"
+            ]
+        )
 
     def end_acquisition(self) -> None:
         """End the acquisition.

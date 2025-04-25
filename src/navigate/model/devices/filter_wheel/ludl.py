@@ -76,7 +76,10 @@ class LUDLFilterWheel(FilterWheelBase, SerialDevice):
             The ID of the device. Default is 0.
         """
 
-        super().__init__(microscope_name, device_connection, configuration)
+        super().__init__(microscope_name, device_connection, configuration, device_id)
+
+        #: Any: Device connection object.
+        self.serial = device_connection
 
         #: io.TextIOWrapper: Text I/O wrapper for the serial port.
         self.sio = io.TextIOWrapper(io.BufferedRWPair(self.serial, self.serial))
