@@ -371,12 +371,12 @@ class Model:
             ],
             "z-stack": [
                 (
+                    {"name": ZStackAcquisition},
+                    {"name": StackPause},
                     {
                         "name": LoopByCount,
                         "args": ("experiment.MicroscopeState.timepoints",),
                     },
-                    {"name": ZStackAcquisition},
-                    {"name": StackPause},
                 )
             ],
             "customized": [],
