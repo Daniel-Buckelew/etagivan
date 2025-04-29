@@ -398,6 +398,11 @@ class Model:
             Number of active pixels in the x-dimension.
         img_height : int
             Number of active pixels in the y-dimension.
+
+        Returns
+        -------
+        None
+            Completes after the data buffer is resized and reinitialized.
         """
         self.img_width = img_width
         self.img_height = img_height
@@ -998,6 +1003,11 @@ class Model:
         """Pause the data thread.
 
         Function is called when user pauses the acquisition.
+
+        Returns
+        -------
+        None
+            Execution pauses until resume_data_thread() is called.
         """
 
         self.pause_data_ready_lock.acquire()
@@ -1008,6 +1018,11 @@ class Model:
         """Resume the data thread.
 
         Function is called when the user resumes the acquisition.
+
+        Returns
+        -------
+        None
+            Execution continues after pause.
         """
 
         self.ask_to_pause_data_thread = False
@@ -1031,6 +1046,11 @@ class Model:
             The pipe for delivering images to the Controller.
         data_func : callable
             Function to run on the acquired data.
+
+        Returns
+        -------
+        None
+            Terminates when acquisition stops.
         """
 
         acquired_frame_num = 0
@@ -1114,6 +1134,11 @@ class Model:
         Can be used in acquisitions where changing waveforms are required,
         but there is additional overhead due to the need to write the
         waveforms into the buffers of the DAQ cards.
+
+        Returns
+        -------
+        None
+            Completes after the image is captured and buffered.
         """
         if hasattr(self, "signal_container"):
             self.signal_container.run()
@@ -1161,6 +1186,11 @@ class Model:
 
         Recalculates the waveforms for each image, thereby allowing people to adjust
         acquisition parameters in real-time.
+
+        Returns
+        -------
+        None
+            Terminates when live acquisition is stopped.
         """
         self.stop_acquisition = False
         while not self.stop_acquisition and not self.stop_send_signal:
@@ -1175,7 +1205,13 @@ class Model:
         self.get_stage_position()
 
     def run_acquisition(self) -> None:
-        """Run acquisition along with a feature list one time."""
+        """Run acquisition along with a feature list one time.
+
+        Returns
+        -------
+        None
+            Completes after acquisition pass ends.
+        """
         if not hasattr(self, "signal_container"):
             self.snap_image()
             return
