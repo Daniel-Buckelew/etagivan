@@ -123,9 +123,6 @@ class Model:
         self.plugin_acquisition_modes = plugin_acquisition_modes
 
         # Devices
-        # devices_dict = load_devices(
-        #     configuration, args.synthetic_hardware, plugin_devices
-        # )
         devices_dict = {}
         devices_dict["__plugins__"] = plugin_devices
 
@@ -383,21 +380,21 @@ class Model:
             ],
             "z-stack": [
                 (
-                    {"name": ZStackAcquisition},
-                    {"name": StackPause},
                     {
                         "name": LoopByCount,
                         "args": ("experiment.MicroscopeState.timepoints",),
                     },
+                    {"name": ZStackAcquisition},
+                    {"name": StackPause},
                 )
             ],
             "customized": [],
         }
         # append plugin acquisition mode
         for mode in self.plugin_acquisition_modes:
-            self.acquisition_modes_feature_setting[
-                mode
-            ] = self.plugin_acquisition_modes[mode].feature_list
+            self.acquisition_modes_feature_setting[mode] = (
+                self.plugin_acquisition_modes[mode].feature_list
+            )
 
         self.load_feature_records()
 
@@ -558,11 +555,13 @@ class Model:
             r = self.prepare_acquisition()
             if not r:
                 self.show_img_pipe.send("stop")
-                self.event_queue.put((
-                    "warning", 
-                    "Acquisition aborted because of camera ROI setting failed.\n"
-                    "Please do not use center ROI for the Ximea Camera."
-                    ))
+                self.event_queue.put(
+                    (
+                        "warning",
+                        "Acquisition aborted because of camera ROI setting failed.\n"
+                        "Please do not use center ROI for the Ximea Camera.",
+                    )
+                )
                 return
 
             # load features
@@ -588,7 +587,7 @@ class Model:
 
             self.signal_thread.name = f"{self.imaging_mode} signal"
 
-            if self.is_save and self.imaging_mode != "live":
+            if self.is_save and self.imaging_mode is not "live":
                 saving_config = {}
                 plugin_obj = self.plugin_acquisition_modes.get(self.imaging_mode, None)
                 if plugin_obj and hasattr(plugin_obj, "update_saving_config"):
@@ -907,7 +906,12 @@ class Model:
     ) -> None:
         """Run the data process.
 
-        This function is the structure of data thread.
+        This function is the structure of the data thread.
+
+        So long as the acquisition is not stopped, it will keep acquiring frames. If
+        it expects a frame, but does not receive one, it will wait for a certain number
+        of iterations before aborting the acquisition. If it receives a frame,
+        it will count it, send it to the controller for display,
 
         Parameters
         ----------
@@ -919,7 +923,7 @@ class Model:
         wait_num = self.camera_wait_iterations
         acquired_frame_num = 0
 
-        # whether acquire specific number of frames.
+        # whether acquire a specific number of frames.
         count_frame = num_of_frames > 0
 
         while not self.stop_acquisition:
@@ -976,7 +980,7 @@ class Model:
         self.logger.info("Data thread stopped.")
         self.logger.info(f"Received frames in total: {acquired_frame_num}")
 
-        # release the lock when data thread ends
+        # release the lock when the data thread ends
         if self.pause_data_ready_lock.locked():
             self.pause_data_ready_lock.release()
 
@@ -1090,7 +1094,7 @@ class Model:
         waveform_dict = self.active_microscope.prepare_acquisition()
         if waveform_dict is None:
             return False
-        
+
         self.event_queue.put(("waveform", waveform_dict))
 
         self.frame_id = 0
