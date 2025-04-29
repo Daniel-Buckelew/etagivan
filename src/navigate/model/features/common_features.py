@@ -1392,9 +1392,7 @@ class ZStackAcquisition:
         """
 
         self.received_frames = 0
-        self.total_frames = (
-            self.channels * self.number_z_steps * len(self.positions)
-        )
+        self.total_frames = self.channels * self.number_z_steps * len(self.positions)
 
     def in_data_func(self, frame_ids: list) -> None:
         """Handle incoming data frames during data acquisition.
