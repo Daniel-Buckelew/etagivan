@@ -62,7 +62,7 @@ class ASIDAQ(DAQBase, SerialDevice):
     Triggers all devices and outputs to camera trigger channel.
     """
 
-    def __init__(self, configuration: Dict[str, Any]) -> None:
+    def __init__(self, microscope_name, device_connection, configuration: Dict[str, Any], device_id) -> None:
         """Initialize the ASI DAQ.
 
         Parameters
@@ -89,6 +89,8 @@ class ASIDAQ(DAQBase, SerialDevice):
 
         #: str: Trigger mode. Self-trigger or external-trigger.
         self.trigger_mode = "self-trigger"
+
+        self.daq = device_connection
 
         self.remote_focus = ASIRemoteFocus
 
@@ -156,7 +158,7 @@ class ASIDAQ(DAQBase, SerialDevice):
         # self.create_analog_output_tasks(channel_key)
 
         # self.create_camera_task(channel_key)
-        TigerController.setup_control_loop(TigerController) #self.analog_outputs
+        self.daq.setup_control_loop() #self.analog_outputs
         self.current_channel_key = channel_key
         self.is_updating_analog_task = False
         # if self.wait_to_run_lock.locked():

@@ -492,7 +492,7 @@ def start_device(
     device_not_found(microscope_name, device_category, device_type, device_id)
 
 
-def start_daq(configuration: Dict[str, Any], device_type: str = "NI") -> DAQBase:
+def start_daq(configuration: Dict[str, Any], device_type: str = "NI", name: str = "name") -> DAQBase:
     """Initializes the data acquisition (DAQ) class on a dedicated thread.
 
     Load daq information from the configuration file. Proper daq types include NI and
@@ -518,8 +518,9 @@ def start_daq(configuration: Dict[str, Any], device_type: str = "NI") -> DAQBase
     
     elif device_type == "ASI":
         from navigate.model.devices.daq.asi import ASIDAQ
-
-        return ASIDAQ(configuration)
+        
+        return start_device(name, configuration, "daq")
+        print("ASI")
 
     elif device_type.lower().startswith("synthetic"):
         from navigate.model.devices.daq.synthetic import SyntheticDAQ
