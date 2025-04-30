@@ -160,7 +160,8 @@ class ASIDaq(DAQBase, SerialDevice):
         # self.create_analog_output_tasks(channel_key)
 
         # self.create_camera_task(channel_key)
-        # self.daq.setup_control_loop() #self.analog_outputs
+        self.daq.setup_control_loop()
+        self.daq.trigger_acquisition()
         self.current_channel_key = channel_key
         self.is_updating_analog_task = False
         # if self.wait_to_run_lock.locked():
@@ -182,7 +183,10 @@ class ASIDaq(DAQBase, SerialDevice):
     def stop_acquisition(self) -> None:
         #send logic card off to cell 1
         try:
-            self.daq.logic_cell_off("1")                       
+            self.daq.logic_cell_off("1") 
+            self.daq.logic_cell_on("8")
+            self.daq.send_command("sam a =0")
+            self.daq.read_response()                   
         except Exception:
             logger.debug("DAQ cannot turn off")
             pass

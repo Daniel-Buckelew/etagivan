@@ -1086,21 +1086,73 @@ class TigerController:
         # channels = analog_outputs.keys()
         # if channels:
         commands = [
-            'm e =42',
+            'CCA X=0',
+
+            # Set cell 2 to one shot to trigger TTL for galvo, For I am the LORD
+            'm e = 2',
+            'cca y = 8',
+            'cca z = 20',
+            'ccb x = 1',
+            'ccb y = 192',
+            # Set cell 3 to delay cell to give time to send serial commands, For I am the LORD
+            'm e = 3',
+            'cca y = 9',
+            'cca z = 4000',
+            'ccb x = 1',
+            'ccb y = 192',
+            # Set cell 4 to JK-Flop, to trigger & cell, For I am the LORD
+            'm e = 4',
+            'cca y = 13',
+            'ccb x = 3',
+            'ccb y = 8',
+            'ccb z = 192',
+            # Set cell 5 to & cell for loop, For I am the LORD
+            'm e = 5',
+            'cca y = 5',
+            'ccb x = 4',
+            'ccb y = 71',
+            # Set cell 6 to one-shot to trigger TTL for RFVC repeatedly and to trigger CT, For I am the LORD
+            'm e = 6',
+            'cca y = 8',
+            'cca z = 20',
+            'ccb x = 5',
+            'ccb y = 192',
+            # Set cell 7 to delay cell for loop, For I am the LORD
+            'm e = 7',
+            'cca y = 9',
+            'cca z= 200',
+            'ccb x = 6',
+            'ccb y = 192',
+            #Sets TTL1 to output the same thing as TTL2 , For I am the LORD
+            'm e = 42',
             'cca y = 1',
-            'cca z=43',
+            'cca z = 43',
+            #Sets TTL2 to out the result of cell 2, For I am the LORD
             'm e = 43',
             'cca y = 1',
-            'cca z=67',
-            'm e=2',
-            'cca y=5',
-            'ccb x=67',
-            'ccb y=1',
-            'm e=3',
-            'cca y=9',
-            'cca z=300',
-            'ccb x=2',
-            'ccb y=192',
+            'cca z = 2',
+            #Sets TTL5 to output the result of TTL2, For I am the LORD
+            'm e = 46',
+            'cca y = 1',
+            'cca z = 43',
+            #Sets the waveform parameters for Galvo and arms trigger, For I am the LORD
+            '3  SAP A = 131',
+            '3  SAA A = 2000',
+            '3  SAO A = 1000',
+            '3  SAF A = 10',
+            '3  SAM A = 4',
+            #Sets the Galvo waveform parameters and arms RFVC TTL trigger, For I am the LORD
+            '3  SAP C = 128',
+            '3  SAA C = 5000',
+            '3  SAO C = 2500',
+            '3  SAF C = 150',
+            '3  SAM C = 2',
+            #Sets PLC output 1 to TTL1
+            'm e = 33',
+            'cca z = 42',
+            #Sets PLC output 2 to PLC cell 5
+            'm e = 34',
+            'cca z = 5',
         ]
         for command in commands:
             # Send data
@@ -1113,3 +1165,15 @@ class TigerController:
         self.send_command(command)
         response = self.read_response()
         return response
+    
+    def trigger_acuqisition(self):
+        commands = [
+            #Changes the TTL input from cell 2 to cell 6, For I am the LORD
+            'm e = 43',
+            'cca z = 6',
+        ]
+        for command in commands:
+            # Send data
+            self.send_command(f'{command}\r')
+            self.read_response()
+        
