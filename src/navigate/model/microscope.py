@@ -191,10 +191,7 @@ class Microscope:
 
             # Skip the daq and stage devices. These are handled separately.
             if device_name in ["daq", "stage"]:
-                if device_name == "stage":
-                    continue
-                if self.configuration["configuration"]["microscopes"][self.microscope_name]["daq"]["hardware"]["type"] != "ASI":
-                    continue
+                continue
             is_plugin = False
             device_connection = None
             (
