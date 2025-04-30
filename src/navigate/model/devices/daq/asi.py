@@ -55,7 +55,7 @@ p = __name__.split(".")[1]
 logger = logging.getLogger(p)
 
 @log_initialization
-class ASIDAQ(DAQBase, SerialDevice):
+class ASIDaq(DAQBase, SerialDevice):
     """ASIDAQ class for Data Acquisition (DAQ). 
 
     Representation of Tiger Controller in action. 
@@ -91,6 +91,8 @@ class ASIDAQ(DAQBase, SerialDevice):
         self.trigger_mode = "self-trigger"
 
         self.daq = device_connection
+
+        self.daq.setup_control_loop()
 
         self.remote_focus = ASIRemoteFocus
 
@@ -158,7 +160,7 @@ class ASIDAQ(DAQBase, SerialDevice):
         # self.create_analog_output_tasks(channel_key)
 
         # self.create_camera_task(channel_key)
-        self.daq.setup_control_loop() #self.analog_outputs
+        # self.daq.setup_control_loop() #self.analog_outputs
         self.current_channel_key = channel_key
         self.is_updating_analog_task = False
         # if self.wait_to_run_lock.locked():
@@ -172,7 +174,7 @@ class ASIDAQ(DAQBase, SerialDevice):
 
         # try:
         #send logic card on to cell 1
-        TigerController.logic_cell_on("1")
+        self.daq.logic_cell_on("1")
         # except Exception:
         #     logger.debug("DAQ cannot turn on")
         #     pass
@@ -180,7 +182,7 @@ class ASIDAQ(DAQBase, SerialDevice):
     def stop_acquisition(self) -> None:
         #send logic card off to cell 1
         try:
-            TigerController.logic_cell_off("1")                       
+            self.daq.logic_cell_off("1")                       
         except Exception:
             logger.debug("DAQ cannot turn off")
             pass
