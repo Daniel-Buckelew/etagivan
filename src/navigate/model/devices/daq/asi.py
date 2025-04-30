@@ -62,7 +62,7 @@ class ASIDaq(DAQBase, SerialDevice):
     Triggers all devices and outputs to camera trigger channel.
     """
 
-    def __init__(self, microscope_name, device_connection, configuration: Dict[str, Any], device_id) -> None:
+    def __init__(self, configuration: Dict[str, Any]) -> None:
         """Initialize the ASI DAQ.
 
         Parameters
