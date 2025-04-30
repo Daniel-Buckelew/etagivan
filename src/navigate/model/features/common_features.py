@@ -645,8 +645,6 @@ class MoveToNextPositionInMultiPositionTable:
         #: bool: The flag indicates whether this node is initialized
         self.initialized = False
 
-        print("*** MoveToNextPositionInMultiPositionTable initialized")
-
     def pre_signal_func(self):
         """Calculate stage offset if applicable."""
         if self.initialized:
