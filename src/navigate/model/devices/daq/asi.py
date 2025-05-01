@@ -160,7 +160,10 @@ class ASIDaq(DAQBase, SerialDevice):
         # self.create_analog_output_tasks(channel_key)
 
         # self.create_camera_task(channel_key)
+        
+
         self.daq.setup_control_loop()
+        time.sleep(0.2)
         self.daq.trigger_acquisition()
         self.current_channel_key = channel_key
         self.is_updating_analog_task = False
