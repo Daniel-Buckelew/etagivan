@@ -15,17 +15,15 @@ is closed.
 
 ------------
 
-National Instruments (NI)
+ASI Tiger Controller (ASI)
 ----------------------------
 
-We can control these shutters using a digital output from a National
-Instruments (NI) data acquisition card.
+We can control these shutters using a digital output from a ASI Tiger Controller.
 
 .. Note::
 
     This was for the NI Class for previously old code. Now it uses the ASI Tiger Controller 
     instead of NI devices
-
 
     If the shutter opens and closes immediately upon starting an acquisition, try a
     different port for the digital I/O on the NI data acquisition card. Some NI devices
