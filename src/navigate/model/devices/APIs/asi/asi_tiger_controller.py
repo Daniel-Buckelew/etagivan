@@ -1056,3 +1056,4 @@ class TigerController:
 
         self.send_command(f"SAM {axis}={mode}")
         self.read_response()
+        
