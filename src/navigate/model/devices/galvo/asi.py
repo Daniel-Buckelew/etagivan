@@ -74,7 +74,7 @@ class ASIGalvo(GalvoBase , SerialDevice):
         super().__init__(microscope_name, device_connection, configuration, device_id)
 
         #: Any: Device connection.
-        self.device_connection = device_connection
+        self.galvo = device_connection
 
         #: dict: Dictionary of microscope configuration parameters.
         self.configuration = configuration
@@ -89,9 +89,6 @@ class ASIGalvo(GalvoBase , SerialDevice):
         self.trigger_source = configuration["configuration"]["microscopes"][
             microscope_name
         ]["daq"]["trigger_source"]
-
-        #: obj: NI DAQ device connection.
-        # self.daq = device_connection
 
         #: str: Name of the galvo.
         self.galvo_name = "Galvo " + str(device_id)
@@ -239,16 +236,16 @@ class ASIGalvo(GalvoBase , SerialDevice):
                     self.sawtooth(frequency, amplitude, offset)
 
                 elif self.galvo_waveform == "sine":
-                    frequency=galvo_frequency,
-                    amplitude=galvo_amplitude,
-                    offset=galvo_offset,
+                    frequency=galvo_frequency
+                    amplitude=galvo_amplitude
+                    offset=galvo_offset
                 
                     self.sine_wave(frequency, amplitude, offset)
                 
                 elif self.galvo_waveform == "halfsaw":
-                    frequency=galvo_frequency,
-                    amplitude=galvo_amplitude,
-                    offset=galvo_offset,
+                    frequency=galvo_frequency
+                    amplitude=galvo_amplitude
+                    offset=galvo_offset
                     
                     self.half_saw(frequency, amplitude, offset)
                 else:
@@ -278,8 +275,8 @@ class ASIGalvo(GalvoBase , SerialDevice):
         amplitude *= 1000
         offset *= 1000
 
-        self.device_connection.SA_waveform(self.axis, 0, amplitude, offset, period)
-        self.device_connection.SAM(self.axis, 4)
+        self.galvo.SA_waveform(self.axis, 128, amplitude, offset, period)
+        self.galvo.SAM(self.axis, 4)
 
         # need to adjust it so it only runs for the duration of the sweep time
         # do we want to do anything with duty cycle or phase, or accept that as a limitation
@@ -322,8 +319,8 @@ class ASIGalvo(GalvoBase , SerialDevice):
         amplitude *= 1000
         offset *= 1000
 
-        self.device_connection.SA_waveform(self.axis, 3, amplitude, offset, period)
-        self.device_connection.SAM(self.axis, 4)
+        self.galvo.SA_waveform(self.axis, 131, amplitude, offset, period)
+        self.galvo.SAM(self.axis, 4)
     
         # need to adjust it so it only runs for the duration of the sweep time
         # do we want to do anything with phase, or accept that as a limitation
@@ -360,23 +357,23 @@ class ASIGalvo(GalvoBase , SerialDevice):
         amplitude *= 1000/2
         offset *= 1000
 
-        self.device_connection.SA_waveform(self.axis, 128, amplitude, offset, period)
+        self.galvo.SA_waveform(self.axis, 128, amplitude, offset, period)
         time.sleep(1/frequency)
-        self.device_connection.SAM(self.axis, 2)
+        self.galvo.SAM(self.axis, 2)
 
     def turn_off(self): 
         """Stops the galvo waveform"""
-        self.device_connection.SAM(self.axis, 0)
+        self.galvo.SAM(self.axis, 0)
 
     def close(self):
         """Close the ASI galvo serial port.
 
         Stops the remote focus waveform and then closes the port.
         """
-        if self.device_connection.is_open():
+        if self.galvo.is_open():
             self.turn_off()
             logger.debug("ASI Remote Focus - Closing Device.")
-            self.device_connection.disconnect_from_serial()
+            self.galvo.disconnect_from_serial()
 
     def __del__(self):
         """Destructor for the ASIGalvo class."""
