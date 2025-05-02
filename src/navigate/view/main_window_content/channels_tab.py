@@ -39,9 +39,10 @@ from typing import Dict
 # Third Party Imports
 
 # Local Imports
-from navigate.view.custom_widgets.hover import Hover, HoverButton
+from navigate.view.custom_widgets.hover import HoverButton
 from navigate.view.custom_widgets.validation import ValidatedSpinbox, ValidatedCombobox
 from navigate.view.custom_widgets.LabelInputWidgetFactory import LabelInput
+from navigate.view.custom_widgets.common import uniform_grid
 import navigate
 
 # Logger Setup
@@ -55,11 +56,12 @@ class ChannelsTab(tk.Frame):
     This tab is used to set the channels for the stack acquisition.
     """
 
-    def __init__(self,
-                 settings_notebook: "navigate.view.main_window_content.settings_notebook.SettingsNotebook",
-                 *args: list,
-                 **kwargs: dict
-                 ):
+    def __init__(
+        self,
+        settings_notebook: "navigate.view.main_window_content.settings_notebook.SettingsNotebook",
+        *args: list,
+        **kwargs: dict,
+    ):
         """Initialization of the Channels Tab
 
         Parameters
@@ -115,11 +117,12 @@ class ChannelCreator(ttk.Labelframe):
     This frame is used to create the channels for the stack acquisition.
     """
 
-    def __init__(self,
-                 channels_tab: "navigate.view.main_window_content.settings_notebook.SettingsNotebook",
-                 *args: list,
-                 **kwargs: dict
-                 ) -> None:
+    def __init__(
+        self,
+        channels_tab: "navigate.view.main_window_content.settings_notebook.SettingsNotebook",
+        *args: list,
+        **kwargs: dict,
+    ) -> None:
         """Initialization of the Channel Creator
 
         Parameters
@@ -200,11 +203,9 @@ class ChannelCreator(ttk.Labelframe):
         #: list: List of the frames for the columns
         self.frame_columns = []
 
-    def populate_frame(self,
-                       channels: int,
-                       filter_wheels: int,
-                       filter_wheel_names: list
-                       ) -> None:
+    def populate_frame(
+        self, channels: int, filter_wheels: int, filter_wheel_names: list
+    ) -> None:
         """Populates the frame with the widgets.
 
         This function populates the frame with the widgets for the channels. By updating
@@ -234,56 +235,111 @@ class ChannelCreator(ttk.Labelframe):
         for num in range(0, channels):
             self.channel_variables.append(tk.BooleanVar())
             self.channel_checks.append(
-                ttk.Checkbutton(self, text="CH" + str(num + 1), variable=self.channel_variables[num]))
-            self.channel_checks[num].grid(row=num + 1, column=(column_id := 0), sticky=tk.NSEW, padx=self.pad_x,
-                                          pady=self.pad_y)
+                ttk.Checkbutton(
+                    self, text="CH" + str(num + 1), variable=self.channel_variables[num]
+                )
+            )
+            self.channel_checks[num].grid(
+                row=num + 1,
+                column=(column_id := 0),
+                sticky=tk.NSEW,
+                padx=self.pad_x,
+                pady=self.pad_y,
+            )
 
             # Laser Dropdowns
             self.laser_variables.append(tk.StringVar())
-            self.laser_pulldowns.append(ttk.Combobox(self, textvariable=self.laser_variables[num], width=6))
+            self.laser_pulldowns.append(
+                ttk.Combobox(self, textvariable=self.laser_variables[num], width=6)
+            )
             self.laser_pulldowns[num].config(state="readonly")
-            self.laser_pulldowns[num].grid(row=num + 1, column=(column_id := column_id + 1), sticky=tk.NSEW,
-                                           padx=self.pad_x, pady=self.pad_y)
+            self.laser_pulldowns[num].grid(
+                row=num + 1,
+                column=(column_id := column_id + 1),
+                sticky=tk.NSEW,
+                padx=self.pad_x,
+                pady=self.pad_y,
+            )
 
             # Laser Power Spinbox
             self.laserpower_variables.append(tk.StringVar())
             self.laserpower_pulldowns.append(
-                ValidatedSpinbox(self, textvariable=self.laserpower_variables[num], width=4))
-            self.laserpower_pulldowns[num].grid(row=num + 1, column=(column_id := column_id + 1), sticky=tk.NSEW,
-                                                padx=self.pad_x, pady=self.pad_y)
+                ValidatedSpinbox(
+                    self, textvariable=self.laserpower_variables[num], width=4
+                )
+            )
+            self.laserpower_pulldowns[num].grid(
+                row=num + 1,
+                column=(column_id := column_id + 1),
+                sticky=tk.NSEW,
+                padx=self.pad_x,
+                pady=self.pad_y,
+            )
 
             # FilterWheel Dropdowns
             for i in range(filter_wheels):
                 self.filterwheel_variables.append(tk.StringVar())
                 self.filterwheel_pulldowns.append(
-                    ttk.Combobox(self, textvariable=self.filterwheel_variables[-1], width=10))
+                    ttk.Combobox(
+                        self, textvariable=self.filterwheel_variables[-1], width=10
+                    )
+                )
                 self.filterwheel_pulldowns[-1].config(state="readonly")
-                self.filterwheel_pulldowns[-1].grid(row=num + 1, column=(column_id := column_id + 1),
-                                                    sticky=tk.NSEW, padx=self.pad_x, pady=self.pad_y)
+                self.filterwheel_pulldowns[-1].grid(
+                    row=num + 1,
+                    column=(column_id := column_id + 1),
+                    sticky=tk.NSEW,
+                    padx=self.pad_x,
+                    pady=self.pad_y,
+                )
 
             # Exposure Time Spin boxes
             self.exptime_variables.append(tk.StringVar())
-            self.exptime_pulldowns.append(ValidatedSpinbox(self, textvariable=self.exptime_variables[num], width=7))
-            self.exptime_pulldowns[num].grid(row=num + 1, column=(column_id := column_id + 1), sticky=tk.NSEW,
-                                             padx=self.pad_x, pady=self.pad_y)
+            self.exptime_pulldowns.append(
+                ValidatedSpinbox(
+                    self, textvariable=self.exptime_variables[num], width=7
+                )
+            )
+            self.exptime_pulldowns[num].grid(
+                row=num + 1,
+                column=(column_id := column_id + 1),
+                sticky=tk.NSEW,
+                padx=self.pad_x,
+                pady=self.pad_y,
+            )
 
             # Time Interval Spin boxes
             self.interval_variables.append(tk.StringVar())
-            self.interval_spins.append(ValidatedSpinbox(self, textvariable=self.interval_variables[num], width=3))
-            self.interval_spins[num].grid(row=num + 1, column=(column_id := column_id + 1), sticky=tk.NSEW,
-                                          padx=self.pad_x, pady=self.pad_y)
+            self.interval_spins.append(
+                ValidatedSpinbox(
+                    self, textvariable=self.interval_variables[num], width=3
+                )
+            )
+            self.interval_spins[num].grid(
+                row=num + 1,
+                column=(column_id := column_id + 1),
+                sticky=tk.NSEW,
+                padx=self.pad_x,
+                pady=self.pad_y,
+            )
 
             # Defocus Spinbox
             self.defocus_variables.append(tk.DoubleVar())
-            self.defocus_spins.append(ValidatedSpinbox(self, textvariable=self.defocus_variables[num], width=4))
-            self.defocus_spins[num].grid(row=num + 1, column=(column_id := column_id + 1), sticky=tk.NSEW,
-                                         padx=self.pad_x, pady=self.pad_y)
+            self.defocus_spins.append(
+                ValidatedSpinbox(
+                    self, textvariable=self.defocus_variables[num], width=4
+                )
+            )
+            self.defocus_spins[num].grid(
+                row=num + 1,
+                column=(column_id := column_id + 1),
+                sticky=tk.NSEW,
+                padx=self.pad_x,
+                pady=self.pad_y,
+            )
 
-
-    def create_labels(self,
-                      filter_wheel_names: list,
-                      filter_wheels: int) -> None:
-        """ Create the labels for the columns.
+    def create_labels(self, filter_wheel_names: list, filter_wheels: int) -> None:
+        """Create the labels for the columns.
 
         Function to create the labels for the columns of the Channel Creator frame.
 
@@ -307,18 +363,21 @@ class ChannelCreator(ttk.Labelframe):
 
         for idx in range(len(self.label_text)):
             self.frame_columns.append(ttk.Frame(self))
-            self.frame_columns[idx].grid(row=0, column=idx, sticky=tk.NSEW, padx=self.pad_x, pady=self.pad_y)
-            self.labels.append(ttk.Label(self.frame_columns[idx], text=self.label_text[idx]))
-            self.labels[idx].grid(row=0, column=0, sticky=tk.N, pady=self.pad_y, padx=self.pad_x)
+            self.frame_columns[idx].grid(
+                row=0, column=idx, sticky=tk.NSEW, padx=self.pad_x, pady=self.pad_y
+            )
+            self.labels.append(
+                ttk.Label(self.frame_columns[idx], text=self.label_text[idx])
+            )
+            self.labels[idx].grid(
+                row=0, column=0, sticky=tk.N, pady=self.pad_y, padx=self.pad_x
+            )
 
 
 class StackAcquisitionFrame(ttk.Labelframe):
     """This class is the frame that holds the stack acquisition settings."""
 
-    def __init__(self,
-                 settings_tab: ChannelsTab,
-                 *args: list,
-                 **kwargs: dict) -> None:
+    def __init__(self, settings_tab: ChannelsTab, *args: list, **kwargs: dict) -> None:
         """Initialization of the Stack Acquisition Frame
 
         Parameters
@@ -346,9 +405,13 @@ class StackAcquisitionFrame(ttk.Labelframe):
         #: ttk.Frame: The frame that holds the laser cycling settings
         self.cycling = ttk.Frame(self)
 
+        #: ttk.Frame: The frame that holds the z-stack device settings
+        self.z_device = ttk.Frame(self)
+
         # Griding Each Holder Frame
         self.pos_slice.grid(row=0, column=0, sticky=tk.NSEW)
         self.cycling.grid(row=1, column=0, sticky=tk.NSEW)
+        self.z_device.grid(row=2, column=0, sticky=tk.NSEW)
 
         # Start Pos Frame (Vertically oriented)
         start_names = ["start_position", "start_focus"]
@@ -365,11 +428,15 @@ class StackAcquisitionFrame(ttk.Labelframe):
                 input_var=tk.DoubleVar(),
                 input_args={"width": 6},
             )
-            self.inputs[start_names[i]].grid(row=i + 1, column=0, sticky="N", pady=2, padx=(6, 0))
+            self.inputs[start_names[i]].grid(
+                row=i + 1, column=0, sticky="N", pady=2, padx=(6, 0)
+            )
             self.inputs[start_names[i]].label.grid(sticky="N")
 
         # Start button
-        self.buttons["set_start"] = HoverButton(self.pos_slice, text="Set Start Pos/Foc")
+        self.buttons["set_start"] = HoverButton(
+            self.pos_slice, text="Set Start Pos/Foc"
+        )
         self.buttons["set_start"].grid(row=3, column=0, sticky="N", pady=2, padx=(6, 0))
 
         # End Pos Frame (Vertically Oriented)
@@ -387,7 +454,9 @@ class StackAcquisitionFrame(ttk.Labelframe):
                 input_var=tk.DoubleVar(),
                 input_args={"width": 6},
             )
-            self.inputs[end_names[i]].grid(row=i + 1, column=1, sticky="N", pady=2, padx=(6, 0))
+            self.inputs[end_names[i]].grid(
+                row=i + 1, column=1, sticky="N", pady=2, padx=(6, 0)
+            )
             self.inputs[end_names[i]].label.grid(sticky="N")
 
         # End Button
@@ -410,12 +479,16 @@ class StackAcquisitionFrame(ttk.Labelframe):
         self.empty_label = ttk.Label(self.pos_slice, text=" ")
         self.empty_label.grid(row=0, column=3, sticky="N")
         slice_names = ["number_z_steps", "abs_z_start", "abs_z_end"]
-        slice_labels = ["# slices      ", "Abs Z Start", "Abs Z Stop"]
+        slice_labels = [
+            "Z Slices".ljust(20),
+            "Abs Z Start".ljust(20),
+            "Abs Z Stop".ljust(20),
+        ]
         for i in range(len(slice_names)):
             self.inputs[slice_names[i]] = LabelInput(
                 parent=self.pos_slice,
                 label=slice_labels[i],
-                input_class=ttk.Spinbox,
+                input_class=ValidatedSpinbox,
                 input_var=tk.DoubleVar(),
                 input_args={"width": 6},
             )
@@ -423,11 +496,12 @@ class StackAcquisitionFrame(ttk.Labelframe):
             self.inputs[slice_names[i]].grid(
                 row=i + 1, column=3, sticky="NSEW", pady=2, padx=(6, 0)
             )
+        uniform_grid(self.pos_slice)
 
         # Laser Cycling Settings
         self.inputs["cycling"] = LabelInput(
             parent=self.cycling,
-            label="Laser Cycling Settings ",
+            label="Laser Cycling Settings".ljust(30),
             input_class=ValidatedCombobox,
             input_var=tk.StringVar(),
             input_args={"width": 8},
@@ -435,9 +509,68 @@ class StackAcquisitionFrame(ttk.Labelframe):
         self.inputs["cycling"].state(["readonly"])
         self.inputs["cycling"].grid(row=0, column=0, sticky="NSEW", padx=6, pady=5)
 
+        self.inputs["z_device"] = LabelInput(
+            parent=self.z_device,
+            label="Z-Stack Device".ljust(30),
+            input_class=ValidatedCombobox,
+            input_var=tk.StringVar(),
+            input_args={"width": 8},
+        )
+        self.inputs["z_device"].state(["disabled", "readonly"])
+        self.inputs["z_device"].grid(row=0, column=0, sticky="NSEW", padx=6, pady=5)
+
+        self.inputs["z_offset"] = LabelInput(
+            parent=self.z_device,
+            label="Z Offset".ljust(30),
+            input_class=ValidatedSpinbox,
+            input_var=tk.DoubleVar(),
+            input_args={"width": 8},
+        )
+        self.inputs["z_offset"].widget.configure(state="disabled")
+        self.inputs["z_offset"].grid(row=1, column=0, sticky="NSEW", padx=6, pady=5)
+
         # Initialize DescriptionHovers
-        self.inputs["step_size"].widget.hover.setdescription("Step Size")
-        self.buttons["set_end"].hover.setdescription("Sets End")
+        self.inputs["step_size"].widget.hover.setdescription("The Z-stack step size.")
+        self.inputs["cycling"].widget.hover.setdescription(
+            "Per Stack - Captures a full z-stack for each channel in sequence, \n"
+            "scanning from the start to end Z positions for one channel before \n"
+            "moving on to the next. \n\n"
+            "Per Channel - Captures the full z-stack in an interleaved fashion, \n"
+            "acquiring every channel at each z-plane before moving to the next."
+        )
+        self.inputs["z_offset"].widget.hover.setdescription(
+            "The relative offset between the Z stages, if applicable."
+        )
+        self.buttons["set_end"].hover.setdescription(
+            "Sets the Z-stack end position " "for the F and Z Axes."
+        )
+        self.buttons["set_start"].hover.setdescription(
+            "Sets the Z-stack start position " "for the F and Z Axes."
+        )
+        self.inputs["z_device"].widget.hover.setdescription(
+            "The device that controls the Z-stack."
+        )
+        self.inputs["start_position"].widget.hover.setdescription(
+            "The relative starting Z position for the Z-stack."
+        )
+        self.inputs["start_focus"].widget.hover.setdescription(
+            "The relative starting F position for the Z-stack."
+        )
+        self.inputs["end_position"].widget.hover.setdescription(
+            "The relative ending Z position for the Z-stack."
+        )
+        self.inputs["end_focus"].widget.hover.setdescription(
+            "The relative ending F position for the Z-stack."
+        )
+        self.inputs["number_z_steps"].widget.hover.setdescription(
+            "The number of Z slices in the Z stack per channel."
+        )
+        self.inputs["abs_z_start"].widget.hover.setdescription(
+            "The absolute Z start position for the Z-stack."
+        )
+        self.inputs["abs_z_end"].widget.hover.setdescription(
+            "The absolute Z end position for the Z-stack."
+        )
 
     # Getters
     def get_variables(self) -> dict:
@@ -492,10 +625,7 @@ class StackTimePointFrame(ttk.Labelframe):
     It is a subclass of ttk.Labelframe.
     """
 
-    def __init__(self,
-                 settings_tab: ChannelsTab,
-                 *args: list,
-                 **kwargs: dict) -> None:
+    def __init__(self, settings_tab: ChannelsTab, *args: list, **kwargs: dict) -> None:
         """Initialization of the Stack Time point Frame
 
         Parameters
@@ -528,13 +658,17 @@ class StackTimePointFrame(ttk.Labelframe):
 
         #: ttk.Label: The label for the timepoints spinbox
         self.filterwheel_label = ttk.Label(self, text="Timepoints")
-        self.filterwheel_label.grid(row=1, column=0, sticky=tk.NSEW, padx=(4, 5), pady=2)
+        self.filterwheel_label.grid(
+            row=1, column=0, sticky=tk.NSEW, padx=(4, 5), pady=2
+        )
 
         #: tk.StringVar: The variable for the timepoints spinbox
         self.exp_time_spinval = tk.StringVar()
 
         #: ValidatedSpinbox: The timepoints spinbox
-        self.exp_time_spinbox = ValidatedSpinbox(self, textvariable=self.exp_time_spinval, width=3)
+        self.exp_time_spinbox = ValidatedSpinbox(
+            self, textvariable=self.exp_time_spinval, width=3
+        )
         self.exp_time_spinbox.grid(row=1, column=1, sticky=tk.NSEW, pady=2)
         self.inputs["time_spin"] = self.exp_time_spinbox
 
@@ -546,7 +680,9 @@ class StackTimePointFrame(ttk.Labelframe):
         self.stack_acq_spinval = tk.StringVar()
 
         #: ttk.Spinbox: The stack acquisition time spinbox
-        self.stack_acq_spinbox = ttk.Spinbox(self, textvariable=self.stack_acq_spinval, width=6)
+        self.stack_acq_spinbox = ttk.Spinbox(
+            self, textvariable=self.stack_acq_spinval, width=6
+        )
         self.stack_acq_spinbox.grid(row=2, column=1, sticky=tk.NSEW, pady=2)
         self.stack_acq_spinbox.state(["disabled"])
 
@@ -558,7 +694,9 @@ class StackTimePointFrame(ttk.Labelframe):
         self.stack_pause_spinval = tk.StringVar()
 
         #: ValidatedSpinbox: The stack pause spinbox
-        self.stack_pause_spinbox = ValidatedSpinbox(self, textvariable=self.stack_pause_spinval, width=6)
+        self.stack_pause_spinbox = ValidatedSpinbox(
+            self, textvariable=self.stack_pause_spinval, width=6
+        )
         self.stack_pause_spinbox.grid(row=0, column=3, sticky=tk.NSEW, pady=2)
         self.inputs["stack_pause"] = self.stack_pause_spinbox
 
@@ -572,13 +710,17 @@ class StackTimePointFrame(ttk.Labelframe):
             self.timepoint_interval_spinval.set("0")
 
         #: ttk.Spinbox: The time point interval spinbox
-        self.timepoint_interval_spinbox = ttk.Spinbox(self, textvariable=self.timepoint_interval_spinval, width=6)
+        self.timepoint_interval_spinbox = ttk.Spinbox(
+            self, textvariable=self.timepoint_interval_spinval, width=6
+        )
         self.timepoint_interval_spinbox.grid(row=1, column=3, sticky=tk.NSEW, pady=2)
         self.timepoint_interval_spinbox.state(["disabled"])  # Starts it disabled
 
         #: ttk.Label: The label for the total time spinbox
         self.exp_time_label = ttk.Label(self, text="Experiment Duration (hh:mm:ss)")
-        self.exp_time_label.grid(row=2, column=2, sticky=tk.NSEW, padx=(4, 5), pady=(2, 6))
+        self.exp_time_label.grid(
+            row=2, column=2, sticky=tk.NSEW, padx=(4, 5), pady=(2, 6)
+        )
 
         #: tk.StringVar: The variable for the total time spinbox
         self.total_time_spinval = tk.StringVar()
@@ -586,7 +728,9 @@ class StackTimePointFrame(ttk.Labelframe):
             self.total_time_spinval.set("0")
 
         #: ttk.Spinbox: The total time spinbox
-        self.total_time_spinval = ttk.Spinbox(self, textvariable=self.total_time_spinval, width=6)
+        self.total_time_spinval = ttk.Spinbox(
+            self, textvariable=self.total_time_spinval, width=6
+        )
         self.total_time_spinval.grid(row=2, column=3, sticky=tk.NSEW, pady=(2, 6))
         self.total_time_spinval.state(["disabled"])
 
@@ -621,10 +765,7 @@ class StackTimePointFrame(ttk.Labelframe):
 class MultiPointFrame(ttk.Labelframe):
     """Multi-Position Acquisition Frame"""
 
-    def __init__(self,
-                 settings_tab: ChannelsTab,
-                 *args: list,
-                 **kwargs: dict) -> None:
+    def __init__(self, settings_tab: ChannelsTab, *args: list, **kwargs: dict) -> None:
         """Initialization of the Multi-Position Acquisition Frame
 
         Parameters
@@ -652,7 +793,9 @@ class MultiPointFrame(ttk.Labelframe):
 
         #: dict: Dictionary of the buttons in the frame
         self.buttons = {"tiling": ttk.Button(self, text="Launch Tiling Wizard")}
-        self.buttons["tiling"].grid(row=0, column=2, sticky=tk.NSEW, padx=(10, 0), pady=(4, 4))
+        self.buttons["tiling"].grid(
+            row=0, column=2, sticky=tk.NSEW, padx=(10, 0), pady=(4, 4)
+        )
 
 
 class QuickLaunchFrame(ttk.Labelframe):
@@ -678,7 +821,13 @@ class QuickLaunchFrame(ttk.Labelframe):
 
         #: Dict[str, ttk.Button]: Dictionary of the buttons in the frame
         self.buttons: Dict[str, ttk.Button] = {}
-        self.buttons = {"waveform_parameters": ttk.Button(self, text="Waveform Parameters")}
-        self.buttons["waveform_parameters"].grid(row=0, column=2, sticky=tk.NSEW, padx=(4, 4), pady=(4, 4))
+        self.buttons = {
+            "waveform_parameters": ttk.Button(self, text="Waveform Parameters")
+        }
+        self.buttons["waveform_parameters"].grid(
+            row=0, column=2, sticky=tk.NSEW, padx=(4, 4), pady=(4, 4)
+        )
         self.buttons["autofocus_button"] = ttk.Button(self, text="Autofocus Settings")
-        self.buttons["autofocus_button"].grid(row=1, column=2, sticky=tk.NSEW, padx=(4, 4), pady=(4, 4))
+        self.buttons["autofocus_button"].grid(
+            row=1, column=2, sticky=tk.NSEW, padx=(4, 4), pady=(4, 4)
+        )

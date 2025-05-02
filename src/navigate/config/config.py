@@ -823,6 +823,12 @@ def verify_waveform_constants(manager, configuration):
             ):
                 update_config_dict(manager, waveform_dict, microscope_name, {})
 
+            galvo_config = {
+                "amplitude": "0",
+                "offset": 0,
+                "rising_ramp": 50,
+                "frequency": 10,
+            }
             for zoom in config_dict["zoom"]["position"].keys():
                 if (
                     zoom not in waveform_dict[microscope_name].keys()
@@ -832,18 +838,14 @@ def verify_waveform_constants(manager, configuration):
                         manager,
                         waveform_dict[microscope_name],
                         zoom,
-                        {
-                            "amplitude": "0",
-                            "offset": 0,
-                            "frequency": 10,
-                        },
+                        galvo_config,
                     )
                 else:
-                    for k in ["amplitude", "offset", "frequency"]:
+                    for k in galvo_config.keys():
                         if k not in waveform_dict[microscope_name][zoom].keys():
                             waveform_dict[microscope_name][zoom][k] = config_dict[
                                 "galvo"
-                            ][i].get(k, "0")
+                            ][i].get(k, galvo_config[k])
                         else:
                             try:
                                 float(waveform_dict[microscope_name][zoom][k])
@@ -1073,11 +1075,26 @@ def verify_positions_config(positions):
     if positions is None or type(positions) not in (list, ListProxy):
         return []
     # MultiPositions
+    # check if there is a header
+    start_index = 0
+    if len(positions) > 0:
+        cmp_header = [axis in positions[0] for axis in ["X", "Y"]]
+        if all(cmp_header):
+            start_index = 1
+        elif any(cmp_header):
+            positions = positions[1:]
+            start_index = 0
+        else:
+            start_index = 0
+
+    if start_index == len(positions):
+        return []
+
     position_num = len(positions)
-    for i in range(position_num - 1, -1, -1):
+    for i in range(position_num - 1, start_index-1, -1):
         position = positions[i]
         try:
-            for j in range(5):
+            for j in range(len(position)):
                 float(position[j])
         except (ValueError, KeyError, IndexError):
             del positions[i]

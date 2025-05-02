@@ -994,9 +994,9 @@ class TigerController:
         """
 
         axis = int(axis) + 32
-        self.send_command(f'M E = {axis}\r')
+        self.send_command(f'6 M E = {axis}\r')
         self.read_response()
-        self.send_command(f'CCA Z=64\r')
+        self.send_command(f'6 CCA Z=64\r')
         self.read_response()
         
     def logic_card_off(self, axis : str):
@@ -1008,9 +1008,9 @@ class TigerController:
             The axis of the logic card
         """
         axis = int(axis) + 32
-        self.send_command(f'M E = {axis}\r')
+        self.send_command(f'6 M E = {axis}\r')
         self.read_response()
-        self.send_command(f'CCA Z=0\r')
+        self.send_command(f'6 CCA Z=0\r')
         self.read_response()
 
     def logic_cell_on(self, axis : str):
@@ -1170,4 +1170,3 @@ class TigerController:
             # Send data
             self.send_command(f'{command}\r')
             self.read_response()
-        

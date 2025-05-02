@@ -134,7 +134,7 @@ class Configurator:
             temp_dict[key_list[-1]] = value
 
         filename = filedialog.asksaveasfilename(
-            defaultextension=".yml", filetypes=[("Yaml file", "*.yml *.yaml")]
+            defaultextension=".yaml", filetypes=[("Yaml file", "*.yml *.yaml")]
         )
         if not filename:
             return

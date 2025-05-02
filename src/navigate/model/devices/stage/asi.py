@@ -569,7 +569,7 @@ class MS2000Stage(ASIStage):
         device_id : int
             Device ID for the stage, default to 0
         """
-        StageBase.__init__(microscope_name, device_connection, configuration, device_id)
+        StageBase.__init__(self, microscope_name, device_connection, configuration, device_id)
 
         # Default axes mapping
         axes_mapping = {"x": "X", "y": "Y", "z": "Z"}

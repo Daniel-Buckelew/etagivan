@@ -821,7 +821,7 @@ class TestVerifyExperimentConfig(unittest.TestCase):
         ]
         new_positions = config.verify_positions_config(positions)
         assert isinstance(new_positions, list)
-        assert len(new_positions) == 0
+        assert len(new_positions) == 1
 
         positions = [
             [1, 2, 3],
@@ -836,7 +836,7 @@ class TestVerifyExperimentConfig(unittest.TestCase):
         ]
         new_positions = config.verify_positions_config(positions)
         assert isinstance(new_positions, list)
-        assert len(new_positions) == 1
+        assert len(new_positions) == 2
 
         positions = [
             [1, 2, 3],
@@ -852,4 +852,4 @@ class TestVerifyExperimentConfig(unittest.TestCase):
         ]
         new_positions = config.verify_positions_config(positions)
         assert isinstance(new_positions, list)
-        assert len(new_positions) == 2
+        assert len(new_positions) == 3

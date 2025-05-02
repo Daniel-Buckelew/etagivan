@@ -344,7 +344,7 @@ class LoopByCount:
     dynamically determining it from configuration references.
     """
 
-    def __init__(self, model, steps=1):
+    def __init__(self, model, steps=1, step_by_frame=False, is_nested=False):
         """Initialize the LoopByCount class.
 
         Parameters:
@@ -354,15 +354,22 @@ class LoopByCount:
         steps : int or str, optional
             The number of steps or a configuration reference to determine the loop
             count. Default is 1.
+        step_by_frame : bool
+            Count by number of frames received/ the number of entering this node.
+        is_nested : bool
+            The flag indicates whether the loop is nested within another loop.
         """
         #: MicroscopeModel: The microscope model associated with the loop control.
         self.model = model
 
         #: bool: A boolean value indicating whether to step by frame or by step.
-        self.step_by_frame = False if type(steps) is str else True
+        self.step_by_frame = step_by_frame
 
         #: int: The remaining number of steps or frames.
         self.steps = steps
+
+        #: bool: Flags indicate if nested loops
+        self.is_nested = is_nested
 
         #: int: The remaining number of steps.
         self.signals = 1
@@ -373,6 +380,10 @@ class LoopByCount:
         #: bool: Initialization flag
         self.initialized = VariableWithLock(bool)
         self.initialized.value = False
+
+        #: int: signal/data end num
+        self.end_count = VariableWithLock(int)
+        self.end_count.value = 0
 
         #: dict: A dictionary defining the configuration for the loop control process.
         self.config_table = {
@@ -395,10 +406,10 @@ class LoopByCount:
             if initialized.value:
                 return
 
-            self.get_steps()
+            steps = self.get_steps()
 
-            self.signals = self.steps
-            self.data_frames = self.steps
+            self.signals = steps
+            self.data_frames = steps
             initialized.value = True
 
             logger.debug(f"LoopByCount-initialize: {self.signals}, {self.data_frames}")
@@ -417,8 +428,8 @@ class LoopByCount:
         """
         self.signals -= 1
         if self.signals <= 0:
-            self.signals = self.steps
-            self.initialized.value = False
+            if self.is_nested:
+                self.synchronize("signal")
             return False
         return True
 
@@ -444,8 +455,8 @@ class LoopByCount:
         else:
             self.data_frames -= 1
         if self.data_frames <= 0:
-            self.data_frames = self.steps
-            self.initialized.value = False
+            if self.is_nested:
+                self.synchronize("data")
             return False
         return True
 
@@ -457,25 +468,50 @@ class LoopByCount:
         int
             Number of steps.
         """
-        if type(self.steps) is int:
-            return self.steps
-        if self.steps == "channels":
-            self.steps = len(self.model.active_microscope.available_channels)
-        elif self.steps == "positions":
-            self.steps = len(self.model.configuration["multi_positions"])
+        steps = self.steps
+
+        if type(steps) is int:
+            return steps
+        if steps == "channels":
+            return len(self.model.active_microscope.available_channels)
+        elif steps == "positions":
+            return len(self.model.configuration["multi_positions"]) - 1
         else:
             try:
-                parameters = self.steps.split(".")
+                parameters = steps.split(".")
                 config_ref = reduce((lambda pre, n: f"{pre}['{n}']"), parameters, "")
-                exec(f"self.steps = self.model.configuration{config_ref}")
+                steps = eval(f"self.model.configuration{config_ref}")
             except:  # noqa
-                self.steps = 1
+                return 1
 
-            if type(self.steps) in [list, ListProxy]:
-                self.steps = len(self.steps)
+            if type(steps) in [list, ListProxy]:
+                return len(steps)
             else:
-                self.steps = int(self.steps)
-        return self.steps
+                return int(steps)
+    
+    def synchronize(self, thread_name):
+        """Synchronize signal and data function
+        
+        Parameters:
+        ----------
+        thread_name : bool
+            Signal or Data
+        """
+        logger.debug(f"LoopByCount-Synchronize {thread_name}")
+        with self.end_count as end_count:
+            if end_count.value == 1:
+                self.initialized.value = False
+                end_count.value += 1
+                return
+            end_count.value += 1
+
+        while self.end_count.value < 2:
+            time.sleep(0.001)
+
+        self.end_count.value = 0
+
+        logger.debug(f"LoopByCount-Synchronize {thread_name} ends.")
+        
 
 
 class PrepareNextChannel:
@@ -614,20 +650,25 @@ class MoveToNextPositionInMultiPositionTable:
         if self.initialized:
             return
         self.initialized = True
-        self.multiposition_table = self.model.configuration["multi_positions"]
+        # the first row will be headers
+        self.multiposition_table = self.model.configuration["multi_positions"][1:]
+        headers = self.model.configuration["multi_positions"][0]
+        self.stage_axes = list(self.model.active_microscope.stages.keys())
+        self.axes_index = [headers.index(axis.upper()) for axis in self.stage_axes]
         self.position_count = len(self.multiposition_table)
+        axes_num = len(self.stage_axes)
         if type(self.offset) is str:
             try:
                 self.offset = ast.literal_eval(self.offset)
             except SyntaxError:
-                self.offset = [0] * 5
+                self.offset = [0] * axes_num
         if not self.offset or type(self.offset) is not list:
-            self.offset = [0] * 5
+            self.offset = [0] * axes_num
 
-        # assert offset has at least 5 float values
-        if len(self.offset) < 5:
-            self.offset[len(self.offset) : 5] = [0] * (5 - self.offset)
-        for i in range(5):
+        # assert offset has values for each axis
+        if len(self.offset) < axes_num:
+            self.offset[len(self.offset) : axes_num] = [0] * (axes_num - len(self.offset))
+        for i in range(axes_num):
             try:
                 self.offset[i] = float(self.offset[i])
             except (ValueError, TypeError):
@@ -647,18 +688,18 @@ class MoveToNextPositionInMultiPositionTable:
             curr_stage_offset = self.model.configuration["configuration"][
                 "microscopes"
             ][curr_resolution]["stage"]
-            for i, axis in enumerate(["x", "y", "z", "theta", "f"]):
+            for i, axis in enumerate(self.stage_axes):
                 self.offset[i] = (
                     self.offset[i]
-                    + curr_stage_offset[axis + "_offset"]
-                    - stage_offset[axis + "_offset"]
+                    + curr_stage_offset.get(axis + "_offset", 0)
+                    - stage_offset.get(axis + "_offset", 0)
                 )
         else:
             solvent = self.model.configuration["experiment"]["Saving"]["solvent"]
             stage_solvent_offsets = self.model.active_microscope.zoom.stage_offsets
             if solvent in stage_solvent_offsets.keys():
                 stage_offset = stage_solvent_offsets[solvent]
-                for i, axis in enumerate(["x", "y", "z", "theta", "f"]):
+                for i, axis in enumerate(self.stage_axes):
                     if axis not in stage_offset.keys():
                         continue
                     try:
@@ -694,10 +735,10 @@ class MoveToNextPositionInMultiPositionTable:
         # add offset
         pos_dict = dict(
             zip(
-                ["x", "y", "z", "theta", "f"],
+                self.stage_axes,
                 [
-                    self.multiposition_table[self.current_idx][i] + self.offset[i]
-                    for i in range(5)
+                    self.multiposition_table[self.current_idx][self.axes_index[i]] + self.offset[i]
+                    for i in range(len(self.axes_index))
                 ],
             )
         )
@@ -707,27 +748,24 @@ class MoveToNextPositionInMultiPositionTable:
             pre_stage_pos = dict(
                 map(
                     lambda k: (k, temp[f"{k}_pos"]),
-                    ["x", "y", "z", "f", "theta"],
+                    self.stage_axes,
                 )
             )
         else:
             pre_stage_pos = dict(
                 zip(
-                    ["x", "y", "z", "theta", "f"],
+                    self.stage_axes,
                     [
-                        self.multiposition_table[self.current_idx - 1][i]
+                        self.multiposition_table[self.current_idx - 1][self.axes_index[i]]
                         + self.offset[i]
-                        for i in range(5)
+                        for i in range(len(self.axes_index))
                     ],
                 )
             )
-        delta_x = abs(pos_dict["x"] - pre_stage_pos["x"])
-        delta_y = abs(pos_dict["y"] - pre_stage_pos["y"])
-        delta_z = abs(pos_dict["z"] - pre_stage_pos["z"])
-        delta_f = abs(pos_dict["f"] - pre_stage_pos["f"])
+        delta_distances = [abs(pos_dict[axis] - pre_stage_pos[axis]) for axis in self.stage_axes]
         should_pause_data_thread = any(
             distance > self.stage_distance_threshold
-            for distance in [delta_x, delta_y, delta_z, delta_f]
+            for distance in delta_distances
         )
         if should_pause_data_thread:
             self.model.pause_data_thread()
@@ -1005,9 +1043,12 @@ class ZStackAcquisition:
         self.restore_f = pos_dict["f_pos"]
 
         # position: x, y, z, theta, f
+        # TODO: Update axes headers and get positions accordingly
         if bool(microscope_state["is_multiposition"]) or self.force_multiposition:
-            self.positions = self.model.configuration["multi_positions"]
+            self.position_headers = self.model.configuration["multi_positions"][0]
+            self.positions = self.model.configuration["multi_positions"][1:]
         else:
+            self.position_headers = ["X", "Y", "Z", "THETA", "F"]
             self.positions = [
                 [
                     float(pos_dict["x_pos"]),
@@ -1031,6 +1072,7 @@ class ZStackAcquisition:
                     ),
                 ]
             ]
+        self.axes_index = [self.position_headers.index(axis.upper()) for axis in ["x", "y", "z", "theta", "f"]]
 
         # Setup next channel down here, to ensure defocus isn't merged into
         # restore f_pos, positions
@@ -1048,7 +1090,7 @@ class ZStackAcquisition:
         )
         self.current_position_idx = 0
         self.current_position = dict(
-            zip(["x", "y", "z", "theta", "f"], self.positions[0])
+            zip(["x", "y", "z", "theta", "f"], [self.positions[0][i] for i in self.axes_index])
         )
         self.z_position_moved_time = 0
         self.need_to_move_new_position = True
@@ -1090,7 +1132,7 @@ class ZStackAcquisition:
             self.current_position = dict(
                 zip(
                     ["x", "y", "z", "theta", "f"],
-                    self.positions[self.current_position_idx],
+                    [self.positions[self.current_position_idx][i] for i in self.axes_index],
                 )
             )
 

@@ -153,6 +153,7 @@ daq_hardware_widgets = {
 }
 
 shutter_device_types = {
+    "ASI Shutter": ("ASI", "asi"),
     "Analog/Digital Device": ("NI", "ni"),
     "Virtual Device": ("Synthetic", "synthetic"),
 }
@@ -160,6 +161,8 @@ shutter_device_types = {
 shutter_hardware_widgets = {
     "type": ["Device Type", "Combobox", "string", shutter_device_types, None],
     "channel": ["NI Channel", "Input", "string", None, "Example: PXI6259/port0/line0"],
+    "port": ["COM Port", "Input", "string", None, "e.g., COM3"],
+    "axis": ["Shutter Axis", "Input", "string", None, "e.g., A, B, C"],
     "min": ["Minimum Voltage", "Spinbox", "float", None, "Example: 0"],
     "max": ["Maximum Voltage", "Spinbox", "float", None, "Example: 5"],
     "frame_config": {"ref": "hardware"},
@@ -664,9 +667,8 @@ hardwares_config_name_dict = {
 }
 
 deceased_device_type_names = {
-    "MS2000": "ASIMS2000",
-    "MFC2000": "ASIMFC2000",
+    "ASIMS2000": "MS2000",
+    "ASIMFC2000": "MFC2000",
     "GalvoNIStage": "NI",
     "Thorlabs": "KIM001",
-    "KST101": "KST101",
 }

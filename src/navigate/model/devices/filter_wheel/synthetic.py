@@ -61,7 +61,7 @@ class SyntheticFilterWheel(FilterWheelBase):
         device_id : int
             The ID of the device. Default is 0.
         """
-        super().__init__(microscope_name, device_connection, configuration)
+        super().__init__(microscope_name, device_connection, configuration, device_id)
 
 
     def __str__(self):
