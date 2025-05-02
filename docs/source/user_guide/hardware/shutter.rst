@@ -23,6 +23,10 @@ Instruments (NI) data acquisition card.
 
 .. Note::
 
+    This was for the NI Class for previously old code. Now it uses the ASI Tiger Controller 
+    instead of NI devices
+
+
     If the shutter opens and closes immediately upon starting an acquisition, try a
     different port for the digital I/O on the NI data acquisition card. Some NI devices
     (e.g.PCIe-6738) have port/sample size limitations. If the port/sample size is
@@ -41,8 +45,8 @@ Instruments (NI) data acquisition card.
         microscope_name:
             shutter:
               hardware:
-                type: NI
-                channel: PXI6249/port0/line0
+                type: ASI
+                axis: A
                 min: 0.0
                 max: 5.0
 
