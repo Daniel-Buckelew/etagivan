@@ -204,7 +204,10 @@ class ASIRemoteFocus(RemoteFocusBase , SerialDevice):
                     waveform_constants["remote_focus_constants"][imaging_mode][zoom][
                         laser
                     ]["amplitude"] = "1000"
-
+                printyBoy = waveform_constants["remote_focus_constants"][imaging_mode][zoom][
+                        laser
+                    ]["amplitude"]
+                print(f"{printyBoy}")
                 amplitude = float(
                     waveform_constants["remote_focus_constants"][imaging_mode][zoom][
                         laser
@@ -228,19 +231,6 @@ class ASIRemoteFocus(RemoteFocusBase , SerialDevice):
                 if offset is not None:
                     remote_focus_offset += offset    
 
-                if self.remote_focus_min_voltage < 0: 
-                    self.remote_focus_min_voltage = 0
-                if (amplitude + remote_focus_offset) > self.remote_focus_max_voltage: 
-                    if remote_focus_offset > self.remote_focus_max_voltage:
-                        logger.error("Waveform offset is greater than device maximum voltage")
-                        remote_focus_offset = self.remote_focus_max_voltage
-                    amplitude = self.remote_focus_max_voltage - remote_focus_offset
-                if (remote_focus_offset - amplitude) < self.remote_focus_min_voltage:
-                    if remote_focus_offset < self.remote_focus_min_voltage:
-                        logger.error("Waveform offset is less than device minimum voltage")
-                        remote_focus_offset = self.remote_focus_min_voltage
-                    amplitude = remote_focus_offset - self.remote_focus_min_voltage
-
                 # Calculate the Waveforms
                 if sensor_mode == "Light-Sheet" and (
                     readout_direction == "Bidirectional"
@@ -258,7 +248,8 @@ class ASIRemoteFocus(RemoteFocusBase , SerialDevice):
                               remote_focus_delay=remote_focus_delay,
                               camera_delay=self.camera_delay,
                               fall=remote_focus_ramp_falling,
-                              amplitude=amplitude, offset=remote_focus_offset
+                              amplitude=amplitude, 
+                              offset=remote_focus_offset
                               )
     
     def triangle(
@@ -318,24 +309,24 @@ class ASIRemoteFocus(RemoteFocusBase , SerialDevice):
 
         # rise period
 
-
-        period = int(
-            (exposure_time + camera_delay - remote_focus_delay) * 1000
-        )
+        # print(f"{exposure_time}, {camera_delay}, {remote_focus_delay}")
+        # period = int(
+        #     (exposure_time + camera_delay - remote_focus_delay) * 1000
+        # )
 
         # delay period
-        extra_samples = int(int(sweep_time)- (remote_focus_delay + period + fall))
-        if extra_samples > 0:
-            _delay_time = remote_focus_delay + fall + extra_samples
-        else:
-            _delay_time = remote_focus_delay + fall
+        # extra_samples = int(int(sweep_time)- (remote_focus_delay + period + fall))
+        # if extra_samples > 0:
+        #     _delay_time = remote_focus_delay + fall + extra_samples
+        # else:
+        #     _delay_time = remote_focus_delay + fall
         
         amplitude *= 1000
         offset *= 1000
-
-        self.remote_focus.SA_waveform(self.axis, 128, amplitude, offset, period)
+        exposure_time = int(exposure_time * 1000)
+        print(f"{amplitude} {offset} {exposure_time}")
+        self.remote_focus.SA_waveform(self.axis, 128, amplitude, offset, exposure_time)
         self.remote_focus.SAM(self.axis, 2)
-        time.sleep(_delay_time)
     
     def move(self, exposure_times, sweep_times, offset=None):
         """Move the remote focus.

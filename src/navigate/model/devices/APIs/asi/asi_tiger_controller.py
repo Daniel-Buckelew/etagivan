@@ -1141,12 +1141,6 @@ class TigerController:
             '3 SAO A = 1000',
             '3 SAF A = 10',
             '3 SAM A = 4',
-            #Sets the Galvo waveform parameters and arms RFVC TTL trigger, For I am the LORD
-            '3 SAP C = 128',
-            '3 SAA C = 5000',
-            '3 SAO C = 2500',
-            '3 SAF C = 150',
-            '3 SAM C = 2',
             #Sets PLC output 1 to TTL5
             '6 m e = 33',
             '6 cca z = 46',
