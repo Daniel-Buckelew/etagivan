@@ -1,9 +1,9 @@
 ======
 Lasers
 ======
-We currently support laser control via voltage signals. In the near-future, we will consider implementing
-laser control via serial communication for power control, but digital modulation will still be controlled via
-voltage signals.
+We currently support laser control via voltage signals. ASI Tiger Controller-based lasers 
+are now supported for both digital and analog modulation through the ASILaser class.
+Future versions may expand serial-based laser control beyond ASI.
 
 ---------------------
 
@@ -44,32 +44,30 @@ modulation.
                 wavelength: 488
                 onoff:
                   hardware:
-                    type: NI
-                    channel: PXI6733/port0/line2
+                    type: ASI
+                    axis: A
                     min: 0.0
                     max: 5.0
                 power:
                   hardware:
-                    type: NI
-                    channel: PXI6733/ao0
+                    type: ASI
+                    axis: B
                     min: 0.0
                     max: 5.0
                -
                 wavelength: 561
                 onoff:
                   hardware:
-                    type: NI
-                    channel: PXI6733/port0/line3
+                    type: ASI
+                    axis: C
                     min: 0.0
                     max: 5.0
                 power:
                   hardware:
-                    type: NI
-                    channel: PXI6733/ao1
+                    type: ASI
+                    axis: D
                     min: 0.0
                     max: 5.0
-
-|
 
 -------------------
 

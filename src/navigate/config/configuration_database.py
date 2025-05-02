@@ -575,9 +575,11 @@ mirror_hardware_widgets = {
     "n_modes": ["Number of Modes", "Input", "int", None, "Example: 32", 32],
 }
 
-laser_device_types = {"Analog Device": ("NI", "ni"), "Virtual Device": ("Synthetic", "synthetic")}
+laser_device_types = {"ASI Laser": ("ASI", "asi"), "Virtual Device": ("Synthetic", "synthetic")}
 
 laser_hardware_widgets = {
+    "onoff/hardware/axis": ["Digital Axis", "Input", "string", None, "Example: A"],
+    "power/hardware/axis": ["Analog Axis", "Input", "string", None, "Example: B"],
     "wavelength": ["Wavelength", "Input", "int", None, "Example: 488", 488],
     "onoff": ["On/Off Setting", "Label", None, None, None],
     "onoff/hardware/type": ["Type", "Combobox", "string", laser_device_types, None],
