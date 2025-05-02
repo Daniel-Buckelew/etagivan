@@ -133,13 +133,13 @@ Future versions may expand serial-based laser control beyond ASI.
                 onoff:
                   hardware:
                     type: ASI
-                    axis: A
+                    axis: [1-8]
                     min: 0.0
                     max: 5.0
                 power:
                   hardware:
                     type: ASI
-                    axis: B
+                    axis: A
                     min: 0.0
                     max: 5.0
                -
@@ -147,13 +147,13 @@ Future versions may expand serial-based laser control beyond ASI.
                 onoff:
                   hardware:
                     type: ASI
-                    axis: C
+                    axis: [1-8]
                     min: 0.0
                     max: 5.0
                 power:
                   hardware:
                     type: ASI
-                    axis: D
+                    axis: B
                     min: 0.0
                     max: 5.0
 

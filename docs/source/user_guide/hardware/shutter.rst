@@ -84,7 +84,7 @@ We can control these shutters using a digital output from a ASI Tiger Controller
             shutter:
               hardware:
                 type: ASI
-                axis: A
+                axis: [1-8]
                 min: 0.0
                 max: 5.0
 
