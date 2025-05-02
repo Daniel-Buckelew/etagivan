@@ -37,7 +37,6 @@ from typing import Any, Dict
 
 
 # Local Imports
-from navigate.model.devices.galvo.base import GalvoBase
 from navigate.model.devices.device_types import SerialDevice
 from navigate.model.devices.APIs.asi.asi_tiger_controller import TigerController
 from navigate.tools.decorators import log_initialization
@@ -48,7 +47,7 @@ logger = logging.getLogger(p)
 
 
 @log_initialization
-class ASIGalvo(GalvoBase , SerialDevice):
+class ASIGalvo(SerialDevice):
     """GalvoASI Class - ASI DAQ Control of Galvanometers"""
 
     def __init__(
