@@ -1031,22 +1031,4 @@ class TigerController:
 
         self.send_command(f"SAM {axis}={mode}")
         self.read_response()
-
-    def TTL_Trigger(self):
-        self.send_command(f"6 M E=42")
-        self.read_response
-        self.send_command(f"6 CCA Y=1")
-        self.read_response
-        self.send_command(f"6 CCA Z=43")
-        self.read_response
-        self.send_command(f"6 M E=43")
-        self.read_response
-        self.send_command(f"6 CCA Y=1")
-        self.read_response
-        self.send_command(f"6 CCA Z=1")
-        self.read_response
-        self.send_command(f"6 M E=1")
-        self.read_response
-        self.send_command(f"6 CCA Z=1")
-        self.read_response
         
