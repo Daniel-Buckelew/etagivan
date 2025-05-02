@@ -575,7 +575,7 @@ mirror_hardware_widgets = {
     "n_modes": ["Number of Modes", "Input", "int", None, "Example: 32", 32],
 }
 
-laser_device_types = {"ASI Laser": ("ASI", "asi"), "Virtual Device": ("Synthetic", "synthetic")}
+laser_device_types = {"Analog Device": ("NI", "ni"), "ASI Laser": ("ASI", "asi"), "Virtual Device": ("Synthetic", "synthetic")}
 
 laser_hardware_widgets = {
     "onoff/hardware/axis": ["Digital Axis", "Input", "string", None, "Example: A"],
