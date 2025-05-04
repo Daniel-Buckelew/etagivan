@@ -124,7 +124,8 @@ class ASIGalvo(GalvoBase , SerialDevice):
         #: str: Galvo waveform. Waveform or Sawtooth.
         self.galvo_waveform = self.device_config.get("waveform", "sawtooth")
 
-        self.axis = self.device_config["hardware"].get("axis","B")
+        self.axis = self.device_config["hardware"]["axis"]#.get("axis","B")
+        print(f'galvo axis: {self.axis}')
 
     def __str__(self) -> str:
         """Return string representation of the GalvoASI."""
@@ -318,7 +319,7 @@ class ASIGalvo(GalvoBase , SerialDevice):
         period = int((1.0 / frequency)*1000)
         amplitude *= 1000
         offset *= 1000
-
+        print(f'Galvo: {amplitude} {offset} {period}')
         self.galvo.SA_waveform(self.axis, 131, amplitude, offset, period)
         self.galvo.SAM(self.axis, 4)
     

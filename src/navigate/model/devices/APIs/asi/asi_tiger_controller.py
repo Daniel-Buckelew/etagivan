@@ -1044,14 +1044,14 @@ class TigerController:
         """
 
         "Verify if this is for synchronous or asynchronous"
-        print(frequency)
-        self.send_command(f"SAP {axis}={waveform}")
+        print(f"Period (ms): {frequency}")
+        self.send_command(f"3 SAP {axis}={waveform}")
         self.read_response()
-        self.send_command(f"SAA {axis}={amplitude}")
+        self.send_command(f"3 SAA {axis}={amplitude}")
         self.read_response()
-        self.send_command(f"SAO {axis}={offset}")
+        self.send_command(f"3 SAO {axis}={offset}")
         self.read_response()
-        self.send_command(f"SAF {axis}={frequency}")
+        self.send_command(f"3 SAF {axis}={frequency}")
         self.read_response()
 
     def SAM(self, axis: str, mode: int):
@@ -1071,7 +1071,7 @@ class TigerController:
             Integer code     
         """
 
-        self.send_command(f"SAM {axis}={mode}")
+        self.send_command(f"3 SAM {axis}={mode}")
         self.read_response()
 
     def setup_control_loop(self,delay,sweep_time : float):
@@ -1101,7 +1101,7 @@ class TigerController:
             # Set cell 3 to delay cell to give time to send serial commands, For I am the LORD
             '6 m e = 3',
             '6 cca y = 9',
-            f'6 cca z = {sweep_time}',
+            f'6 cca z = {delay}',
             '6 ccb x = 1',
             '6 ccb y = 192',
             # Set cell 4 to JK-Flop, to trigger & cell, For I am the LORD
@@ -1124,7 +1124,7 @@ class TigerController:
             # Set cell 7 to delay cell for loop, For I am the LORD
             '6 m e = 7',
             '6 cca y = 9',
-            '6 cca z= 200',
+            f'6 cca z= {sweep_time}',
             '6 ccb x = 6',
             '6 ccb y = 192',
             #Sets TTL1 to output the same thing as TTL2 , For I am the LORD
@@ -1147,7 +1147,7 @@ class TigerController:
             # '3 SAM A = 4',
             #Sets PLC output 1 to TTL5
             '6 m e = 33',
-            '6 cca z = 46',
+            '6 cca z = 42',
             #Sets PLC output 2 to TTL2
             '6 m e = 34',
             '6 cca z = 43',

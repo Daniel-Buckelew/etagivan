@@ -92,7 +92,7 @@ class ASIDaq(DAQBase, SerialDevice):
 
         self.daq = device_connection
 
-        self.daq.setup_control_loop(3, .12)
+        self.daq.setup_control_loop(1000, .12)
         self.microscope_name = microscope_name
 
         self.remote_focus = ASIRemoteFocus
@@ -164,9 +164,8 @@ class ASIDaq(DAQBase, SerialDevice):
         sweep_time = self.sweep_times[channel_key]
         print(f'Sweep Time: {sweep_time}')
         #phase = self.configuration["configuration"]["microscopes"][self.microscope_name]["galvo"][galvo_name]["phase"]
-        self.daq.setup_control_loop(3,sweep_time)
-        time.sleep(0.2)
-        self.daq.trigger_acquisition()
+        self.daq.setup_control_loop(2000,sweep_time)
+        time.sleep(0.01)
         self.current_channel_key = channel_key
         self.is_updating_analog_task = False
         # if self.wait_to_run_lock.locked():
@@ -181,6 +180,7 @@ class ASIDaq(DAQBase, SerialDevice):
         # try:
         #send logic card on to cell 1
         self.daq.logic_cell_on("1")
+        self.daq.trigger_acquisition()
         # except Exception:
         #     logger.debug("DAQ cannot turn on")
         #     pass
