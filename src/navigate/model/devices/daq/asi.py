@@ -92,7 +92,8 @@ class ASIDaq(DAQBase, SerialDevice):
 
         self.daq = device_connection
 
-        self.daq.setup_control_loop()
+        self.daq.setup_control_loop(3, .12)
+        self.microscope_name = microscope_name
 
         self.remote_focus = ASIRemoteFocus
 
@@ -160,9 +161,10 @@ class ASIDaq(DAQBase, SerialDevice):
         # self.create_analog_output_tasks(channel_key)
 
         # self.create_camera_task(channel_key)
-        
-
-        self.daq.setup_control_loop()
+        sweep_time = self.sweep_times[channel_key]
+        print(f'Sweep Time: {sweep_time}')
+        #phase = self.configuration["configuration"]["microscopes"][self.microscope_name]["galvo"][galvo_name]["phase"]
+        self.daq.setup_control_loop(3,sweep_time)
         time.sleep(0.2)
         self.daq.trigger_acquisition()
         self.current_channel_key = channel_key

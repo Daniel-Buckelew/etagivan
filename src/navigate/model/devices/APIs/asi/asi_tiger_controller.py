@@ -1044,6 +1044,7 @@ class TigerController:
         """
 
         "Verify if this is for synchronous or asynchronous"
+        print(frequency)
         self.send_command(f"SAP {axis}={waveform}")
         self.read_response()
         self.send_command(f"SAA {axis}={amplitude}")
@@ -1073,7 +1074,7 @@ class TigerController:
         self.send_command(f"SAM {axis}={mode}")
         self.read_response()
 
-    def setup_control_loop(self):
+    def setup_control_loop(self,delay,sweep_time : float):
     # def setup_control_loop(self, analog_outputs: dict):
         """
         Sets up the control loop
@@ -1085,6 +1086,9 @@ class TigerController:
         """
         # channels = analog_outputs.keys()
         # if channels:
+        sweep_time = int(sweep_time*4000)
+        print(f'Sweep Time Cycles: {sweep_time}')
+
         commands = [
             '6 CCA X=0',
 
@@ -1097,7 +1101,7 @@ class TigerController:
             # Set cell 3 to delay cell to give time to send serial commands, For I am the LORD
             '6 m e = 3',
             '6 cca y = 9',
-            '6 cca z = 4000',
+            f'6 cca z = {sweep_time}',
             '6 ccb x = 1',
             '6 ccb y = 192',
             # Set cell 4 to JK-Flop, to trigger & cell, For I am the LORD
@@ -1136,17 +1140,31 @@ class TigerController:
             '6 cca y = 1',
             '6 cca z = 43',
             #Sets the waveform parameters for Galvo and arms trigger, For I am the LORD
-            '3 SAP A = 131',
-            '3 SAA A = 2000',
-            '3 SAO A = 1000',
-            '3 SAF A = 10',
-            '3 SAM A = 4',
+            # '3 SAP A = 131',
+            # '3 SAA A = 2000',
+            # '3 SAO A = 1000',
+            # '3 SAF A = 10',
+            # '3 SAM A = 4',
             #Sets PLC output 1 to TTL5
             '6 m e = 33',
             '6 cca z = 46',
             #Sets PLC output 2 to TTL2
             '6 m e = 34',
             '6 cca z = 43',
+        ]
+        for command in commands:
+            # Send data
+            self.send_command(f'{command}\r')
+            self.read_response()
+
+    def tweak_control_loop(self, delay, sweep_time):
+        commands = [            
+            # Set cell 3 to delay cell to give time to send serial commands, For I am the LORD
+            '6 m e = 3',
+            '6 cca z = 4000',        
+            # Set cell 7 to delay cell for loop, For I am the LORD
+            '6 m e = 7',
+            '6 cca z= 200',        
         ]
         for command in commands:
             # Send data
@@ -1170,3 +1188,4 @@ class TigerController:
             # Send data
             self.send_command(f'{command}\r')
             self.read_response()
+        

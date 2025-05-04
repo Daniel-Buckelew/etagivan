@@ -271,7 +271,7 @@ class ASIGalvo(GalvoBase , SerialDevice):
             Unit - Volts
         """
 
-        period = (1 / frequency)*1000
+        period = int((1.0 / frequency)*1000)
         amplitude *= 1000
         offset *= 1000
 
@@ -283,9 +283,9 @@ class ASIGalvo(GalvoBase , SerialDevice):
 
     def sine_wave(
         self,
-        frequency=10,  
-        amplitude=1, 
-        offset=0
+        frequency=10.0,  
+        amplitude=1.0, 
+        offset=0.0
     ):
         """Returns a numpy array with a sine waveform
 
@@ -315,7 +315,7 @@ class ASIGalvo(GalvoBase , SerialDevice):
         >>> typical_laser = sine_wave(sample_rate, sweep_time, 10, 1, 0, 0)
 
         """
-        period = (1 / frequency)*1000
+        period = int((1.0 / frequency)*1000)
         amplitude *= 1000
         offset *= 1000
 
@@ -352,7 +352,7 @@ class ASIGalvo(GalvoBase , SerialDevice):
         """
 
         # rise period
-        period = (1 / frequency)*1000
+        period = int((1.0 / frequency)*1000)
         
         amplitude *= 1000/2
         offset *= 1000
