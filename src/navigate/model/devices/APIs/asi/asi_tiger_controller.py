@@ -1074,7 +1074,7 @@ class TigerController:
         self.send_command(f"3 SAM {axis}={mode}")
         self.read_response()
 
-    def setup_control_loop(self,delay,sweep_time : float):
+    def setup_control_loop(self,delay,sweep_time : float): # delay (ms), sweep_time (ms)
     # def setup_control_loop(self, analog_outputs: dict):
         """
         Sets up the control loop
@@ -1086,7 +1086,10 @@ class TigerController:
         """
         # channels = analog_outputs.keys()
         # if channels:
-        sweep_time = int(sweep_time*4000)
+        delay = int(delay*4) - 26
+
+        sweep_time = int(sweep_time*4) - 2
+
         print(f'Sweep Time Cycles: {sweep_time}')
 
         commands = [
@@ -1147,7 +1150,7 @@ class TigerController:
             # '3 SAM A = 4',
             #Sets PLC output 1 to TTL5
             '6 m e = 33',
-            '6 cca z = 42',
+            '6 cca z = 46',
             #Sets PLC output 2 to TTL2
             '6 m e = 34',
             '6 cca z = 43',

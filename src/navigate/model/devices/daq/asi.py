@@ -95,9 +95,6 @@ class ASIDaq(DAQBase, SerialDevice):
         self.daq.setup_control_loop(1000, .12)
         self.microscope_name = microscope_name
 
-        self.remote_focus = ASIRemoteFocus
-
-        #self.galvo = ASIGalvo
 
     @classmethod
     def connect(cls, port, baudrate=115200, timeout=0.25):
@@ -161,10 +158,31 @@ class ASIDaq(DAQBase, SerialDevice):
         # self.create_analog_output_tasks(channel_key)
 
         # self.create_camera_task(channel_key)
+        # galvos = self.configuration["configuration"]['microscopes'][self.microscope_name]['galvo']
+        # print(galvos)
+        # for k in galvos:
+        #     self.daq.SAM(galvos[k]['hardware']['axis'],4)
+        #     print(f"galv axis: {galvos[k]['hardware']['axis']}")
+
         sweep_time = self.sweep_times[channel_key]
         print(f'Sweep Time: {sweep_time}')
-        #phase = self.configuration["configuration"]["microscopes"][self.microscope_name]["galvo"][galvo_name]["phase"]
-        self.daq.setup_control_loop(2000,sweep_time)
+
+        
+        phase = self.configuration["configuration"]["microscopes"][self.microscope_name]["galvo"][0]["phase"]
+        zoom = self.configuration["experiment"]["MicroscopeState"]["zoom"]
+        frequency = self.waveform_constants["galvo_constants"]["Galvo 0"][self.microscope_name][zoom]["frequency"]
+        period = self.exposure_times[channel_key]/float(frequency)
+        period *= 1000 # exposure times are in seconds 
+        t = period*phase/(2*3.14159265)
+        n3 = (175 - t) // period + 1 
+
+        delay = period*n3 + t 
+
+        n7 = 1000*sweep_time // period + 1
+
+        sweep_time = period*n7
+        print(f'sweep time (ms): {sweep_time}')
+        self.daq.setup_control_loop(delay,sweep_time) # delay (ms), sweep_time (ms)
         time.sleep(0.01)
         self.current_channel_key = channel_key
         self.is_updating_analog_task = False
@@ -190,8 +208,10 @@ class ASIDaq(DAQBase, SerialDevice):
         try:
             self.daq.logic_cell_off("1") 
             self.daq.logic_cell_on("8")
-            self.daq.send_command("sam a =0")
-            self.daq.read_response()                   
+            # self.daq.send_command("3 sam a = 0")
+            # self.daq.read_response()
+            # self.daq.send_command("3 sam c = 0")
+            # self.daq.read_response()                   
         except Exception:
             logger.debug("DAQ cannot turn off")
             pass
