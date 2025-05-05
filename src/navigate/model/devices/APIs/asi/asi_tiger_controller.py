@@ -1045,11 +1045,14 @@ class TigerController:
 
         "Verify if this is for synchronous or asynchronous"
         print(f"Period (ms): {frequency}")
+        Amp = amplitude*2
+        Off = .5*(offset+amplitude)
+
         self.send_command(f"3 SAP {axis}={waveform}")
         self.read_response()
-        self.send_command(f"3 SAA {axis}={amplitude}")
+        self.send_command(f"3 SAA {axis}={Amp}")
         self.read_response()
-        self.send_command(f"3 SAO {axis}={offset}")
+        self.send_command(f"3 SAO {axis}={Off}")
         self.read_response()
         self.send_command(f"3 SAF {axis}={frequency}")
         self.read_response()
