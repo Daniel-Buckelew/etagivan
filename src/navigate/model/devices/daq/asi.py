@@ -205,6 +205,7 @@ class ASIDaq(DAQBase, SerialDevice):
                 rising_ramp = float(self.waveform_constants["galvo_constants"][f"Galvo {i}"][self.microscope_name][self.zoom].get("rising_ramp", 50))
                 if (rising_ramp == 50):
                     period = 2*round(period/2)
+                    periods[i] = period
                                         
             t = periods[i]*phase/(2*3.14159265)
             print(f't {i}: {t}')

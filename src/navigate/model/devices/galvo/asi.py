@@ -249,6 +249,9 @@ class ASIGalvo(GalvoBase , SerialDevice):
                     self.configuration["waveform_constants"]["galvo_constants"][
                         self.galvo_name
                     ][microscope_name][zoom_value]['rising ramp'] = duty_cycle
+                    print(self.configuration["waveform_constants"]["galvo_constants"][
+                        self.galvo_name
+                    ][microscope_name][zoom_value]['rising ramp'])
                     self.sawtooth(frequency, amplitude, offset, duty_cycle)
 
                 elif self.galvo_waveform == "sine":
@@ -292,6 +295,7 @@ class ASIGalvo(GalvoBase , SerialDevice):
             amplitude = amplitude * -1
             self.galvo.SA_waveform(self.axis, 128, amplitude, offset, period)
         if duty_cycle == 50:
+            period = 2*round(period/2)
             self.galvo.SA_waveform(self.axis, 129, amplitude, offset, period)
         if duty_cycle == 100:
             self.galvo.SA_waveform(self.axis, 128, amplitude, offset, period)
