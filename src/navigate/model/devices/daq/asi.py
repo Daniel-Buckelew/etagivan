@@ -214,7 +214,7 @@ class ASIDaq(DAQBase, SerialDevice):
                 if (rising_ramp == 50):
                     period = 2*round(period/2)
                     periods[i] = period
-
+            periods[i] = int(period)
             t = period*phase/(2*3.14159265)
             print(f't {i}: {t}')
             n39 = ((n-i)*175 + t) // period + 1 

@@ -1091,7 +1091,7 @@ class TigerController:
         # channels = analog_outputs.keys()
         # if channels:
         print(delays)
-        rfvc_delay = int(delays[0]*4) - period
+        rfvc_delay = int(delays[0]*4) - int(round(period))
         if len(delays) > 1:
             galvo2_delay = int((delays[0] - delays[1])*4) 
         else:
