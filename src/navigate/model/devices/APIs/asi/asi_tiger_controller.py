@@ -1091,8 +1091,12 @@ class TigerController:
         # channels = analog_outputs.keys()
         # if channels:
         print(delays)
-        delay = int(delays[0]*4) - 26
-
+        rfvc_delay = int(delays[0]*4) - 26
+        if delays[1]:
+            galvo2_delay = int((delays[0] - delays[1])*4) 
+        else
+            galvo2_delay = 0
+        
         sweep_time = int(sweep_time*4) - 2
 
         print(f'Sweep Time Cycles: {sweep_time}')
@@ -1103,13 +1107,13 @@ class TigerController:
             # Set cell 2 to one shot to trigger TTL for galvo, For I am the LORD
             '6 m e = 2',
             '6 cca y = 8',
-            '6 cca z = 20',
+            '6 cca z = 10',
             '6 ccb x = 1',
             '6 ccb y = 192',
             # Set cell 3 to delay cell to give time to send serial commands, For I am the LORD
             '6 m e = 3',
             '6 cca y = 9',
-            f'6 cca z = {delay}',
+            f'6 cca z = {rfvc_delay}',
             '6 ccb x = 1',
             '6 ccb y = 192',
             # Set cell 4 to JK-Flop, to trigger & cell, For I am the LORD
@@ -1126,7 +1130,7 @@ class TigerController:
             # Set cell 6 to one-shot to trigger TTL for RFVC repeatedly and to trigger CT, For I am the LORD
             '6 m e = 6',
             '6 cca y = 8',
-            '6 cca z = 20',
+            '6 cca z = 10',
             '6 ccb x = 5',
             '6 ccb y = 192',
             # Set cell 7 to delay cell for loop, For I am the LORD
@@ -1135,6 +1139,30 @@ class TigerController:
             f'6 cca z= {sweep_time}',
             '6 ccb x = 6',
             '6 ccb y = 192',
+            #Sets cell 9 to a delay cell to account for the second galvo
+            '6 m e = 9',
+            '6 cca y = 9',
+            f'6 cca z = {galvo2_delay}',
+            '6 ccb x = 2',
+            '6 ccb y = 192',
+            #Sets cell 10 to a one shot to trigger Galvo 2
+            'm e = 10',
+            'cca y = 8',
+            'cca z = 10',
+            'ccb x = 9',
+            'ccb y = 192',
+            #Sets cell 11 to a delay reading the output of cell 6
+            '6 m e = 11',
+            '6 cca y = 9',
+            #f'6 cca z = {camera_delay',
+            '6 ccb x = 6',
+            '6 ccb y = 192',
+            #Sets cell 12 to one shot to trigger camera
+            'm e = 12',
+            'cca y = 8',
+            'cca z = 10',
+            'ccb x = 11',
+            'ccb y = 192',
             #Sets TTL1 to output the same thing as TTL2 , For I am the LORD
             '6 m e = 42',
             '6 cca y = 1',
@@ -1147,18 +1175,11 @@ class TigerController:
             '6 m e = 46',
             '6 cca y = 1',
             '6 cca z = 43',
-            #Sets the waveform parameters for Galvo and arms trigger, For I am the LORD
-            # '3 SAP A = 131',
-            # '3 SAA A = 2000',
-            # '3 SAO A = 1000',
-            # '3 SAF A = 10',
-            # '3 SAM A = 4',
-            #Sets PLC output 1 to TTL5
-            # '6 m e = 33',
-            # '6 cca z = 46',
             #Sets PLC output 2 to TTL2
-            '6 m e = 34',
-            '6 cca z = 43',
+            # '6 m e = 34',
+            # '6 cca z = 43',
+            
+            
         ]
         for command in commands:
             # Send data
