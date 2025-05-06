@@ -181,9 +181,9 @@ class ASIDaq(DAQBase, SerialDevice):
 
         # self.create_camera_task(channel_key)
 
-
+        n = len(self.galvos)
         frequencies = [
-            self.waveform_constants["galvo_constants"][f"Galvo {i}"][self.microscope_name][self.zoom]["frequency"] for i in range(len(self.galvos))
+            self.waveform_constants["galvo_constants"][f"Galvo {i}"][self.microscope_name][self.zoom]["frequency"] for i in range(n)
         ]
 
         print(frequencies)
@@ -206,13 +206,13 @@ class ASIDaq(DAQBase, SerialDevice):
                 if (rising_ramp == 50):
                     period = 2*round(period/2)
                     periods[i] = period
-                                        
-            t = periods[i]*phase/(2*3.14159265)
+
+            t = period*phase/(2*3.14159265)
             print(f't {i}: {t}')
-            n3 = (175 + t) // period + 1 
-            print(f'n3 {i}: {n3}')
-            delays.append(period*n3 - t)
-            print(f'delay: {delays[i]}')
+            n39 = ((n-i)*175 + t) // period + 1 
+            print(f'n{6*i+3} {i}: {n39}')
+            delays.append(period*n39 - t)
+            print(f'delay[{i}]: {delays[i]}')
             i += 1
 
         n7 = 1000*sweep_time // periods[0] + 1
