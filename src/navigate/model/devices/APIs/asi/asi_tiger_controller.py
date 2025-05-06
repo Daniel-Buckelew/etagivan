@@ -1154,8 +1154,8 @@ class TigerController:
             # '3 SAF A = 10',
             # '3 SAM A = 4',
             #Sets PLC output 1 to TTL5
-            '6 m e = 33',
-            '6 cca z = 46',
+            # '6 m e = 33',
+            # '6 cca z = 46',
             #Sets PLC output 2 to TTL2
             '6 m e = 34',
             '6 cca z = 43',
