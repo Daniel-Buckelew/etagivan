@@ -93,7 +93,7 @@ class ASIDaq(DAQBase, SerialDevice):
 
         self.daq = device_connection
 
-        self.daq.setup_control_loop([1000], .12)
+       
         self.microscope_name = microscope_name
 
         self.zoom = self.configuration["experiment"]["MicroscopeState"]["zoom"]
@@ -108,14 +108,21 @@ class ASIDaq(DAQBase, SerialDevice):
             raise TypeError("Unexpected type for galvos: {}".format(type(galvos_raw)))
 
         # Now loop safely
+        i=0
         for g in self.galvos:
-            print(f"galv axis: {g['hardware']['axis']}")
+            self.analog_outputs.update({f"galvo {i}":g['hardware']['axis']})
+            i += 1
 
         #for i,galvo in enumerate(galvos):
         self.phases = [
             galvo["phase"] for galvo in self.galvos
         ]
         print(self.phases)
+
+        remote_focus_channel = self.configuration["configuration"]["microscopes"][self.microscope_name]["remote_focus"]["hardware"]["axis"]
+        self.analog_outputs.update({"remote_focus":remote_focus_channel})
+
+        self.daq.setup_control_loop([1000],26, .12, self.analog_outputs)
         
 
     @classmethod
@@ -178,6 +185,7 @@ class ASIDaq(DAQBase, SerialDevice):
 
     def prepare_acquisition(self, channel_key: str) -> None:
         # self.create_analog_output_tasks(channel_key)
+        
 
         # self.create_camera_task(channel_key)
 
@@ -219,7 +227,7 @@ class ASIDaq(DAQBase, SerialDevice):
         print(f'n7 {i}: {n7}')
         sweep_time = periods[0]*n7
         print(f'sweep time (ms): {sweep_time}')
-        self.daq.setup_control_loop(delays,sweep_time) # delay (ms), sweep_time (ms)
+        self.daq.setup_control_loop(delays,periods[0],sweep_time,self.analog_outputs) # delay (ms), sweep_time (ms)
         time.sleep(0.01)
         self.current_channel_key = channel_key
         self.is_updating_analog_task = False

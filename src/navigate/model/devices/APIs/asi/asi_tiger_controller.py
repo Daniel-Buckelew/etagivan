@@ -1078,7 +1078,7 @@ class TigerController:
         self.send_command(f"3 SAM {axis}={mode}")
         self.read_response()
 
-    def setup_control_loop(self,delays,sweep_time : float): # delay (ms), sweep_time (ms)
+    def setup_control_loop(self,delays,period,sweep_time : float, analog_outputs): # delay (ms), sweep_time (ms)
     # def setup_control_loop(self, analog_outputs: dict):
         """
         Sets up the control loop
@@ -1091,10 +1091,10 @@ class TigerController:
         # channels = analog_outputs.keys()
         # if channels:
         print(delays)
-        rfvc_delay = int(delays[0]*4) - 26
-        if delays[1]:
+        rfvc_delay = int(delays[0]*4) - period
+        if len(delays) > 1:
             galvo2_delay = int((delays[0] - delays[1])*4) 
-        else
+        else:
             galvo2_delay = 0
         
         sweep_time = int(sweep_time*4) - 2
@@ -1154,7 +1154,7 @@ class TigerController:
             #Sets cell 11 to a delay reading the output of cell 6
             '6 m e = 11',
             '6 cca y = 9',
-            #f'6 cca z = {camera_delay',
+            f'6 cca z = 0', #{camera_delay',
             '6 ccb x = 6',
             '6 ccb y = 192',
             #Sets cell 12 to one shot to trigger camera
@@ -1175,9 +1175,17 @@ class TigerController:
             '6 m e = 46',
             '6 cca y = 1',
             '6 cca z = 43',
+            #Sets TTL4 to output result of cell 10
+            '6 m e = 45',
+            'cca y = 1',
+            'cca z = 10',
+            #Sets TTL3 to outpu result of TTL4
+            '6 m e = 44',
+            'cca y = 1',
+            'cca z = 45',
             #Sets PLC output 2 to TTL2
-            # '6 m e = 34',
-            # '6 cca z = 43',
+            '6 m e = 35',
+            '6 cca z = 6',
             
             
         ]
