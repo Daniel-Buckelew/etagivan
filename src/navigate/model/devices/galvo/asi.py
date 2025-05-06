@@ -203,6 +203,7 @@ class ASIGalvo(GalvoBase , SerialDevice):
                 try:
                     galvo_amplitude = float(galvo_parameters.get("amplitude", 0))
                     galvo_offset = float(galvo_parameters.get("offset", 0))
+                    galvo_rising_ramp = float(galvo_parameters.get("rising_ramp", 50))
                     galvo_frequency = (
                         float(galvo_parameters.get("frequency", 0)) / exposure_time
                     )
@@ -233,8 +234,20 @@ class ASIGalvo(GalvoBase , SerialDevice):
                     frequency=galvo_frequency
                     amplitude=galvo_amplitude
                     offset=galvo_offset
+                    duty_cycle=galvo_rising_ramp
 
-                    self.sawtooth(frequency, amplitude, offset)
+                    if duty_cycle != 0 or duty_cycle != 50 or duty_cycle != 100:
+                        temp = duty_cycle
+                        remainder = duty_cycle % 100
+                        if remainder < 25:
+                            duty_cycle = temp - remainder
+                        elif remainder < 75:
+                            duty_cycle = temp - remainder + 50
+                        else:
+                            duty_cycle = 100
+                        logger.debug(f"Invalid duty cycle given. Duty cycle value corrected to {duty_cycle}")    
+
+                    self.sawtooth(frequency, amplitude, offset, duty_cycle)
 
                 elif self.galvo_waveform == "sine":
                     frequency=galvo_frequency
@@ -243,12 +256,6 @@ class ASIGalvo(GalvoBase , SerialDevice):
                 
                     self.sine_wave(frequency, amplitude, offset)
                 
-                elif self.galvo_waveform == "halfsaw":
-                    frequency=galvo_frequency
-                    amplitude=galvo_amplitude
-                    offset=galvo_offset
-                    
-                    self.half_saw(frequency, amplitude, offset)
                 else:
                     print("Unknown Galvo waveform specified in configuration file.")
                     continue
@@ -258,6 +265,7 @@ class ASIGalvo(GalvoBase , SerialDevice):
         frequency=10,
         amplitude=1,
         offset=0,
+        duty_cycle=100
     ):
         """
         Sends the tiger controller commands to make the sawtooth wave (actually triangle)
@@ -270,17 +278,22 @@ class ASIGalvo(GalvoBase , SerialDevice):
             Unit - Volts
         offset : Float
             Unit - Volts
+        duty_cycle : Float
+            Unit - Percent 
         """
 
         period = int((1.0 / frequency)*1000)
         amplitude *= 1000
         offset *= 1000
         print(f'Galvo: {amplitude} {offset} {period}')
-        self.galvo.SA_waveform(self.axis, 129, amplitude, offset, period)
+        if duty_cycle == 0:
+            amplitude = amplitude * -1
+            self.galvo.SA_waveform(self.axis, 128, amplitude, offset, period)
+        if duty_cycle == 50:
+            self.galvo.SA_waveform(self.axis, 129, amplitude, offset, period)
+        if duty_cycle == 100:
+            self.galvo.SA_waveform(self.axis, 128, amplitude, offset, period)
         self.galvo.SAM(self.axis, 4)
-
-        # need to adjust it so it only runs for the duration of the sweep time
-        # do we want to do anything with duty cycle or phase, or accept that as a limitation
 
     def sine_wave(
         self,
@@ -322,45 +335,6 @@ class ASIGalvo(GalvoBase , SerialDevice):
         print(f'Galvo: {amplitude} {offset} {period}')
         self.galvo.SA_waveform(self.axis, 131, amplitude, offset, period)
         self.galvo.SAM(self.axis, 4)
-    
-        # need to adjust it so it only runs for the duration of the sweep time
-        # do we want to do anything with phase, or accept that as a limitation
-
-    def half_saw(
-        self,
-        frequency=10,
-        amplitude=1,
-        offset=0,
-    ):
-        """Sends the tiger controller commands to make the ramp wave
-
-        Parameters
-        ----------
-        exposure_time : Float
-            Unit - Seconds
-        sweep_time : Float
-            Unit - Seconds
-        remote_focus_delay : Float
-            Unit - seconds
-        camera_delay : Float
-            Unit - seconds
-        fall : Float
-            Unit - seconds
-        amplitude : Float
-            Unit - Volts
-        offset : Float
-            Unit - Volts
-        """
-
-        # rise period
-        period = int((1.0 / frequency)*1000)
-        
-        amplitude *= 1000/2
-        offset *= 1000
-
-        self.galvo.SA_waveform(self.axis, 128, amplitude, offset, period)
-        time.sleep(1/frequency)
-        self.galvo.SAM(self.axis, 2)
 
     def turn_off(self): 
         """Stops the galvo waveform"""
