@@ -246,7 +246,9 @@ class ASIGalvo(GalvoBase , SerialDevice):
                         else:
                             duty_cycle = 100
                         logger.debug(f"Invalid duty cycle given. Duty cycle value corrected to {duty_cycle}")    
-
+                    self.configuration["waveform_constants"]["galvo_constants"][
+                        self.galvo_name
+                    ][microscope_name][zoom_value]['rising ramp'] = duty_cycle
                     self.sawtooth(frequency, amplitude, offset, duty_cycle)
 
                 elif self.galvo_waveform == "sine":

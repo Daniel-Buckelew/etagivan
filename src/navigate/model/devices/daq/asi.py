@@ -181,9 +181,11 @@ class ASIDaq(DAQBase, SerialDevice):
 
         # self.create_camera_task(channel_key)
 
+
         frequencies = [
             self.waveform_constants["galvo_constants"][f"Galvo {i}"][self.microscope_name][self.zoom]["frequency"] for i in range(len(self.galvos))
         ]
+
         print(frequencies)
         
         sweep_time = self.sweep_times[channel_key]
@@ -196,11 +198,19 @@ class ASIDaq(DAQBase, SerialDevice):
         i = 0
         delays = []
         for phase in self.phases:
+            frequency = self.waveform_constants["galvo_constants"][f"Galvo {i}"][self.microscope_name][self.zoom]["frequency"]
+            period = self.exposure_times[channel_key]*1000/float(frequency)
+
+            if self.galvos[i]['waveform'] == 'sawtooth':
+                rising_ramp = float(self.waveform_constants["galvo_constants"][f"Galvo {i}"][self.microscope_name][self.zoom].get("rising_ramp", 50))
+                if (rising_ramp == 50):
+                    period = 2*round(period/2)
+                                        
             t = periods[i]*phase/(2*3.14159265)
             print(f't {i}: {t}')
-            n3 = (175 + t) // periods[i] + 1 
+            n3 = (175 + t) // period + 1 
             print(f'n3 {i}: {n3}')
-            delays.append(periods[i]*n3 - t)
+            delays.append(period*n3 - t)
             print(f'delay: {delays[i]}')
             i += 1
 
