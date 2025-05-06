@@ -1045,14 +1045,15 @@ class TigerController:
 
         "Verify if this is for synchronous or asynchronous"
         print(f"Period (ms): {frequency}")
-        Amp = amplitude*2
-        Off = .5*(offset+amplitude)
+        if (waveform % 128 == 3):
+            offset = .5*(offset+amplitude)
+        amplitude = amplitude*2            
 
         self.send_command(f"3 SAP {axis}={waveform}")
         self.read_response()
-        self.send_command(f"3 SAA {axis}={Amp}")
+        self.send_command(f"3 SAA {axis}={amplitude}")
         self.read_response()
-        self.send_command(f"3 SAO {axis}={Off}")
+        self.send_command(f"3 SAO {axis}={offset}")
         self.read_response()
         self.send_command(f"3 SAF {axis}={frequency}")
         self.read_response()
@@ -1077,7 +1078,7 @@ class TigerController:
         self.send_command(f"3 SAM {axis}={mode}")
         self.read_response()
 
-    def setup_control_loop(self,delay,sweep_time : float): # delay (ms), sweep_time (ms)
+    def setup_control_loop(self,delays,sweep_time : float): # delay (ms), sweep_time (ms)
     # def setup_control_loop(self, analog_outputs: dict):
         """
         Sets up the control loop
@@ -1089,7 +1090,8 @@ class TigerController:
         """
         # channels = analog_outputs.keys()
         # if channels:
-        delay = int(delay*4) - 26
+        print(delays)
+        delay = int(delays[0]*4) - 26
 
         sweep_time = int(sweep_time*4) - 2
 

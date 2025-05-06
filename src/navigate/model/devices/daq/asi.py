@@ -40,6 +40,7 @@ from typing import Union, Dict, Any
 # Third Party Imports
 import numpy as np
 import serial
+from multiprocessing.managers import DictProxy, ListProxy
 # Local Imports
 from navigate.model.devices.remote_focus.asi import ASIRemoteFocus
 #from navigate.model.devices.galvo.asi import galvo
@@ -92,9 +93,30 @@ class ASIDaq(DAQBase, SerialDevice):
 
         self.daq = device_connection
 
-        self.daq.setup_control_loop(1000, .12)
+        self.daq.setup_control_loop([1000], .12)
         self.microscope_name = microscope_name
 
+        self.zoom = self.configuration["experiment"]["MicroscopeState"]["zoom"]
+        galvos_raw = self.configuration["configuration"]['microscopes'][self.microscope_name]['galvo']
+
+        # Normalize galvos to always be a list of dicts
+        if isinstance(galvos_raw, DictProxy):
+            self.galvos = [dict(galvos_raw)]  # wrap single DictProxy into a list
+        elif isinstance(galvos_raw, ListProxy):
+            self.galvos = [dict(g) for g in galvos_raw]  # convert each DictProxy in the list to a dict
+        else:
+            raise TypeError("Unexpected type for galvos: {}".format(type(galvos_raw)))
+
+        # Now loop safely
+        for g in self.galvos:
+            print(f"galv axis: {g['hardware']['axis']}")
+
+        #for i,galvo in enumerate(galvos):
+        self.phases = [
+            galvo["phase"] for galvo in self.galvos
+        ]
+        print(self.phases)
+        
 
     @classmethod
     def connect(cls, port, baudrate=115200, timeout=0.25):
@@ -158,31 +180,35 @@ class ASIDaq(DAQBase, SerialDevice):
         # self.create_analog_output_tasks(channel_key)
 
         # self.create_camera_task(channel_key)
-        # galvos = self.configuration["configuration"]['microscopes'][self.microscope_name]['galvo']
-        # print(galvos)
-        # for k in galvos:
-        #     self.daq.SAM(galvos[k]['hardware']['axis'],4)
-        #     print(f"galv axis: {galvos[k]['hardware']['axis']}")
 
+        frequencies = [
+            self.waveform_constants["galvo_constants"][f"Galvo {i}"][self.microscope_name][self.zoom]["frequency"] for i in range(len(self.galvos))
+        ]
+        print(frequencies)
+        
         sweep_time = self.sweep_times[channel_key]
         print(f'Sweep Time: {sweep_time}')
 
-        
-        phase = self.configuration["configuration"]["microscopes"][self.microscope_name]["galvo"][0]["phase"]
-        zoom = self.configuration["experiment"]["MicroscopeState"]["zoom"]
-        frequency = self.waveform_constants["galvo_constants"]["Galvo 0"][self.microscope_name][zoom]["frequency"]
-        period = self.exposure_times[channel_key]/float(frequency)
-        period *= 1000 # exposure times are in seconds 
-        t = period*phase/(2*3.14159265)
-        n3 = (175 - t) // period + 1 
+        periods = [
+            self.exposure_times[channel_key]*1000/float(frequency) for frequency in frequencies # exposure times are in seconds 
+        ]
+        print(periods)
+        i = 0
+        delays = []
+        for phase in self.phases:
+            t = periods[i]*phase/(2*3.14159265)
+            print(f't {i}: {t}')
+            n3 = (175 + t) // periods[i] + 1 
+            print(f'n3 {i}: {n3}')
+            delays.append(periods[i]*n3 - t)
+            print(f'delay: {delays[i]}')
+            i += 1
 
-        delay = period*n3 + t 
-
-        n7 = 1000*sweep_time // period + 1
-
-        sweep_time = period*n7
+        n7 = 1000*sweep_time // periods[0] + 1
+        print(f'n7 {i}: {n7}')
+        sweep_time = periods[0]*n7
         print(f'sweep time (ms): {sweep_time}')
-        self.daq.setup_control_loop(delay,sweep_time) # delay (ms), sweep_time (ms)
+        self.daq.setup_control_loop(delays,sweep_time) # delay (ms), sweep_time (ms)
         time.sleep(0.01)
         self.current_channel_key = channel_key
         self.is_updating_analog_task = False

@@ -260,7 +260,7 @@ class ASIGalvo(GalvoBase , SerialDevice):
         offset=0,
     ):
         """
-        Sends the tiger controller commands to make the sawtooth wave
+        Sends the tiger controller commands to make the sawtooth wave (actually triangle)
 
         Parameters
         ----------
@@ -275,8 +275,8 @@ class ASIGalvo(GalvoBase , SerialDevice):
         period = int((1.0 / frequency)*1000)
         amplitude *= 1000
         offset *= 1000
-
-        self.galvo.SA_waveform(self.axis, 128, amplitude, offset, period)
+        print(f'Galvo: {amplitude} {offset} {period}')
+        self.galvo.SA_waveform(self.axis, 129, amplitude, offset, period)
         self.galvo.SAM(self.axis, 4)
 
         # need to adjust it so it only runs for the duration of the sweep time
