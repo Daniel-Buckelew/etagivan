@@ -290,7 +290,7 @@ class ASIGalvo(GalvoBase , SerialDevice):
         period = int((1.0 / frequency)*1000)
         amplitude *= 1000
         offset *= 1000
-        print(f'Galvo: {amplitude} {offset} {period}')
+        #print(f'Galvo: {amplitude} {offset} {period}')
         if duty_cycle == 0:
             amplitude = amplitude * -1
             self.galvo.SA_waveform(self.axis, 128, amplitude, offset, period)
