@@ -189,23 +189,13 @@ class ASIDaq(DAQBase, SerialDevice):
         # self.create_analog_output_tasks(channel_key)
         # self.create_camera_task(channel_key)
 
-        # Get Galvo frequencies from waveform constants, indexing using microscope name and zoom
-        n = len(self.galvos)
-        frequencies = [
-            self.waveform_constants["galvo_constants"][f"Galvo {i}"][self.microscope_name][self.zoom]["frequency"] for i in range(n)
-        ]
-
-        print(frequencies)
         # Gets appropriate sweep_time for the current channel
         sweep_time = self.sweep_times[channel_key]
-        print(f'Sweep Time: {sweep_time}')
-        # Gets galvo period(s) based on selected channel's exposure time and galvo frequency
-        periods = [
-            self.exposure_times[channel_key]*1000/float(frequency) for frequency in frequencies # exposure times are in seconds 
-        ]
-        print(periods)
 
-        # loops through galvo phases to calculate time delays. Delay[i] corresponds to the time between the triggering of the ith galvo and the master trigger
+        # loops through galvo phases to calculate time delays 
+        # delays[i] corresponds to the time between the triggering of the ith galvo and the master trigger
+        # delay between consecutive triggers must be greater than 175 ms (limitation of TG-1000)
+        n = len(self.galvos)
         i = 0
         delays = []
         for phase in self.phases:
@@ -218,20 +208,25 @@ class ASIDaq(DAQBase, SerialDevice):
                     period = 2*round(period/2)
             # rounds period to closest number of ms, as TG-1000 can only generate waveforms with whole number of ms periods
             period = int(round(period))
-            periods[i] = period
-            t = period*phase/(2*3.14159265)
-            print(f't {i}: {t}')
+            if (i == 0):
+                period1 = period # saves first period to sync loop with first galvo
+            t = period*phase/(2*3.14159265) 
             n39 = ((n-i)*175 + t) // period + 1 
-            print(f'n{6*i+3} {i}: {n39}')
             delays.append(period*n39 - t)
-            print(f'delay[{i}]: {delays[i]}')
             i += 1
+        # modify sweep time to sync with first galvo if there are asi galvos in config
+        if (len(delays) > 0): 
+            n7 = 1000*sweep_time // period1 + 1
+            sweep_time = period1*n7
 
-        n7 = 1000*sweep_time // periods[0] + 1
-        print(f'n7: {n7}')
-        sweep_time = periods[0]*n7
-        print(f'sweep time (ms): {sweep_time}')
-        self.daq.setup_control_loop(delays,sweep_time,self.analog_outputs) # delay (ms), sweep_time (ms)
+        self.camera_delay = (
+            float(self.waveform_constants["other_constants"].get("camera_delay", 5))
+        )
+        rfvc_delay = (
+            float(self.waveform_constants["other_constants"].get("remote_focus_delay", 5))
+        )
+
+        self.daq.setup_control_loop(delays, self.camera_delay, rfvc_delay, sweep_time, self.analog_outputs) # delay (ms), sweep_time (ms)
 
         self.current_channel_key = channel_key
         self.is_updating_analog_task = False
