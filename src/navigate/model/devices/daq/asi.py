@@ -123,8 +123,8 @@ class ASIDaq(DAQBase, SerialDevice):
         # update analog outputs with rfvc and associated axis
         remote_focus_channel = self.configuration["configuration"]["microscopes"][self.microscope_name]["remote_focus"]["hardware"]["axis"]
         self.analog_outputs.update({"remote_focus":remote_focus_channel})
-        # sets up initial PLC configuration with default delay (ms), period (ms), sweep time (ms), and analog outputs dict
-        self.daq.setup_control_loop([1000],26, 120, self.analog_outputs)
+        # sets up initial PLC configuration with default delay (ms), sweep time (ms), and analog outputs dict
+        self.daq.setup_control_loop([200], 120, self.analog_outputs)
         
 
     @classmethod
@@ -231,8 +231,8 @@ class ASIDaq(DAQBase, SerialDevice):
         print(f'n7: {n7}')
         sweep_time = periods[0]*n7
         print(f'sweep time (ms): {sweep_time}')
-        self.daq.setup_control_loop(delays,periods[0],sweep_time,self.analog_outputs) # delay (ms), sweep_time (ms)
-        time.sleep(0.01)
+        self.daq.setup_control_loop(delays,sweep_time,self.analog_outputs) # delay (ms), sweep_time (ms)
+
         self.current_channel_key = channel_key
         self.is_updating_analog_task = False
         # if self.wait_to_run_lock.locked():

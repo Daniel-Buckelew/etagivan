@@ -1078,7 +1078,7 @@ class TigerController:
         self.send_command(f"3 SAM {axis}={mode}")
         self.read_response()
 
-    def setup_control_loop(self,delays,period,sweep_time : float, analog_outputs): # delay (ms), sweep_time (ms)
+    def setup_control_loop(self,delays, sweep_time : float, analog_outputs): # delay (ms), sweep_time (ms)
     # def setup_control_loop(self, analog_outputs: dict):
         """
         Sets up the control loop
@@ -1091,7 +1091,7 @@ class TigerController:
         # channels = analog_outputs.keys()
         # if channels:
         print(delays)
-        rfvc_delay = int(delays[0]*4) #- int(round(period))
+        start_delay = int(delays[0]*4) #- int(round(period))
         if len(delays) > 1:
             galvo2_delay = int((delays[0] - delays[1])*4) 
         else:
@@ -1113,7 +1113,7 @@ class TigerController:
             # Set cell 3 to delay cell to give time to send serial commands, For I am the LORD
             '6 m e = 3',
             '6 cca y = 9',
-            f'6 cca z = {rfvc_delay}',
+            f'6 cca z = {start_delay}',
             '6 ccb x = 1',
             '6 ccb y = 192',
             # Set cell 4 to JK-Flop, to trigger & cell, For I am the LORD
@@ -1179,7 +1179,7 @@ class TigerController:
             '6 m e = 45',
             'cca y = 1',
             'cca z = 10',
-            #Sets TTL3 to outpu result of TTL4
+            #Sets TTL3 to output result of TTL4
             '6 m e = 44',
             'cca y = 1',
             'cca z = 45',
@@ -1189,22 +1189,43 @@ class TigerController:
             #Set PLC output 1 to TTL5 REMOVE THIS
             '6 m e = 33',
             '6 cca z = 46',
-            
-            
         ]
         for command in commands:
             # Send data
             self.send_command(f'{command}\r')
             self.read_response()
 
-    def tweak_control_loop(self, delay, sweep_time):
+    def tweak_control_loop(self, delays, sweep_time):
+
+        start_delay = int(delays[0]*4) #- int(round(period))
+        if len(delays) > 1:
+            galvo2_delay = int((delays[0] - delays[1])*4) 
+        else:
+            galvo2_delay = 0
+        
+        sweep_time = int(sweep_time*4) - 2
+
+        print(f'Sweep Time Cycles: {sweep_time}')
+
         commands = [            
             # Set cell 3 to delay cell to give time to send serial commands, For I am the LORD
             '6 m e = 3',
-            '6 cca z = 4000',        
+            '6 cca y = 9'
+            f'6 cca z = {start_delay}',
+            '6 ccb x = 1',
+            '6 ccb y = 192',
             # Set cell 7 to delay cell for loop, For I am the LORD
             '6 m e = 7',
-            '6 cca z= 200',        
+            '6 cca y = 9'
+            f'6 cca z= {sweep_time}',
+            '6 ccb x = 6',
+            '6 ccb y = 192',
+            #Sets cell 9 to a delay cell to account for the second galvo
+            '6 m e = 9',
+            '6 cca y = 9'
+            f'6 cca z = {galvo2_delay}',
+            '6 ccb x = 2',
+            '6 ccb y = 192',
         ]
         for command in commands:
             # Send data
