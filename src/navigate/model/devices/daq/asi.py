@@ -124,7 +124,7 @@ class ASIDaq(DAQBase, SerialDevice):
         remote_focus_channel = self.configuration["configuration"]["microscopes"][self.microscope_name]["remote_focus"]["hardware"]["axis"]
         self.analog_outputs.update({"remote_focus":remote_focus_channel})
         # sets up initial PLC configuration with default delay (ms), sweep time (ms), and analog outputs dict
-        self.daq.setup_control_loop([200], 120, self.analog_outputs)
+        self.daq.setup_control_loop([200], 0, 0, 120, self.analog_outputs)
         
 
     @classmethod

@@ -1078,7 +1078,7 @@ class TigerController:
         self.send_command(f"3 SAM {axis}={mode}")
         self.read_response()
 
-    def setup_control_loop(self,delays, sweep_time : float, analog_outputs): # delay (ms), sweep_time (ms)
+    def setup_control_loop(self,delays,camera_delay,rfvc_delay,sweep_time : float, analog_outputs): # delay (ms), sweep_time (ms)
     # def setup_control_loop(self, analog_outputs: dict):
         """
         Sets up the control loop
@@ -1090,7 +1090,6 @@ class TigerController:
         """
         # channels = analog_outputs.keys()
         # if channels:
-        print(delays)
         start_delay = int(delays[0]*4) #- int(round(period))
         if len(delays) > 1:
             galvo2_delay = int((delays[0] - delays[1])*4) 
@@ -1099,7 +1098,29 @@ class TigerController:
         
         sweep_time = int(sweep_time*4) - 2
 
+        if rfvc_delay > camera_delay + 2:
+            camera_output = 6
+            rfvc_output = 12
+            start_delay += int((camera_delay + 2) * 4)
+            difference_delay = int((rfvc_delay - (camera_delay + 2)) * 4)
+        elif rfvc_delay < camera_delay + 2:
+            camera_output = 12
+            rfvc_output = 6
+            start_delay += int((rfvc_delay) * 4)
+            difference_delay = int(((camera_delay + 2) - rfvc_delay) * 4)
+        elif rfvc_delay == camera_delay + 2:
+            camera_output = 6
+            rfvc_output = 6
+            start_delay += int((camera_delay + 2) * 4)
+            difference_delay = int((rfvc_delay - (camera_delay + 2)) * 4)
+
+
+        print(f"Delays: {delays}, RFVC Delay: {rfvc_delay}, Camera Delay: {camera_delay}")
+
+        print(f"Camera: {camera_output}, RFVC: {rfvc_output}")
+        
         print(f'Sweep Time Cycles: {sweep_time}')
+        print(f"Start Delay: {start_delay}, Difference Delay: {difference_delay}")
 
         commands = [
             '6 CCA X=0',
@@ -1154,7 +1175,7 @@ class TigerController:
             #Sets cell 11 to a delay reading the output of cell 6
             '6 m e = 11',
             '6 cca y = 9',
-            f'6 cca z = 4', #{camera_delay',
+            f'6 cca z = {difference_delay}', #{difference_delay}',
             '6 ccb x = 6',
             '6 ccb y = 192',
             #Sets cell 12 to one shot to trigger camera
@@ -1163,32 +1184,36 @@ class TigerController:
             'cca z = 10',
             'ccb x = 11',
             'ccb y = 192',
-            #Sets TTL1 to output the same thing as TTL2 , For I am the LORD
+            #Sets TTL0 to output from the RFVC cell in this case , For I am the LORD
+            '6 m e = 47',
+            '6 cca y = 1',
+            f'6 cca z = {rfvc_output}',
+            #Sets TTL1 to output the same thing as TTL0, For I am the LORD
             '6 m e = 42',
             '6 cca y = 1',
-            '6 cca z = 43',
-            #Sets TTL2 to out the result of cell 2, For I am the LORD
+            '6 cca z = 47',
+            #Sets TTL2 to output for the first Galvo, For I am the LORD
             '6 m e = 43',
             '6 cca y = 1',
             '6 cca z = 2',
-            #Sets TTL5 to output the result of TTL2, For I am the LORD
-            '6 m e = 46',
-            '6 cca y = 1',
-            '6 cca z = 43',
-            #Sets TTL4 to output result of cell 10
+            #Sets TTL3 to output the same thing as TTL2
+            '6 m e = 44',
+            'cca y = 1',
+            'cca z = 43',
+            #Sets TTL4 to output for the second Galvo
             '6 m e = 45',
             'cca y = 1',
             'cca z = 10',
-            #Sets TTL3 to output result of TTL4
-            '6 m e = 44',
+            #Sets TTL5 to output the same thing as TTL4
+            '6 m e = 46',
             'cca y = 1',
             'cca z = 45',
             #Sets PLC output 3 to cell 6
-            '6 m e = 35',
-            '6 cca z = 12',
-            #Set PLC output 1 to TTL5 REMOVE THIS
             '6 m e = 33',
-            '6 cca z = 46',
+            f'6 cca z = {camera_output}',
+            # #Set PLC output 1 to TTL5 REMOVE THIS
+            # '6 m e = 33',
+            # '6 cca z = 46',
         ]
         for command in commands:
             # Send data
