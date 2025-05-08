@@ -205,7 +205,7 @@ class ASIGalvo(GalvoBase , SerialDevice):
                     galvo_offset = float(galvo_parameters.get("offset", 0))
                     galvo_rising_ramp = float(galvo_parameters.get("rising_ramp", 50))
                     galvo_period = (
-                        exposure_time/float(galvo_parameters.get("frequency", 0))
+                        exposure_time/float(galvo_parameters.get("frequency", 10))
                     )
                     factor_name = None
                     if galvo_factor == "channel":

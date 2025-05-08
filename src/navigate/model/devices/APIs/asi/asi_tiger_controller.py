@@ -1091,7 +1091,7 @@ class TigerController:
         # channels = analog_outputs.keys()
         # if channels:
         print(delays)
-        rfvc_delay = int(delays[0]*4) - int(round(period))
+        rfvc_delay = int(delays[0]*4) #- int(round(period))
         if len(delays) > 1:
             galvo2_delay = int((delays[0] - delays[1])*4) 
         else:
@@ -1154,7 +1154,7 @@ class TigerController:
             #Sets cell 11 to a delay reading the output of cell 6
             '6 m e = 11',
             '6 cca y = 9',
-            f'6 cca z = 0', #{camera_delay',
+            f'6 cca z = 4', #{camera_delay',
             '6 ccb x = 6',
             '6 ccb y = 192',
             #Sets cell 12 to one shot to trigger camera
@@ -1183,9 +1183,12 @@ class TigerController:
             '6 m e = 44',
             'cca y = 1',
             'cca z = 45',
-            #Sets PLC output 2 to TTL2
+            #Sets PLC output 3 to cell 6
             '6 m e = 35',
-            '6 cca z = 6',
+            '6 cca z = 12',
+            #Set PLC output 1 to TTL5 REMOVE THIS
+            '6 m e = 33',
+            '6 cca z = 46',
             
             
         ]

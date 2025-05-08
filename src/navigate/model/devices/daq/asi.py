@@ -91,12 +91,14 @@ class ASIDaq(DAQBase, SerialDevice):
         #: str: Trigger mode. Self-trigger or external-trigger.
         self.trigger_mode = "self-trigger"
 
+        #: Any: Device connection.
         self.daq = device_connection
 
-       
+        #: str: microscope name
         self.microscope_name = microscope_name
-
+        #: str: zoom
         self.zoom = self.configuration["experiment"]["MicroscopeState"]["zoom"]
+        # retrieves galvo ListProxy/DictProxy from config file
         galvos_raw = self.configuration["configuration"]['microscopes'][self.microscope_name]['galvo']
 
         # Normalize galvos to always be a list of dicts
@@ -107,22 +109,22 @@ class ASIDaq(DAQBase, SerialDevice):
         else:
             raise TypeError("Unexpected type for galvos: {}".format(type(galvos_raw)))
 
-        # Now loop safely
+        # update analog outputs with galvo numbers and associated axes
         i=0
         for g in self.galvos:
             self.analog_outputs.update({f"galvo {i}":g['hardware']['axis']})
             i += 1
 
-        #for i,galvo in enumerate(galvos):
+        # retreive galvo phases from config
         self.phases = [
             galvo["phase"] for galvo in self.galvos
         ]
         print(self.phases)
-
+        # update analog outputs with rfvc and associated axis
         remote_focus_channel = self.configuration["configuration"]["microscopes"][self.microscope_name]["remote_focus"]["hardware"]["axis"]
         self.analog_outputs.update({"remote_focus":remote_focus_channel})
-
-        self.daq.setup_control_loop([1000],26, .12, self.analog_outputs)
+        # sets up initial PLC configuration with default delay (ms), period (ms), sweep time (ms), and analog outputs dict
+        self.daq.setup_control_loop([1000],26, 120, self.analog_outputs)
         
 
     @classmethod
@@ -185,36 +187,38 @@ class ASIDaq(DAQBase, SerialDevice):
 
     def prepare_acquisition(self, channel_key: str) -> None:
         # self.create_analog_output_tasks(channel_key)
-        
-
         # self.create_camera_task(channel_key)
 
+        # Get Galvo frequencies from waveform constants, indexing using microscope name and zoom
         n = len(self.galvos)
         frequencies = [
             self.waveform_constants["galvo_constants"][f"Galvo {i}"][self.microscope_name][self.zoom]["frequency"] for i in range(n)
         ]
 
         print(frequencies)
-        
+        # Gets appropriate sweep_time for the current channel
         sweep_time = self.sweep_times[channel_key]
         print(f'Sweep Time: {sweep_time}')
-
+        # Gets galvo period(s) based on selected channel's exposure time and galvo frequency
         periods = [
             self.exposure_times[channel_key]*1000/float(frequency) for frequency in frequencies # exposure times are in seconds 
         ]
         print(periods)
+
+        # loops through galvo phases to calculate time delays. Delay[i] corresponds to the time between the triggering of the ith galvo and the master trigger
         i = 0
         delays = []
         for phase in self.phases:
             frequency = self.waveform_constants["galvo_constants"][f"Galvo {i}"][self.microscope_name][self.zoom]["frequency"]
             period = self.exposure_times[channel_key]*1000/float(frequency)
-
+            # rounds period for triangle waveform to even number, as the TG-1000 can only generate triangle waveforms with even-number-of-ms periods
             if self.galvos[i]['waveform'] == 'sawtooth':
                 rising_ramp = float(self.waveform_constants["galvo_constants"][f"Galvo {i}"][self.microscope_name][self.zoom].get("rising_ramp", 50))
                 if (rising_ramp == 50):
                     period = 2*round(period/2)
-                    periods[i] = period # reduntant
-            periods[i] = int(round(period))
+            # rounds period to closest number of ms, as TG-1000 can only generate waveforms with whole number of ms periods
+            period = int(round(period))
+            periods[i] = period
             t = period*phase/(2*3.14159265)
             print(f't {i}: {t}')
             n39 = ((n-i)*175 + t) // period + 1 
