@@ -204,8 +204,8 @@ class ASIGalvo(GalvoBase , SerialDevice):
                     galvo_amplitude = float(galvo_parameters.get("amplitude", 0))
                     galvo_offset = float(galvo_parameters.get("offset", 0))
                     galvo_rising_ramp = float(galvo_parameters.get("rising_ramp", 50))
-                    galvo_frequency = (
-                        float(galvo_parameters.get("frequency", 0)) / exposure_time
+                    galvo_period = (
+                        exposure_time/float(galvo_parameters.get("frequency", 0))
                     )
                     factor_name = None
                     if galvo_factor == "channel":
@@ -231,7 +231,7 @@ class ASIGalvo(GalvoBase , SerialDevice):
 
                 # Calculate the Waveforms
                 if self.galvo_waveform == "sawtooth":
-                    frequency=galvo_frequency
+                    period=galvo_period
                     amplitude=galvo_amplitude
                     offset=galvo_offset
                     duty_cycle=galvo_rising_ramp
@@ -252,14 +252,14 @@ class ASIGalvo(GalvoBase , SerialDevice):
                     print(self.configuration["waveform_constants"]["galvo_constants"][
                         self.galvo_name
                     ][microscope_name][zoom_value]['rising ramp'])
-                    self.sawtooth(frequency, amplitude, offset, duty_cycle)
+                    self.sawtooth(period, amplitude, offset, duty_cycle)
 
                 elif self.galvo_waveform == "sine":
-                    frequency=galvo_frequency
+                    period=galvo_period
                     amplitude=galvo_amplitude
                     offset=galvo_offset
                 
-                    self.sine_wave(frequency, amplitude, offset)
+                    self.sine_wave(period, amplitude, offset)
                 
                 else:
                     print("Unknown Galvo waveform specified in configuration file.")
@@ -267,7 +267,7 @@ class ASIGalvo(GalvoBase , SerialDevice):
     
     def sawtooth(
         self,
-        frequency=10,
+        period=10,
         amplitude=1,
         offset=0,
         duty_cycle=100
@@ -287,7 +287,7 @@ class ASIGalvo(GalvoBase , SerialDevice):
             Unit - Percent 
         """
 
-        period = int((1.0 / frequency)*1000)
+        period = int(round(period*1000))
         amplitude *= 1000
         offset *= 1000
         #print(f'Galvo: {amplitude} {offset} {period}')
@@ -303,7 +303,7 @@ class ASIGalvo(GalvoBase , SerialDevice):
 
     def sine_wave(
         self,
-        frequency=10.0,  
+        period=10.0,  
         amplitude=1.0, 
         offset=0.0
     ):
@@ -335,7 +335,7 @@ class ASIGalvo(GalvoBase , SerialDevice):
         >>> typical_laser = sine_wave(sample_rate, sweep_time, 10, 1, 0, 0)
 
         """
-        period = int((1.0 / frequency)*1000)
+        period = int(round(period*1000))
         amplitude *= 1000
         offset *= 1000
         print(f'Galvo: {amplitude} {offset} {period}')

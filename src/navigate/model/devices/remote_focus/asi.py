@@ -267,7 +267,7 @@ class ASIRemoteFocus(RemoteFocusBase , SerialDevice):
             Unit - Volts
         """
 
-        period = int(sweep_time * 1000)
+        period = int(round(sweep_time * 1000))
         amplitude *= 1000
         offset *= 1000
 
@@ -320,7 +320,7 @@ class ASIRemoteFocus(RemoteFocusBase , SerialDevice):
         
         amplitude *= 1000
         offset *= 1000
-        exposure_time = int(exposure_time * 1000)
+        exposure_time = int(round(exposure_time * 1000))
         #print(f"RFVC: {amplitude} {offset} {exposure_time}")
         self.remote_focus.SA_waveform(self.axis, 128, amplitude, offset, exposure_time)
         self.remote_focus.SAM(self.axis, 2)
