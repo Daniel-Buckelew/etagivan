@@ -1175,7 +1175,7 @@ class TigerController:
             #Sets cell 11 to a delay reading the output of cell 6
             '6 m e = 11',
             '6 cca y = 9',
-            f'6 cca z = {difference_delay}', #{difference_delay}',
+            f'6 cca z = {difference_delay}',
             '6 ccb x = 6',
             '6 ccb y = 192',
             #Sets cell 12 to one shot to trigger camera
@@ -1184,36 +1184,33 @@ class TigerController:
             'cca z = 10',
             'ccb x = 11',
             'ccb y = 192',
-            #Sets TTL0 to output from the RFVC cell in this case , For I am the LORD
-            '6 m e = 47',
+            #Sets TTL2 to output from the RFVC cell in this case , For I am the LORD
+            '6 m e = 43',
             '6 cca y = 1',
             f'6 cca z = {rfvc_output}',
             #Sets TTL1 to output the same thing as TTL0, For I am the LORD
             '6 m e = 42',
             '6 cca y = 1',
-            '6 cca z = 47',
-            #Sets TTL2 to output for the first Galvo, For I am the LORD
-            '6 m e = 43',
+            '6 cca z = 43',
+            #Sets TTL4 to output for the first Galvo, For I am the LORD
+            '6 m e = 45',
             '6 cca y = 1',
             '6 cca z = 2',
             #Sets TTL3 to output the same thing as TTL2
             '6 m e = 44',
             'cca y = 1',
-            'cca z = 43',
-            #Sets TTL4 to output for the second Galvo
-            '6 m e = 45',
+            'cca z = 45',
+            #Sets TTL6 to output for the second Galvo
+            '6 m e = 47',
             'cca y = 1',
             'cca z = 10',
             #Sets TTL5 to output the same thing as TTL4
             '6 m e = 46',
             'cca y = 1',
-            'cca z = 45',
+            'cca z = 47',
             #Sets PLC output 3 to cell 6
             '6 m e = 33',
             f'6 cca z = {camera_output}',
-            # #Set PLC output 1 to TTL5 REMOVE THIS
-            # '6 m e = 33',
-            # '6 cca z = 46',
         ]
         for command in commands:
             # Send data
