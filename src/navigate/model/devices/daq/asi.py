@@ -211,8 +211,8 @@ class ASIDaq(DAQBase, SerialDevice):
             if (i == 0):
                 period1 = period # saves first period to sync loop with first galvo
             t = period*phase/(2*3.14159265) 
-            n39 = ((n-i)*0 + t) // period + 1 
-            delays.append(period*n39 - t)
+            # n39 = ((n-i)*0 + t) // period + 1 
+            delays.append(period*(n-i) - t)
             i += 1
         # modify sweep time to sync with first galvo if there are asi galvos in config
         if (len(delays) > 0): 
