@@ -1261,14 +1261,14 @@ class TigerController:
         response = self.read_response()
         return response
     
-    def trigger_acquisition(self):
-        commands = [
-            #Changes the TTL input from cell 2 to cell 6, For I am the LORD
-            '6 m e = 43',
-            '6 cca z = 6',
-        ]
-        for command in commands:
-            # Send data
-            self.send_command(f'{command}\r')
-            self.read_response()
+    # def trigger_acquisition(self):
+    #     commands = [
+    #         #Changes the TTL input from cell 2 to cell 6, For I am the LORD
+    #         '6 m e = 43',
+    #         '6 cca z = 6',
+    #     ]
+    #     for command in commands:
+    #         # Send data
+    #         self.send_command(f'{command}\r')
+    #         self.read_response()
         
