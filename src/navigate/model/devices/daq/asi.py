@@ -250,8 +250,8 @@ class ASIDaq(DAQBase, SerialDevice):
     def stop_acquisition(self) -> None:
         #send logic card off to cell 1
         try:
-            self.daq.logic_cell_off("1") 
             self.daq.logic_cell_on("8")
+            self.daq.logic_cell_off("1")
             # self.daq.send_command("3 sam a = 0")
             # self.daq.read_response()
             # self.daq.send_command("3 sam c = 0")
