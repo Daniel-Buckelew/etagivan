@@ -112,7 +112,7 @@ class ASIDaq(DAQBase, SerialDevice):
         # update analog outputs with galvo numbers and associated axes
         i=0
         for g in self.galvos:
-            self.analog_outputs.update({f"galvo {i}":g['hardware']['axis']})
+            self.analog_outputs[f"galvo {i}"] = g['hardware']['axis']
             i += 1
 
         # retreive galvo phases from config
@@ -122,7 +122,7 @@ class ASIDaq(DAQBase, SerialDevice):
         print(self.phases)
         # update analog outputs with rfvc and associated axis
         remote_focus_channel = self.configuration["configuration"]["microscopes"][self.microscope_name]["remote_focus"]["hardware"]["axis"]
-        self.analog_outputs.update({"remote_focus":remote_focus_channel})
+        self.analog_outputs["remote_focus"] = remote_focus_channel
         # sets up initial PLC configuration with default delay (ms), sweep time (ms), and analog outputs dict
         self.daq.setup_control_loop([200], 0, 0, 120, self.analog_outputs)
         

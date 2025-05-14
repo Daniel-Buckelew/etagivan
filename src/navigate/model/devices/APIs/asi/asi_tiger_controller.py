@@ -1078,7 +1078,7 @@ class TigerController:
         self.send_command(f"3 SAM {axis}={mode}")
         self.read_response()
 
-    def setup_control_loop(self,delays,camera_delay,rfvc_delay,sweep_time : float, analog_outputs): # delay (ms), sweep_time (ms)
+    def setup_control_loop(self,delays,camera_delay,rfvc_delay,sweep_time : float, analog_outputs : dict): # delay (ms), sweep_time (ms)
     # def setup_control_loop(self, analog_outputs: dict):
         """
         Sets up the control loop
@@ -1089,13 +1089,22 @@ class TigerController:
         
         """
         # channels = analog_outputs.keys()
+        TTLs = {'A': 42, 'B': 44, 'C': 46}
         # if channels:
         start_delay = int(delays[0]*4) #- int(round(period))
         if len(delays) > 1:
             galvo2_delay = int((delays[0] - delays[1])*4) 
+            galvo1_axis = analog_outputs["galvo 1"]
+            galvo2_axis = analog_outputs["galvo 2"]
+        elif len(delays) == 1:
+            galvo1_axis = analog_outputs["galvo 1"]
+            galvo2_delay = 0
         else:
             galvo2_delay = 0
-        
+        rfvc_axis = analog_outputs["remote_focus"]       
+
+
+
         sweep_time = int(sweep_time*4) - 2
 
         if rfvc_delay > camera_delay + 2:
@@ -1185,35 +1194,58 @@ class TigerController:
             'ccb x = 11',
             'ccb y = 192',
             #Sets TTL2 to output from the RFVC cell in this case , For I am the LORD
-            '6 m e = 43',
+            f'6 m e = {TTLs[rfvc_axis]+1}',
             '6 cca y = 1',
             f'6 cca z = {rfvc_output}',
             #Sets TTL1 to output the same thing as TTL0, For I am the LORD
-            '6 m e = 42',
+            f'6 m e = {TTLs[rfvc_axis]}',
             '6 cca y = 1',
-            '6 cca z = 43',
-            #Sets TTL4 to output for the first Galvo, For I am the LORD
-            '6 m e = 45',
-            '6 cca y = 1',
-            '6 cca z = 2',
-            #Sets TTL3 to output the same thing as TTL2
-            '6 m e = 44',
-            'cca y = 1',
-            'cca z = 45',
-            #Sets TTL6 to output for the second Galvo
-            '6 m e = 47',
-            'cca y = 1',
-            'cca z = 10',
-            #Sets TTL5 to output the same thing as TTL4
-            '6 m e = 46',
-            'cca y = 1',
-            'cca z = 47',
+            f'6 cca z = {TTLs[rfvc_axis]+1}',
             #Sets PLC output 3 to cell 6
             '6 m e = 33',
             f'6 cca z = {camera_output}',
         ]
+        # if galvos exist
+        galvo_commands = []
+        if len(delays) > 0:
+            galvo_commands = [
+            #Sets TTL4 to output for the first Galvo, For I am the LORD
+            f'6 m e = {TTLs[galvo1_axis]+1}',
+            '6 cca y = 1',
+            '6 cca z = 2',
+            #Sets TTL3 to output the same thing as TTL2
+            f'6 m e = {TTLs[galvo1_axis]}',
+            'cca y = 1',
+            f'cca z = {TTLs[galvo1_axis]+1}',
+            ]
+
+        if len(delays) > 1:
+            galvo_commands = [
+             #Sets TTL4 to output for the first Galvo, For I am the LORD
+            f'6 m e = {TTLs[galvo1_axis]+1}',
+            '6 cca y = 1',
+            '6 cca z = 2',
+            #Sets TTL3 to output the same thing as TTL2
+            f'6 m e = {TTLs[galvo1_axis]}',
+            'cca y = 1',
+            f'cca z = {TTLs[galvo1_axis]+1}',
+            #Sets TTL4 to output for the first Galvo, For I am the LORD
+            f'6 m e = {TTLs[galvo2_axis]+1}',
+            '6 cca y = 1',
+            '6 cca z = 2',
+            #Sets TTL3 to output the same thing as TTL2
+            f'6 m e = {TTLs[galvo2_axis]}',
+            'cca y = 1',
+            f'cca z = {TTLs[galvo2_axis]+1}',
+            ]
+            print(galvo_commands)
+            
+
         for command in commands:
             # Send data
+            self.send_command(f'{command}\r')
+            self.read_response()
+        for command in galvo_commands:
             self.send_command(f'{command}\r')
             self.read_response()
 
