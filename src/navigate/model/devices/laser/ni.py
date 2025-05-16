@@ -211,10 +211,16 @@ class NILaser(LaserBase, NIDevice):
 
     def turn_on(self) -> None:
         """Turns on the laser."""
+
+        # Set analog modulation.
         self.set_power(self._current_intensity)
 
+        # If analog only modulation.
         if self.laser_do_task is None:
             return
+
+        # Set digital modulation. Can be analog or digital output type.
+        # E.g., AO port can be analog or digital. DO can only be digital.
         try:
             if self.digital_port_type == "digital":
                 self.laser_do_task.write(True, auto_start=True)
