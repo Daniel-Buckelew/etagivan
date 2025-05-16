@@ -1157,16 +1157,6 @@ class ZStackAcquisition:
 
         self.axes_index = [self.position_headers.index(axis.upper()) for axis in self.stage_axes]
 
-            # Convert all elements to floats
-            self.positions = [
-                [float(val) for val in position] for position in self.positions
-            ]
-
-        self.axes_index = [
-            self.position_headers.index(axis.upper())
-            for axis in ["x", "y", "z", "theta", "f"]
-        ]
-
         # Set up the next channel down here to ensure defocus isn't merged into
         # restore f_pos, positions
         self.model.active_microscope.central_focus = None
