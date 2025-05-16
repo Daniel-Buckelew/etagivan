@@ -1094,10 +1094,10 @@ class TigerController:
         start_delay = int(delays[0]*4) #- int(round(period))
         if len(delays) > 1:
             galvo2_delay = int((delays[0] - delays[1])*4) 
-            galvo1_axis = analog_outputs["galvo 1"]
-            galvo2_axis = analog_outputs["galvo 2"]
+            galvo1_axis = analog_outputs["galvo 0"]
+            galvo2_axis = analog_outputs["galvo 1"]
         elif len(delays) == 1:
-            galvo1_axis = analog_outputs["galvo 1"]
+            galvo1_axis = analog_outputs["galvo 0"]
             galvo2_delay = 0
         else:
             galvo2_delay = 0
@@ -1130,6 +1130,7 @@ class TigerController:
         
         print(f'Sweep Time Cycles: {sweep_time}')
         print(f"Start Delay: {start_delay}, Difference Delay: {difference_delay}")
+        print(f"Galvo2_delay: {galvo2_delay}")
 
         commands = [
             '6 CCA X=0',
@@ -1232,7 +1233,7 @@ class TigerController:
             #Sets TTL4 to output for the first Galvo, For I am the LORD
             f'6 m e = {TTLs[galvo2_axis]+1}',
             '6 cca y = 1',
-            '6 cca z = 2',
+            '6 cca z = 10',
             #Sets TTL3 to output the same thing as TTL2
             f'6 m e = {TTLs[galvo2_axis]}',
             'cca y = 1',
@@ -1240,7 +1241,8 @@ class TigerController:
             ]
             print(galvo_commands)
             
-
+        print(analog_outputs)
+        print(f"{TTLs[galvo1_axis]+ 1}")
         for command in commands:
             # Send data
             self.send_command(f'{command}\r')
