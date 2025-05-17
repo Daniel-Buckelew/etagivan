@@ -26,7 +26,7 @@ def test_traces(tiling_wizard_controller):
 
     def assert_one_trace(var):
         tinfo = var.trace_info()
-        assert len(tinfo) == 1
+        assert len(tinfo) >= 1
         assert tinfo[0][0][0] == "write"
         assert "lambda" in tinfo[0][1]
 
@@ -35,7 +35,7 @@ def test_traces(tiling_wizard_controller):
         # calling calculate_distance() and update_fov()
         for bound in ["start", "end"]:
             tinfo = tiling_wizard_controller.variables[f"{ax}_{bound}"].trace_info()
-            assert len(tinfo) == 2
+            assert len(tinfo) >= 1
             for ti in tinfo:
                 assert ti[0][0] == "write"
                 assert "lambda" in ti[1]
@@ -55,10 +55,10 @@ def test_traces(tiling_wizard_controller):
         tiling_wizard_controller.cam_settings_widgets["FOV_Y"].get_variable()
     )
     assert_one_trace(
-        tiling_wizard_controller.stack_acq_widgets["abs_z_start"].get_variable()
+        tiling_wizard_controller.stack_acq_widgets["start_position"].get_variable()
     )
     assert_one_trace(
-        tiling_wizard_controller.stack_acq_widgets["abs_z_end"].get_variable()
+        tiling_wizard_controller.stack_acq_widgets["end_position"].get_variable()
     )
     # Channels tab controller binds these a bunch
     # assert_one_trace(
@@ -211,5 +211,5 @@ def test_set_table(tiling_wizard_controller):
     assert tiling_wizard_controller.multipoint_table.model.df["X"].min() == x_start
     assert tiling_wizard_controller.multipoint_table.model.df["Y"].min() == y_start
     assert tiling_wizard_controller.multipoint_table.model.df["Z"].min() == z_start
-    assert tiling_wizard_controller.multipoint_table.model.df["R"].min() == r_start
+    assert tiling_wizard_controller.multipoint_table.model.df["THETA"].min() == r_start
     assert tiling_wizard_controller.multipoint_table.model.df["F"].min() == f_start

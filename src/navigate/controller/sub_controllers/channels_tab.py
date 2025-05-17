@@ -106,6 +106,8 @@ class ChannelsTabController(GUIController):
         self.stack_acq_vals["start_position"].trace_add("write", self.update_z_steps)
         self.stack_acq_vals["end_position"].trace_add("write", self.update_z_steps)
         self.stack_acq_vals["start_focus"].trace_add("write", self.update_z_steps)
+        self.stack_acq_vals["z_device"].trace_add("write", self.update_additional_stacking_axes)
+        self.stack_acq_vals["f_device"].trace_add("write", self.update_additional_stacking_axes)
         self.stack_acq_buttons["set_start"].configure(
             command=self.update_start_position
         )
@@ -187,13 +189,26 @@ class ChannelsTabController(GUIController):
         self.stack_acq_widgets["cycling"].widget["values"] = ["Per Z", "Per Stack"]
 
         # Set the default stage for acquiring a z-stack.
-        self.stack_acq_widgets["z_device"].widget["values"] = config.z_stages
-        if len(config.z_stages) == 1:
+        z_stages = config.get_stages_by_axis("z")
+        self.stack_acq_widgets["z_device"].widget["values"] = z_stages
+        if len(z_stages) >= 1:
             self.stack_acq_widgets["z_device"].widget.current(0)
-            self.stack_acq_widgets["z_device"].widget["state"] = "disabled"
-        else:
-            # Now need to allow the user to have an offset between the two stages.
-            self.stack_acq_widgets["z_offset"].widget["state"] = "normal"
+
+        f_stages = config.get_stages_by_axis("f")
+        self.stack_acq_widgets["f_device"].widget["values"] = f_stages
+        if len(f_stages) >= 1:
+            self.stack_acq_widgets["f_device"].widget.current(0)
+
+        axes = config.stage_axes
+        axes = [axis for axis in axes if axis not in ("x", "y", "theta")]
+        devices_dict = {}
+        for axis in axes:
+            temp = config.get_stages_by_axis(axis)
+            for device in temp:
+                device_name, axis = device.split(" - ")
+                devices_dict[axis] = device_name
+        self.view.stack_acq_frame.create_additional_stack_widgets(axes, devices_dict)
+
 
         self.filter_wheel_delay = [
             config.filter_wheel_setting_dict[i]["filter_wheel_delay"]
@@ -224,6 +239,27 @@ class ChannelsTabController(GUIController):
             ]
         self.set_info(self.stack_acq_vals, self.microscope_state_dict)
         self.set_info(self.timepoint_vals, self.microscope_state_dict)
+
+        # set advanced stack acquistion settings
+        for axis in ["z", "f"]:
+            devices = self.stack_acq_widgets[f"{axis}_device"].widget["values"]
+            idx = 0
+            for i, device in enumerate(devices):
+                if device.endswith(self.microscope_state_dict.get(f"primary_{axis}_axis", axis)):
+                    idx = i
+                    break
+            self.stack_acq_widgets[f"{axis}_device"].widget.current(idx)
+
+        secondary_stack_settings= self.microscope_state_dict.get("secondary_stack_settings", {})
+        variable_dict = self.view.stack_acq_frame.additional_stack_setting_variables
+        for axis in secondary_stack_settings.keys():
+            index_axis = f"stack_{axis}"
+            if index_axis in variable_dict:
+                variable_dict[index_axis].set(True)
+                self.view.stack_acq_frame.update_setting_widgets(axis)()
+                variable_dict[f"{axis}_offset"].set(secondary_stack_settings[axis])
+        
+        self.update_additional_stacking_axes()
 
         # check configuration for multi-position settings
         self.is_multiposition_val.set(self.microscope_state_dict["is_multiposition"])
@@ -339,7 +375,8 @@ class ChannelsTabController(GUIController):
             acquisition mode
         """
 
-        # TODO: Why do we have mode and image_mode?
+        # image_mode: imaging mode, e.g., "live", "single", "z-stack", "customized"
+        # stack acquisition settings are disabled in "live" and "single" mode.
         image_mode = self.microscope_state_dict["image_mode"]
         self.mode = mode
         self.channel_setting_controller.set_mode(mode)
@@ -359,9 +396,18 @@ class ChannelsTabController(GUIController):
             "step_size",
         ]:
             self.stack_acq_widgets[widget_name].widget["state"] = state
-        self.stack_acq_widgets["cycling"].widget["state"] = (
-            "readonly" if state == "normal" else "disabled"
-        )
+        for widget_name in ["cycling", "z_device", "f_device"]:
+            self.stack_acq_widgets[widget_name].widget["state"] = (
+                "readonly" if state == "normal" else "disabled"
+            )
+        for widget_name in self.view.stack_acq_frame.additional_stack_setting_variables:
+            if widget_name.startswith("stack_"):
+                self.stack_acq_widgets[widget_name]["state"] = state
+            elif widget_name.endswith("_offset"):
+                self.stack_acq_widgets[widget_name]["state"] = state
+        if state == "normal":
+            self.update_additional_stacking_axes()
+
         self.view.stack_timepoint_frame.save_check["state"] = (
             "normal" if image_mode == "single" and mode == "stop" else state
         )
@@ -408,13 +454,17 @@ class ChannelsTabController(GUIController):
             step_size = float(self.stack_acq_vals["step_size"].get())
             if step_size < 0.001:
                 self.stack_acq_vals["number_z_steps"].set(0)
-                self.stack_acq_vals["abs_z_start"].set(0)
-                self.stack_acq_vals["abs_z_end"].set(0)
+                self.microscope_state_dict["abs_z_start"] = 0
+                self.microscope_state_dict["abs_z_end"] = 0
+                # self.stack_acq_vals["abs_z_start"].set(0)
+                # self.stack_acq_vals["abs_z_end"].set(0)
                 return
         except tk.TclError:
             self.stack_acq_vals["number_z_steps"].set(0)
-            self.stack_acq_vals["abs_z_start"].set(0)
-            self.stack_acq_vals["abs_z_end"].set(0)
+            self.microscope_state_dict["abs_z_start"] = 0
+            self.microscope_state_dict["abs_z_end"] = 0
+            # self.stack_acq_vals["abs_z_start"].set(0)
+            # self.stack_acq_vals["abs_z_end"].set(0)
             return
         except (KeyError, AttributeError):
             logger.error("Error caught: updating z_steps")
@@ -428,11 +478,15 @@ class ChannelsTabController(GUIController):
         # Shift the start/stop positions by the relative position
         flip_flags = self.parent_controller.configuration_controller.stage_flip_flags
         if flip_flags["z"]:
-            self.stack_acq_vals["abs_z_start"].set(self.z_origin + end_position)
-            self.stack_acq_vals["abs_z_end"].set(self.z_origin + start_position)
+            self.microscope_state_dict["abs_z_start"] = self.z_origin + end_position
+            self.microscope_state_dict["abs_z_end"] = self.z_origin + start_position
+            # self.stack_acq_vals["abs_z_start"].set(self.z_origin + end_position)
+            # self.stack_acq_vals["abs_z_end"].set(self.z_origin + start_position)
         else:
-            self.stack_acq_vals["abs_z_start"].set(self.z_origin + start_position)
-            self.stack_acq_vals["abs_z_end"].set(self.z_origin + end_position)
+            self.microscope_state_dict["abs_z_start"] = self.z_origin + start_position
+            self.microscope_state_dict["abs_z_end"] = self.z_origin + end_position
+            # self.stack_acq_vals["abs_z_start"].set(self.z_origin + start_position)
+            # self.stack_acq_vals["abs_z_end"].set(self.z_origin + end_position)
 
         # update experiment MicroscopeState dict
         self.microscope_state_dict["start_position"] = start_position
@@ -441,10 +495,13 @@ class ChannelsTabController(GUIController):
             -1 if flip_flags["z"] else 1
         )
         self.microscope_state_dict["number_z_steps"] = number_z_steps
-        self.microscope_state_dict["abs_z_start"] = self.stack_acq_vals[
-            "abs_z_start"
-        ].get()
-        self.microscope_state_dict["abs_z_end"] = self.stack_acq_vals["abs_z_end"].get()
+        self.stack_acq_vals["bottom"].set(
+            self.microscope_state_dict["abs_z_start"]
+        )
+        self.stack_acq_vals["top"].set(
+            self.microscope_state_dict["abs_z_end"]
+        )
+
         try:
             self.microscope_state_dict["start_focus"] = self.stack_acq_vals[
                 "start_focus"
@@ -814,6 +871,25 @@ class ChannelsTabController(GUIController):
         self.channel_setting_controller.update_experiment_values()
         self.update_z_steps()
 
+        # update primary/secondary stack acquisition stage settings
+        primary_z_stage = self.stack_acq_vals["z_device"].get()
+        primary_z_axis = primary_z_stage.split(" - ")[1]
+        primary_f_stage = self.stack_acq_vals["f_device"].get()
+        primary_f_axis = primary_f_stage.split(" - ")[1]
+
+        self.microscope_state_dict["primary_z_axis"] = primary_z_axis
+        self.microscope_state_dict["primary_f_axis"] = primary_f_axis
+
+        secondary_stack_settings= {}
+        variable_dict = self.view.stack_acq_frame.additional_stack_setting_variables
+        for k in variable_dict.keys():
+            if k.startswith("stack_") and variable_dict[k].get():
+                axis = k.split("_")[1]
+                offset = variable_dict[f"{axis}_offset"].get()
+                secondary_stack_settings[axis] = offset
+
+        self.microscope_state_dict["secondary_stack_settings"] = secondary_stack_settings
+
     def verify_experiment_values(self) -> str:
         """Verify channel tab settings and return warning info
 
@@ -857,6 +933,34 @@ class ChannelsTabController(GUIController):
         self.channel_setting_controller.in_initialization = True
         self.channel_setting_controller.view.exptime_variables[idx].set(exposure_time)
         self.channel_setting_controller.in_initialization = False
+
+    def update_additional_stacking_axes(self, *args, **kwargs):
+        if self.stack_acq_vals["z_device"].get():
+            z_axis = self.stack_acq_vals["z_device"].get().split(" - ")[1]
+        else:
+            z_axis = ""
+        if self.stack_acq_vals["f_device"].get():
+            f_axis = self.stack_acq_vals["f_device"].get().split(" - ")[1]
+        else:
+            f_axis = ""
+
+        # enable all axis
+        for widget_name in self.view.stack_acq_frame.additional_stack_setting_variables:
+            if widget_name.startswith("stack_"):
+                self.stack_acq_widgets[widget_name].state(["!disabled"])
+
+        # disable primary z and f
+        variable_dict = self.view.stack_acq_frame.additional_stack_setting_variables
+        if f"stack_{z_axis}" in variable_dict:
+            self.stack_acq_widgets[f"stack_{z_axis}"].state(["disabled"])
+            if variable_dict[f"stack_{z_axis}"].get():
+                variable_dict[f"stack_{z_axis}"].set(False)
+                self.view.stack_acq_frame.update_setting_widgets(z_axis)()
+        if f"stack_{f_axis}" in variable_dict:
+            self.stack_acq_widgets[f"stack_{f_axis}"].state(["disabled"])
+            if variable_dict[f"stack_{f_axis}"].get():
+                variable_dict[f"stack_{f_axis}"].set(False)
+                self.view.stack_acq_frame.update_setting_widgets(f_axis)()
 
     @property
     def custom_events(self) -> dict[str, callable]:
