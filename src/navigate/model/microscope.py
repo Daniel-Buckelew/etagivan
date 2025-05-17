@@ -549,10 +549,8 @@ class Microscope:
         position if it was moved during the acquisition. It also stops the stage if
         it is moving.
         """
-        
-
-        self.daq.stop_acquisition()
-
+        self.daq.stop_acquisition()        
+        # stops ASI galvos (TG-1000 waveforms in SAM mode 4 must be manually shut off)
         galvo_type = self.configuration["configuration"]["microscopes"][self.microscope_name][
             "galvo"
         ][0]["hardware"]["type"]
