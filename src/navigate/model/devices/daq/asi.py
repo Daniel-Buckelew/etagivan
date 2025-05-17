@@ -68,8 +68,14 @@ class ASIDaq(DAQBase, SerialDevice):
 
         Parameters
         ----------
+        microscope_name : str
+            Name of the microscope.
+        device_connection : Any
+            Connection to the Tiger Controller.
         configuration : Dict[str, Any]
-            Configuration dictionary.
+            Dictionary of configuration parameters.
+        device_id : int
+            Parameter necessary for start_device but not used here.
         """
         super().__init__(configuration)
 
@@ -96,8 +102,10 @@ class ASIDaq(DAQBase, SerialDevice):
 
         #: str: microscope name
         self.microscope_name = microscope_name
+
         #: str: zoom
         self.zoom = self.configuration["experiment"]["MicroscopeState"]["zoom"]
+
         # retrieves galvo ListProxy/DictProxy from config file
         galvos_raw = self.configuration["configuration"]['microscopes'][self.microscope_name]['galvo']
 
@@ -109,7 +117,7 @@ class ASIDaq(DAQBase, SerialDevice):
         else:
             raise TypeError("Unexpected type for galvos: {}".format(type(galvos_raw)))
 
-        # update analog outputs with galvo numbers and associated axes
+        # update analog outputs with galvo IDs and associated axes
         i=0
         for g in self.galvos:
             self.analog_outputs[f"galvo {i}"] = g['hardware']['axis']
@@ -119,17 +127,18 @@ class ASIDaq(DAQBase, SerialDevice):
         self.phases = [
             galvo["phase"] for galvo in self.galvos
         ]
-        print(self.phases)
+
         # update analog outputs with rfvc and associated axis
         remote_focus_channel = self.configuration["configuration"]["microscopes"][self.microscope_name]["remote_focus"]["hardware"]["axis"]
         self.analog_outputs["remote_focus"] = remote_focus_channel
-        # sets up initial PLC configuration with default delay (ms), sweep time (ms), and analog outputs dict
+
+        # sets up initial PLC configuration with default delay (ms), camera delay, rfvc delay, sweep time (ms), and analog outputs dict
         self.daq.setup_control_loop([200], 0, 0, 120, self.analog_outputs)
         
 
     @classmethod
     def connect(cls, port, baudrate=115200, timeout=0.25):
-        """Build ASILaser Serial Port connection
+        """Build ASIDaq Serial Port connection
 
         Parameters
         ----------
@@ -153,71 +162,51 @@ class ASIDaq(DAQBase, SerialDevice):
             raise Exception("ASI stage connection failed.")
         return tiger_controller
 
-    def create_camera_task(self, channel_key: str) -> None:
-        """
-        Set up the camera trigger pulse using ASI Tiger Controller.
+    def prepare_acquisition(self, channel_key: str) -> None:
+        """Prepare the acquisition.
+
+        Creates and configures the DAQ tasks.
+        Writes the waveforms to each task.
 
         Parameters
         ----------
         channel_key : str
             Channel key for current channel.
         """
-        camera_waveform_repeat_num = self.waveform_repeat_num * self.waveform_expand_num
-
-        if self.analog_outputs:
-            camera_high_time = 4  # ms
-        elif camera_waveform_repeat_num == 1:
-            camera_high_time = (self.sweep_times[channel_key] * 1000) - (self.camera_delay * 1000)
-        else:
-            camera_high_time = (self.sweep_times[channel_key] * 1000) - 4
-
-        camera_delay_ms = int(self.camera_delay * 1000)
-
-        ttl_channel = int(self.configuration["configuration"]["microscopes"][self.microscope_name]["daq"]["camera_trigger_out_line"])
-
-        try:
-            response = TigerController.send_ttl_pulse(
-                channel=ttl_channel,
-                pulse_width_ms=int(camera_high_time),
-                delay_ms=camera_delay_ms
-            )
-            logger.info(f"Sent TTL command to ASI: {response}")
-        except Exception:
-            logger.exception("Failed to send TTL command to ASI.")
-
-    def prepare_acquisition(self, channel_key: str) -> None:
-        # self.create_analog_output_tasks(channel_key)
-        # self.create_camera_task(channel_key)
-
-        # Gets appropriate sweep_time for the current channel
+        # Get appropriate sweep_time for the current channel
         sweep_time = self.sweep_times[channel_key]
 
-        # loops through galvo phases to calculate time delays 
-        # delays[i] corresponds to the time between the triggering of the ith galvo and the master trigger
-        # delay between consecutive triggers must be greater than 175 ms (limitation of TG-1000)
+        # loop through galvo phases to calculate time delays 
+        # delays[i] corresponds to the time between the ith galvo trigger and the master trigger
         n = len(self.galvos)
         i = 0
         delays = []
         for phase in self.phases:
             frequency = self.waveform_constants["galvo_constants"][f"Galvo {i}"][self.microscope_name][self.zoom]["frequency"]
             period = self.exposure_times[channel_key]*1000/float(frequency)
-            # rounds period for triangle waveform to even number, as the TG-1000 can only generate triangle waveforms with even-number-of-ms periods
+
+            # round period for triangle waveform to even number, as the TG-1000 can only generate triangle waveforms with even-number-of-ms periods
             if self.galvos[i]['waveform'] == 'sawtooth':
                 rising_ramp = float(self.waveform_constants["galvo_constants"][f"Galvo {i}"][self.microscope_name][self.zoom].get("rising_ramp", 50))
                 if (rising_ramp == 50):
                     period = 2*round(period/2)
-            # rounds period to closest number of ms, as TG-1000 can only generate waveforms with whole number of ms periods
+
+            # round period to closest number of ms, as TG-1000 can only generate waveforms with whole-number-of-ms periods
             period = int(round(period))
+
+            # save first period to sync control loop with first galvo
             if (i == 0):
-                period1 = period # saves first period to sync loop with first galvo
+                period0 = period 
+            
+            # calculate time delay corresponding to phase offset
             t = period*phase/(2*3.14159265) 
-            # n39 = ((n-i)*0 + t) // period + 1 
             delays.append(period*(n-i) - t)
             i += 1
-        # modify sweep time to sync with first galvo if there are asi galvos in config
+        
+        # modify sweep time to sync with the first galvo if there are asi galvos in config
         if (len(delays) > 0): 
-            n7 = 1000*sweep_time // period1 + 1
-            sweep_time = period1*n7
+            n7 = 1000*sweep_time // period0 + 1
+            sweep_time = period0*n7
 
         self.camera_delay = (
             float(self.waveform_constants["other_constants"].get("camera_delay", 5))
@@ -225,8 +214,8 @@ class ASIDaq(DAQBase, SerialDevice):
         rfvc_delay = (
             float(self.waveform_constants["other_constants"].get("remote_focus_delay", 5))
         )
-
-        self.daq.setup_control_loop(delays, self.camera_delay, rfvc_delay, sweep_time, self.analog_outputs) # delay (ms), sweep_time (ms)
+        # sets up control loop with all parameters (all times in ms)
+        self.daq.setup_control_loop(delays, self.camera_delay, rfvc_delay, sweep_time, self.analog_outputs)
 
         self.current_channel_key = channel_key
         self.is_updating_analog_task = False
@@ -234,48 +223,40 @@ class ASIDaq(DAQBase, SerialDevice):
         #     self.wait_to_run_lock.release()
 
     def run_acquisition(self) -> None:
+        """Run DAQ Acquisition.
 
+        Run the tasks for triggering, analog and counter outputs.
+        The master trigger initiates all other waveforms via a shared trigger
+        For this to work, all analog output and counter tasks have to be primed so that
+        they are waiting for the trigger signal.
+        """
         # if self.is_updating_analog_task:
         #     self.wait_to_run_lock.acquire()
         #     self.wait_to_run_lock.release()
 
-        # try:
-        #send logic card on to cell 1
-        self.daq.logic_cell_on("1")
-        # self.daq.trigger_acquisition()
-        # except Exception:
-        #     logger.debug("DAQ cannot turn on")
-        #     pass
+        # turn on PLC cell 1 (Master Trigger)
+        try:
+            self.daq.logic_cell_on("1")
+        except Exception:
+            logger.debug("DAQ cannot turn on")
+            pass
 
     def stop_acquisition(self) -> None:
-        #send logic card off to cell 1
+        """Stop Acquisition.
+
+        Stop control loop.
+        """
+        # turn on PLC cell 8 (kills control loop)
+        # reset PLC cell 1 (Master Trigger)
         try:
             self.daq.logic_cell_on("8")
-            self.daq.logic_cell_off("1")
-            # self.daq.send_command("3 sam a = 0")
-            # self.daq.read_response()
-            # self.daq.send_command("3 sam c = 0")
-            # self.daq.read_response()                   
+            self.daq.logic_cell_off("1")             
         except Exception:
             logger.debug("DAQ cannot turn off")
             pass
 
         # if self.wait_to_run_lock.locked():
         #     self.wait_to_run_lock.release()
-
-    # def create_analog_output_tasks(self, channel_key: str) -> None:
-    #     galvo_channel = self.configuration["configuration"]["microscopes"][self.microscope_name]["galvo"][0]["hardware"]["axis"]
-    #     if isinstance(galvo_channel, list):
-    #         for channel in galvo_channel:
-    #            self.analog_outputs.update({channel: "galvo"})
-    #            self.galvo.move(self.exposure_times,self.sweep_times,offset=None)
-    #     else:
-    #         self.analog_outputs.update({galvo_channel: "galvo"})
-    #     remote_focus_channel = self.configuration["configuration"]["microscopes"][self.microscope_name]["remote_focus"]["hardware"]["axis"]
-    #     self.analog_outputs.update({remote_focus_channel: "remote_focus"})
-    #     print(self.exposure_times)
-    #     print(self.sweep_times)
-    #     self.remote_focus.move(self.exposure_times, self.sweep_times)
 
 
 
