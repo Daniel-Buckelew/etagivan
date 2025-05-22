@@ -67,5 +67,3 @@ shutter.
                 channel: PXI6249/port0/line0
                 min: 0.0
                 max: 5.0
-
-|
