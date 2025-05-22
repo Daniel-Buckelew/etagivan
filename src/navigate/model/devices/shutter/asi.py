@@ -61,7 +61,7 @@ class ASIShutter(ShutterBase, SerialDevice):
         configuration: Dict[str, Any],
         address=None,
     ) -> None:
-        """Initialize the ASIShutterTTL.
+        """Initialize the ASIShutter.
 
         Parameters
         ----------
@@ -73,7 +73,7 @@ class ASIShutter(ShutterBase, SerialDevice):
             Global configuration of the microscope
         """
         super().__init__(microscope_name, device_connection, configuration)
-        
+
         self.address = address
 
         self.shutter = device_connection
@@ -126,7 +126,7 @@ class ASIShutter(ShutterBase, SerialDevice):
         """Open the shutter."""
         try:
             self.shutter.logic_card_on(self.axis)
-            logger.debug("ShutterTTL - Shutter opened")
+            logger.debug("ASIShutter opened")
         except Exception as e:
             logger.exception(f"Shutter not open: {traceback.format_exc()}")
 
@@ -134,7 +134,7 @@ class ASIShutter(ShutterBase, SerialDevice):
         """Close the shutter."""
         try:
             self.shutter.logic_card_off(self.axis)
-            logger.debug("ShutterTTL - Shutter closed")
+            logger.debug("ASIShutter closed")
         except Exception as e:
             logger.exception(f"Shutter did not close: {traceback.format_exc()}")
 

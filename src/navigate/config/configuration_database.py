@@ -152,11 +152,14 @@ daq_hardware_widgets = {
 }
 
 shutter_device_types = {
+    "ASI Shutter": ("ASI", "asi"),
     "Analog/Digital Device": ("NI", "ni"),
     "Virtual Device": ("Synthetic", "synthetic"),
 }
 
 shutter_hardware_widgets = {
+    "hardware/com_port": ["COM Port", "Input", "string", None, "e.g., COM3"],
+    "hardware/axis": ["Shutter Axis", "Input", "string", None, "e.g., A, B, C"],
     "type": ["Device Type", "Combobox", "string", shutter_device_types, None],
     "channel": ["NI Channel", "Input", "string", None, "Example: PXI6259/port0/line0"],
     "min": ["Minimum Voltage", "Spinbox", "float", None, "Example: 0"],
@@ -165,6 +168,7 @@ shutter_hardware_widgets = {
 }
 
 stage_device_types = {
+    "ASI Stage": ("ASI", "asi"),
     "Applied Scientific Instrumentation": ("ASI", "asi"),
     "ASI MFC2000": ("MFC2000", "asi"),
     "ASI MS2000": ("MS2000", "asi"),
@@ -178,6 +182,8 @@ stage_device_types = {
 }
 
 stage_hardware_widgets = {
+    "hardware/com_port": ["COM Port", "Input", "string", None, "e.g., COM4"],
+    "hardware/axis": ["Stage Axis", "Input", "string", None, "e.g., X, Y, Z"],
     "type": ["Device Type", "Combobox", "string", stage_device_types, None],
     "serial_number": ["Serial Number", "Input", "string", None, None],
     "axes": [
@@ -569,9 +575,11 @@ mirror_hardware_widgets = {
     "n_modes": ["Number of Modes", "Input", "int", None, "Example: 32", 32],
 }
 
-laser_device_types = {"Analog Device": ("NI", "ni"), "Virtual Device": ("Synthetic", "synthetic")}
+laser_device_types = {"Analog Device": ("NI", "ni"), "ASI Laser": ("ASI", "asi"), "Virtual Device": ("Synthetic", "synthetic")}
 
 laser_hardware_widgets = {
+    "onoff/hardware/axis": ["Digital Axis", "Input", "string", None, "Example: A"],
+    "power/hardware/axis": ["Analog Axis", "Input", "string", None, "Example: B"],
     "wavelength": ["Wavelength", "Input", "int", None, "Example: 488", 488],
     "onoff": ["On/Off Setting", "Label", None, None, None],
     "onoff/hardware/type": ["Type", "Combobox", "string", laser_device_types, None],

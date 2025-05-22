@@ -1056,3 +1056,26 @@ class TigerController:
 
         self.send_command(f"SAM {axis}={mode}")
         self.read_response()
+
+    
+    def test_one(self, period=100, amplitude=5000, offset=2500):
+        "RFVC in Triangle Mode, Galvo in Ramp"
+        "Amplitude=5v, Offset = 2.5v, Period=100ms"
+
+        self.SA_waveform("c",1,{amplitude},{offset})
+        self.send_command(f"SAF c=100")
+        self.SA_waveform("a",0,{amplitude},{offset})
+        self.send_command(f"SAF a=100")
+        self.SA_waveform("b",0,{amplitude},{offset})
+        self.send_command(f"SAF b=100")
+
+        self.send_command(f"SAM a = 1")
+        self.read_response
+        self.send_command(f"SAM b = 1")
+        self.read_response
+        self.send_command(f"SAM c = 1")
+        self.read_response
+        self.send_command(f"SAM a = 3")
+        self.read_response
+
+
