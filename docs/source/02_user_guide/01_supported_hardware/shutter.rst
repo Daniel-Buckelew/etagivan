@@ -68,4 +68,24 @@ shutter.
                 min: 0.0
                 max: 5.0
 
+------------------
+
+ASI Shutter
+
+We can control these shutters using a digital output from a ASI Tiger Controller.
+-----------------
+
+.. collapse:: Configuration File
+
+    .. code-block:: yaml
+
+      microscopes:
+        microscope_name:
+            shutter:
+              hardware:
+                type: ASI
+                axis: [1-8]
+                min: 0.0
+                max: 5.0
+
 |
