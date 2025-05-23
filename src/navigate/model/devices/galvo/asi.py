@@ -32,7 +32,6 @@
 
 #  Standard Library Imports
 import logging
-import time
 from typing import Any, Dict
 
 
@@ -58,7 +57,7 @@ class ASIGalvo(GalvoBase , SerialDevice):
         configuration: Dict[str, Any],
         device_id: int = 0,
     ) -> None:
-        """Initialize the GalvoNI class.
+        """Initialize the GalvoASI class.
 
         Parameters
         ----------
@@ -238,7 +237,9 @@ class ASIGalvo(GalvoBase , SerialDevice):
                     amplitude=galvo_amplitude
                     offset=galvo_offset
                     duty_cycle=galvo_rising_ramp
-
+                    
+                    # Duty cycle must be either 0, 50, or 100
+                    # If the duty cycle is not 0, 50, or 100, it will round to the nearest value
                     if duty_cycle != 0 or duty_cycle != 50 or duty_cycle != 100:
                         temp = duty_cycle
                         remainder = duty_cycle % 100
@@ -276,7 +277,9 @@ class ASIGalvo(GalvoBase , SerialDevice):
         duty_cycle=100
     ):
         """
-        Sends the tiger controller commands to make the sawtooth wave (actually triangle)
+        Sends the tiger controller commands to intiate the sawtooth wave.
+
+        If the duty cycle given is 50, a triangle wave will be initiated.
 
         Parameters
         ----------
@@ -290,18 +293,28 @@ class ASIGalvo(GalvoBase , SerialDevice):
             Unit - Percent 
         """
 
+        # Converts period to ms and amplitude and offset to mV
         period = int(round(period*1000))
         amplitude *= 1000
         offset *= 1000
-        #print(f'Galvo: {amplitude} {offset} {period}')
+
         if duty_cycle == 0:
+            # Negative amplitude reverses the polarity of the waveform
             amplitude = amplitude * -1
+            # Sawtooth waveform that is triggered on TTL input
             self.galvo.SA_waveform(self.axis, 128, amplitude, offset, period)
+        
         if duty_cycle == 50:
+            # Adjusts the period for a triangle waveform
             period = 2*round(period/2)
+            # Triangle waveform that is triggered on TTL input
             self.galvo.SA_waveform(self.axis, 129, amplitude, offset, period)
+        
         if duty_cycle == 100:
+            # Sawtooth waveform that is triggered on TTL input
             self.galvo.SA_waveform(self.axis, 128, amplitude, offset, period)
+        
+        # Waveform is free running after TTL input
         self.galvo.SAM(self.axis, 4)
 
     def sine_wave(
@@ -310,9 +323,7 @@ class ASIGalvo(GalvoBase , SerialDevice):
         amplitude=1.0, 
         offset=0.0
     ):
-        """Returns a numpy array with a sine waveform
-
-        Used for creating analog laser drive voltage.
+        """Sends the tiger controller commands to intiate the sine wave.
 
         Parameters
         ----------
@@ -338,11 +349,15 @@ class ASIGalvo(GalvoBase , SerialDevice):
         >>> typical_laser = sine_wave(sample_rate, sweep_time, 10, 1, 0, 0)
 
         """
+
+        # Converts period to ms and amplitude and offset to mV
         period = int(round(period*1000))
         amplitude *= 1000
         offset *= 1000
-        print(f'Galvo: {amplitude} {offset} {period}')
+
+        # Sine wave that is triggered on TTL input
         self.galvo.SA_waveform(self.axis, 131, amplitude, offset, period)
+        # Waveform is free running after it is triggered
         self.galvo.SAM(self.axis, 4)
 
     def turn_off(self): 
