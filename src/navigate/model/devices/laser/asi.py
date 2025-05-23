@@ -56,7 +56,7 @@ class ASILaser(LaserBase, SerialDevice):
     This class is used to control a laser connected to a ASI Device.
     """
 
-    def __init__(self, microscope_name, device_connection, configuration, device_id: 0):
+    def __init__(self, microscope_name, device_connection, configuration, device_id: int = 0):
         """Initialize the ASILaser class.
 
         Parameters
