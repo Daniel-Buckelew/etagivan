@@ -57,13 +57,10 @@ operating range.
 
 -------------
 
-Analog Controlled Voice Coils and Tunable Lenses
-------------------------------------------------
+National Instruments
+--------------------
 
-In principle, this hardware type can support any analog-controlled voice coil or tunable lens.
-The `BLINK <https://www.thorlabs.com/thorproduct.cfm?partnumber=BLINK>`_ and the
-`Optotune Focus Tunable Lens <https://www.optotune.com/tunable-lenses>`_ are
-controlled with an analog signal from the DAQ.
+In principle, this hardware type can support any analog-controlled voice coil or tunable lens. The `BLINK <https://www.thorlabs.com/thorproduct.cfm?partnumber=BLINK>`_ and the `Optotune Focus Tunable Lens <https://www.optotune.com/tunable-lenses>`_ are controlled with an analog signal from the DAQ.
 
 -----------------
 

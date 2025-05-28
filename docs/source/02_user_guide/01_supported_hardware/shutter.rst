@@ -15,11 +15,40 @@ is closed.
 
 ------------
 
-National Instruments (NI)
-----------------------------
 
-We can control these shutters using a digital output from a National
-Instruments (NI) data acquisition card.
+Applied Scientific Instrumentation
+----------------------------------
+
+Tiger Controller
+~~~~~~~~~~~~~~~~~~
+
+-----------------
+
+The `tgplc <https://asiimaging.com/docs/tiger_programmable_logic_card>`_ control card from ASI can be used to trigger shutter operation.
+
+-----------------
+
+.. collapse:: Configuration File
+
+    .. code-block:: yaml
+
+      microscopes:
+        microscope_name:
+            shutter:
+              hardware:
+                type: ASI
+                axis: [1-8]
+                min: 0.0
+                max: 5.0
+
+|
+
+-----------------
+
+National Instruments
+--------------------
+
+We can control these shutters using a digital output from a National Instruments (NI) data acquisition card.
 
 .. Note::
 
@@ -68,4 +97,4 @@ shutter.
                 min: 0.0
                 max: 5.0
 
-|
+------------------
