@@ -61,24 +61,21 @@ def compute_tiles_from_bounding_box(
     x_start,
     x_tiles,
     x_length,
-    x_overlap,
     y_start,
     y_tiles,
     y_length,
-    y_overlap,
     z_start,
     z_tiles,
     z_length,
-    z_overlap,
     theta_start,
     theta_tiles,
     theta_length,
-    theta_overlap,
     f_start,
     f_tiles,
     f_length,
-    f_overlap,
+    overlap=0.1,
     f_track_with_z=False,
+    **kwargs,
 ):
     """Create a grid of ROIs to image based on start position, number of tiles, and
     signed FOV length in each dimension.
@@ -91,48 +88,57 @@ def compute_tiles_from_bounding_box(
         Number of tiles to take along x-dimension.
     x_length : float
         Signed length of the FOV along x-dimension.
-    x_overlap : float
-        Fractional overlap of ROIs along x-dimension.
     y_start : float
         Starting position along y-dimension.
     y_tiles : int
         Number of tiles to take along y-dimension.
     y_length : float
         Signed length of the FOV along y-dimension.
-    y_overlap : float
-        Fractional overlap of ROIs along y-dimension.
     z_start : float
         Starting position along z-dimension.
     z_tiles : int
         Number of tiles to take along z-dimension.
     z_length : float
         Signed length of the FOV along z-dimension.
-    z_overlap : float
-        Fractional overlap of ROIs along z-dimension.
     theta_start : float
         Starting position along rotation dimension.
     theta_tiles : int
         Number of tiles to take along rotation dimension.
     theta_length : float
         Signed length of the FOV along rotation dimension.
-    theta_overlap : float
-        Fractional overlap of ROIs along rotation dimension.
     f_start : float
         Starting position along focus dimension.
     f_tiles : int
         Number of tiles to take along focus dimension.
     f_length : float
         Signed length of the FOV along focus dimension.
-    f_overlap : float
-        Fractional overlap of ROIs along focus dimension.
+    overlap : float
+        Fractional overlap of ROIs.
     f_track_with_z : bool
         Make focus track with z/assume focus is z-dependent.
+    **kwargs : additional keyword arguments
+        axis_start: Starting position along that axis
+        axis_tiles: Number of tiles to take along axis
+        axis_length: Signed length of the FOV along axis
 
     Returns
     -------
-    np.array
+    result : tuple ([str], np.array)
+        axes
         (n_positions x (x, y, z, theta, f)) array of positions, gridding out the space
     """
+
+    # get additional axes
+    additional_settings = {}
+    for k in kwargs.keys():
+        if k.endswith("_start"):
+            axis = k[:-6]
+            if f"{axis}_tiles" in kwargs.keys() and f"{axis}_length" in kwargs.keys():
+                additional_settings[axis] = {
+                    "start": kwargs[f"{axis}_start"],
+                    "tiles": 1 if kwargs[f"{axis}_tiles"] <= 0 else kwargs[f"{axis}_tiles"],
+                    "step": kwargs[f"{axis}_length"] * (1 - overlap)
+                }
 
     # Error checking to prevent empty list when tiles are zero
     x_tiles = 1 if x_tiles <= 0 else x_tiles
@@ -142,11 +148,11 @@ def compute_tiles_from_bounding_box(
     f_tiles = 1 if f_tiles <= 0 else f_tiles
 
     # Calculate the step between the edge of each frame
-    x_step = x_length * (1 - x_overlap)
-    y_step = y_length * (1 - y_overlap)
-    z_step = z_length * (1 - z_overlap)
-    theta_step = theta_length * (1 - theta_overlap)
-    f_step = f_length * (1 - f_overlap)
+    x_step = x_length * (1 - overlap)
+    y_step = y_length * (1 - overlap)
+    z_step = z_length * (1 - overlap)
+    theta_step = theta_length * (1 - overlap)
+    f_step = f_length * (1 - overlap)
 
     # grid out each dimension from (x_start, y_start, z_start) in steps
     def dim_vector(start, n_tiles, step):
@@ -166,7 +172,13 @@ def compute_tiles_from_bounding_box(
     # we assume theta FOVs have no thickness
     fs = dim_vector(f_start, f_tiles, f_step)
 
+    additional_coordinates = []
+    for axis in additional_settings:
+        values = additional_settings[axis]
+        additional_coordinates.append(dim_vector(values["start"], values["tiles"], values["step"]))
+
     if f_track_with_z:
+        # TODO: update it later. We are not using this option in navigate now.
         # grid out the 4D space...
         x, y, z, t = np.meshgrid(xs, ys, zs, thetas)
 
@@ -176,10 +188,15 @@ def compute_tiles_from_bounding_box(
             :lz
         ]  # This only works if len(fs) = len(zs)
         # TODO: Don't clip f. Practically fine for now.
+        result = [x, y, z, t, f]
     else:
-        x, y, z, t, f = np.meshgrid(xs, ys, zs, thetas, fs)
+        result = np.meshgrid(xs, ys, zs, thetas, fs, *additional_coordinates)
 
-    return np.vstack([x.ravel(), y.ravel(), z.ravel(), t.ravel(), f.ravel()]).T
+    axes = ["x", "y", "z", "theta", "f"]
+    axes.extend(list(additional_settings.keys()))
+    tiles = np.vstack([v.ravel() for v in result]).T
+
+    return (axes, tiles)
 
 
 def calc_num_tiles(dist, overlap, roi_length):
@@ -217,7 +234,7 @@ def calc_num_tiles(dist, overlap, roi_length):
     return int(num_tiles)
 
 
-def update_table(table, pos, append=False):
+def update_table(table, pos, axes, append=False):
     """Updates and redraws table based on given list.
 
     List is converted to a pandas dataframe before setting data in table.
@@ -229,6 +246,8 @@ def update_table(table, pos, append=False):
     pos: list or np.array
         List or np.array of positions to be added to table. Each row contains an X, Y,
         Z, R, F position
+    axes: list of str
+        List of axes
     append: bool
         Append the new positions to the table
 
@@ -237,7 +256,7 @@ def update_table(table, pos, append=False):
     None :
         Table is updated
     """
-    frame = pd.DataFrame(pos, columns=list("XYZRF"))
+    frame = pd.DataFrame(pos, columns=[axis.upper() for axis in axes])
     if append:
         table.model.df = table.model.df.append(frame, ignore_index=True)
     else:

@@ -160,8 +160,8 @@ shutter_device_types = {
 shutter_hardware_widgets = {
     "type": ["Device Type", "Combobox", "string", shutter_device_types, None],
     "channel": ["NI Channel", "Input", "string", None, "Example: PXI6259/port0/line0"],
-    "com_port": ["COM Port", "Input", "string", None, "e.g., COM3"],
-    "axis": ["Shutter Axis", "Input", "string", None, "e.g., 2, 3, 4"],
+    "port": ["COM Port", "Input", "string", None, "Example: COM3"],
+    "axis": ["Shutter Axis", "Input", "string", None, "Example: 1"],
     "min": ["Minimum Voltage", "Spinbox", "float", None, "Example: 0"],
     "max": ["Maximum Voltage", "Spinbox", "float", None, "Example: 5"],
     "frame_config": {"ref": "hardware"},

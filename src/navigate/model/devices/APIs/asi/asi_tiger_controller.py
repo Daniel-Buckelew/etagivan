@@ -997,7 +997,7 @@ class TigerController:
         self.send_command(f"6 CCA Z=64\r")
         self.read_response()
 
-    def logic_card_off(self, axis: str) -> None:
+    def logic_card_off(self, axis : str) -> None:
         """Turn off the logic card
 
         Parameters
@@ -1006,7 +1006,7 @@ class TigerController:
             The axis of the logic card
         """
         axis = int(axis) + 32
-        self.send_command(f"6 M E = {axis}\r")
+        self.send_command(f'6 M E = {axis}\r')
         self.read_response()
-        self.send_command(f"6 CCA Z=0\r")
+        self.send_command(f'6 CCA Z=0\r')
         self.read_response()
