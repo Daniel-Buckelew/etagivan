@@ -58,7 +58,7 @@ class ASIException(Exception):
         - command: error code received from ASI Console
     """
 
-    def __init__(self, code: str):
+    def __init__(self, code: str) -> None:
         """Initialize the ASIException class
         Parameters
         ----------
@@ -94,7 +94,7 @@ class ASIException(Exception):
         super().__init__(self.message)
         # Sends message to base exception constructor for python purposes
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Overrides base Exception string to be displayed
         in traceback"""
         return f"{self.code} -> {self.message}"
@@ -103,7 +103,7 @@ class ASIException(Exception):
 class TigerController:
     """Tiger Controller class"""
 
-    def __init__(self, com_port: str, baud_rate: int, verbose: bool = False):
+    def __init__(self, com_port: str, baud_rate: int, verbose: bool = False) -> None:
         """Initialize the Tiger Controller class
 
 
@@ -249,9 +249,8 @@ class TigerController:
                 motor_axes.pop(i)
         return motor_axes
 
-    ##### TODO: Modify these to accept dictionaries and send a
-    #           single command for all axes
-    def set_feedback_alignment(self, axis, aa):
+    ##### TODO: Modify to accept dictionaries and send a single command for all axes
+    def set_feedback_alignment(self, axis: str, aa: float) -> None:
         """Set the stage feedback alignment.
 
         Adjusts the drive strength by writing to a non-volatile on-board
@@ -277,7 +276,7 @@ class TigerController:
         self.send_command(f"AZ {axis}\r")
         self.read_response()
 
-    def set_backlash(self, axis, val):
+    def set_backlash(self, axis: str, val: float) -> None:
         """Enable/disable stage backlash correction.
 
         This command sets (or displays) the amount of distance in millimeters of the
@@ -303,7 +302,7 @@ class TigerController:
         self.send_command(f"B {axis}={val:.7f}\r")
         self.read_response()
 
-    def set_finishing_accuracy(self, axis, ac):
+    def set_finishing_accuracy(self, axis: str, ac: float) -> None:
         """Set the stage finishing accuracy.
 
         This command sets/displays the Finish Error setting, which controls when the
@@ -325,7 +324,7 @@ class TigerController:
         self.send_command(f"PC {axis}={ac:.7f}\r")
         self.read_response()
 
-    def set_error(self, axis, ac):
+    def set_error(self, axis: str, ac: float) -> None:
         """Set the stage drift error
 
         This command sets the Drift Error setting. This setting controls the
@@ -638,7 +637,7 @@ class TigerController:
         if self.verbose:
             print(f"Waited {waiting_time:.2f} s")
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop all stage movement immediately"""
 
         self.send_command("HALT")
@@ -646,7 +645,7 @@ class TigerController:
         if self.verbose:
             print("ASI Stages stopped successfully")
 
-    def set_speed(self, speed_dict):
+    def set_speed(self, speed_dict: dict) -> None:
         """Set speed
 
         Parameters
@@ -658,7 +657,7 @@ class TigerController:
         self.send_command(f"S {axes}")
         self.read_response()
 
-    def set_speed_as_percent_max(self, pct):
+    def set_speed_as_percent_max(self, pct: float) -> None:
         """Set speed as a percentage of the maximum speed
 
         Parameters
@@ -692,7 +691,7 @@ class TigerController:
         )
         self.read_response()
 
-    def get_speed(self, axis: str):
+    def get_speed(self, axis: str) -> float:
         """Get speed
 
         Parameters
@@ -704,7 +703,7 @@ class TigerController:
         response = self.read_response()
         return float(response.split("=")[1])
 
-    def get_encoder_counts_per_mm(self, axis: str):
+    def get_encoder_counts_per_mm(self, axis: str) -> float:
         """Get encoder counts pre mm of axis
 
         Parameters
@@ -728,7 +727,7 @@ class TigerController:
         end_position_mm: float,
         enc_divide: float = 0,
         axis: str = "X",
-    ):
+    ) -> None:
         """Set scanr operation mode.
 
         Parameters
@@ -765,7 +764,7 @@ class TigerController:
         number_of_lines: float,
         overshoot: float = 1.0,
         axis: str = "X",
-    ):
+    ) -> None:
         """Set scanv operation mode.
 
         Parameters
@@ -792,7 +791,7 @@ class TigerController:
         self.send_command(command)
         self.read_response()
 
-    def start_scan(self, axis: str, is_single_axis_scan: bool = True):
+    def start_scan(self, axis: str, is_single_axis_scan: bool = True) -> None:
         """Start scan
 
         Parameters
@@ -805,12 +804,12 @@ class TigerController:
         self.send_command("SCAN")
         self.read_response()
 
-    def stop_scan(self):
+    def stop_scan(self) -> None:
         """Stop scan."""
         self.send_command("SCAN P")
         self.read_response()
 
-    def is_moving(self):
+    def is_moving(self) -> bool:
         """Check to see if the stage is moving.
 
         Sends the command / which is equivalent to STATUS
@@ -848,7 +847,7 @@ class TigerController:
 
     # Basic Serial Commands for Filter Wheels
 
-    def send_filter_wheel_command(self, cmd) -> None:
+    def send_filter_wheel_command(self, cmd: str) -> None:
         """Send a serial command to the filter wheel.
 
         Parameters
@@ -861,15 +860,16 @@ class TigerController:
         self.send_command(f"{cmd}\n")
         # print(f"Sent Command: {command.decode(encoding='ascii')}")
 
-    def select_filter_wheel(self, filter_wheel_number=0):
-        """
-        Select the filter wheel, e.g., 0, 1...
+    def select_filter_wheel(self, filter_wheel_number: int=0) -> None:
+        """ Select the filter wheel, e.g., 0, 1...
 
-        Sets the current filter wheel for subsequent commands. Prompt shows currently
-        selected wheel, e.g., 0> is result of FW 0 command. If the selected wheel is
+        Sets the current filter wheel for later commands. Prompt shows the currently
+        selected wheel, e.g., 0> is a result of FW 0 command. If the selected wheel is
         HOMED and ready to go, the FW command returns the selected wheel as normal. If
         the wheel is not ready for any reason, the response ERR is returned. Example:
 
+        Notes
+        ----------
         0> FW 1 1 Normal – switch to FW 1
         1> FW 0 ERR FW 0 not ready
         0> Although FW 0 not ready – can still change FW 0 parameters.
@@ -877,12 +877,12 @@ class TigerController:
         Parameters
         ----------
         filter_wheel_number : int
-            The filter wheel number to select.
+            The filter-wheel number to select.
         """
         self.send_filter_wheel_command(f"FW {filter_wheel_number}")
         self.read_response()
 
-    def move_filter_wheel(self, filter_wheel_position=0):
+    def move_filter_wheel(self, filter_wheel_position: int=0) -> None:
         """Move Filter Wheel
 
         Move to filter position n , where n is a valid filter position.
@@ -896,34 +896,36 @@ class TigerController:
         self.send_filter_wheel_command(f"MP {filter_wheel_position}")
         self.read_response()
 
-    def move_filter_wheel_to_home(self):
+    def move_filter_wheel_to_home(self) -> None:
         """Move the Filter Wheel to Home Position
 
-        Causes current wheel to seek its home position.
+        Causes the current wheel to seek its home position.
         """
         self.send_filter_wheel_command("HO")
         self.read_response()
 
-    def change_filter_wheel_speed(self, speed=0):
-        """Change the Filter Wheel Speed
+    def change_filter_wheel_speed(self, speed: int=0) -> None:
+        """Change the Filter-Wheel Speed
 
         Selects a consistent set of preset acceleration and speed parameters.
         Supported in version 2.4 and later.
 
-        0	Default - directly set and saved AU, AD, and VR parameters are used.
-        1	Slowest and smoothest switching speed.
-        2 to 8	Intermediate switching speeds.
-        9	Fastest but least reliable switching speed.
+        Parameters
+        ----------
+        speed : int
+            Speed of the filter wheel. The speed is a preset value that can be set
+            between 0 and 9, where 0 is the default speed, 1 is the slowest but
+            smoothest switching speed, and 9 is the fastest yet least reliable speed.
         """
         self.send_filter_wheel_command(f"SV {speed}")
         self.read_response()
 
-    def halt_filter_wheel(self):
+    def halt_filter_wheel(self) -> None:
         """Halt filter wheel"""
         self.send_filter_wheel_command("HA")
         self.read_response()
 
-    def move_dichroic(self, dichroic_id, dichroic_position=0):
+    def move_dichroic(self, dichroic_id: str, dichroic_position: int=0) -> None:
         """Move Dichroic Slider.
 
         Move to dichroic position n , where n is a valid filter position.
@@ -939,10 +941,8 @@ class TigerController:
         self.send_filter_wheel_command(f"MOVE {dichroic_id}={dichroic_position}")
         self.read_response()
 
-    def square_wave(self, on_time, delay_time):
+    def square_wave(self, on_time: int, delay_time: int) -> None:
         """Square wave modulation.
-
-        For testing only.
 
         Parameters
         ----------
@@ -984,7 +984,7 @@ class TigerController:
             self.send_command(f'{command}\r')
             self.read_response()
 
-    def logic_card_on(self, axis : str):
+    def logic_card_on(self, axis: str) -> None:
         """Turn on the logic card
 
         Parameters
@@ -999,7 +999,7 @@ class TigerController:
         self.send_command(f'6 CCA Z=64\r')
         self.read_response()
 
-    def logic_card_off(self, axis : str):
+    def logic_card_off(self, axis: str) -> None:
         """Turn off the logic card
 
         Parameters
