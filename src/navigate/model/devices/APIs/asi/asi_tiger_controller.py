@@ -666,8 +666,9 @@ class TigerController:
             Percentage of the maximum speed
         """
         if self.default_axes_sequence is None:
-            logger.error(f"{str(self)}, Default axes sequence is not set. "
-            f"Cannot set speed.")
+            logger.error(
+                f"{str(self)}, Default axes sequence is not set. " f"Cannot set speed."
+            )
             raise ASIException(
                 "Unable to query system for axis sequence. Cannot set speed."
             )
@@ -860,8 +861,8 @@ class TigerController:
         self.send_command(f"{cmd}\n")
         # print(f"Sent Command: {command.decode(encoding='ascii')}")
 
-    def select_filter_wheel(self, filter_wheel_number: int=0) -> None:
-        """ Select the filter wheel, e.g., 0, 1...
+    def select_filter_wheel(self, filter_wheel_number: int = 0) -> None:
+        """Select the filter wheel, e.g., 0, 1...
 
         Sets the current filter wheel for later commands. Prompt shows the currently
         selected wheel, e.g., 0> is a result of FW 0 command. If the selected wheel is
@@ -882,7 +883,7 @@ class TigerController:
         self.send_filter_wheel_command(f"FW {filter_wheel_number}")
         self.read_response()
 
-    def move_filter_wheel(self, filter_wheel_position: int=0) -> None:
+    def move_filter_wheel(self, filter_wheel_position: int = 0) -> None:
         """Move Filter Wheel
 
         Move to filter position n , where n is a valid filter position.
@@ -904,7 +905,7 @@ class TigerController:
         self.send_filter_wheel_command("HO")
         self.read_response()
 
-    def change_filter_wheel_speed(self, speed: int=0) -> None:
+    def change_filter_wheel_speed(self, speed: int = 0) -> None:
         """Change the Filter-Wheel Speed
 
         Selects a consistent set of preset acceleration and speed parameters.
@@ -925,7 +926,7 @@ class TigerController:
         self.send_filter_wheel_command("HA")
         self.read_response()
 
-    def move_dichroic(self, dichroic_id: str, dichroic_position: int=0) -> None:
+    def move_dichroic(self, dichroic_id: str, dichroic_position: int = 0) -> None:
         """Move Dichroic Slider.
 
         Move to dichroic position n , where n is a valid filter position.
@@ -952,36 +953,33 @@ class TigerController:
             Delay time in quarter milliseconds
         """
 
-        commands = ['CCA X=0',
-
-        'M E=2',
-        'CCA Y=15',
-        f'CCA Z={delay_time}',
-        'CCB X=68 Y=192 Z=0',
-
-        'M E=3',
-        'CCA Y=5',
-        'CCB X=1 Y=66',
-
-        'M E=4',
-        'CCA Y=14',
-        f'CCA Z={on_time}',
-        'CCB X=3 Y=192 Z=0',
-
-        'M E=33',
-        'CCA Z=1',
-        'M E=34',
-        'CCA Z=2',
-        'M E=35',
-        'CCA Z=3',
-        'M E=36',
-        'CCA Z=4',
-
-        'M E=1',
-        'CCA Z=1']
+        commands = [
+            "CCA X=0",
+            "M E=2",
+            "CCA Y=15",
+            f"CCA Z={delay_time}",
+            "CCB X=68 Y=192 Z=0",
+            "M E=3",
+            "CCA Y=5",
+            "CCB X=1 Y=66",
+            "M E=4",
+            "CCA Y=14",
+            f"CCA Z={on_time}",
+            "CCB X=3 Y=192 Z=0",
+            "M E=33",
+            "CCA Z=1",
+            "M E=34",
+            "CCA Z=2",
+            "M E=35",
+            "CCA Z=3",
+            "M E=36",
+            "CCA Z=4",
+            "M E=1",
+            "CCA Z=1",
+        ]
         for command in commands:
             # Send data
-            self.send_command(f'{command}\r')
+            self.send_command(f"{command}\r")
             self.read_response()
 
     def logic_card_on(self, axis: str) -> None:
@@ -994,9 +992,9 @@ class TigerController:
         """
 
         axis = int(axis) + 32
-        self.send_command(f'6 M E = {axis}\r')
+        self.send_command(f"6 M E = {axis}\r")
         self.read_response()
-        self.send_command(f'6 CCA Z=64\r')
+        self.send_command(f"6 CCA Z=64\r")
         self.read_response()
 
     def logic_card_off(self, axis: str) -> None:
@@ -1008,7 +1006,7 @@ class TigerController:
             The axis of the logic card
         """
         axis = int(axis) + 32
-        self.send_command(f'6 M E = {axis}\r')
+        self.send_command(f"6 M E = {axis}\r")
         self.read_response()
-        self.send_command(f'6 CCA Z=0\r')
+        self.send_command(f"6 CCA Z=0\r")
         self.read_response()
