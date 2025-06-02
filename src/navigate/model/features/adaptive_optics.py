@@ -156,7 +156,7 @@ def fourier_annulus(im, radius_1=0, radius_2=64):
 class TonyWilson:
     """Tony Wilson iterative AO routine"""
 
-    def __init__(self, model):
+    def __init__(self, model, n_iter=None, n_steps=None, coef_amp=None):
         """Initialize the Tony Wilson iterative AO routine
 
         Parameters
@@ -168,13 +168,13 @@ class TonyWilson:
         self.n_modes = None
 
         #: int: Number of iterations
-        self.n_iter = None
+        self.n_iter = n_iter
 
         #: int: Number of steps
-        self.n_steps = None
+        self.n_steps = n_steps
 
         #: float: Coefficient amplitude
-        self.coef_amp = None
+        self.coef_amp = coef_amp
 
         #: bool: True if all iterations are done, False otherwise
         self.done_all = False
@@ -352,9 +352,12 @@ class TonyWilson:
 
         self.done_all = False
 
-        self.n_iter = tw_settings["iterations"]
-        self.n_steps = tw_settings["steps"]
-        self.coef_amp = tw_settings["amplitude"]
+        if self.n_iter is None:
+            self.n_iter = tw_settings["iterations"]
+        if self.n_steps is None:
+            self.n_steps = tw_settings["steps"]
+        if self.coef_amp is None:
+            self.coef_amp = tw_settings["amplitude"]
 
         self.coef_sweep = np.linspace(
             -self.coef_amp, self.coef_amp, self.n_steps

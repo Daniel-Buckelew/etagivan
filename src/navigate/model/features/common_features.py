@@ -177,11 +177,14 @@ class WaitForExternalTrigger:
 
 class ProjectionMode:
 
-    def __init__(self, model, axis='z', galvo_num=0, enable=True):
+    def __init__(self, model, z_range=None, shear_amp=None, axis='z', galvo_num=0, enable=True):
 
         self.model = model
 
         self.enable = enable
+
+        self.z_range = z_range
+        self.shear_amp = shear_amp
 
         self.microscope_state = None
         self.waveform_constants = None
@@ -238,8 +241,8 @@ class ProjectionMode:
             "remote_focus_ramp_falling"
             ]) / 1000
         
-        z_range = self.microscope_state["scanrange"]        
-        shear_amp = self.microscope_state["shear_amp"]
+        z_range = self.microscope_state["scanrange"] if self.z_range is None else self.z_range        
+        shear_amp = self.microscope_state["shear_amp"] if self.shear_amp is None else self.shear_amp
 
         waveform_dict = {}
         for channel_key in self.microscope_state["channels"].keys():
