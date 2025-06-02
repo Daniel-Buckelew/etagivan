@@ -44,6 +44,9 @@ from multiprocessing.managers import ListProxy
 from .image_writer import ImageWriter
 from navigate.tools.common_functions import VariableWithLock
 
+
+from navigate.model.waveforms import remote_focus_ramp
+
 # Logger Setup
 p = __name__.split(".")[1]
 logger = logging.getLogger(p)
@@ -174,9 +177,11 @@ class WaitForExternalTrigger:
 
 class ProjectionMode:
 
-    def __init__(self, model, axis='z', galvo_num=0):
+    def __init__(self, model, axis='z', galvo_num=0, enable=True):
 
         self.model = model
+
+        self.enable = enable
 
         self.microscope_state = None
         self.waveform_constants = None
@@ -193,32 +198,31 @@ class ProjectionMode:
         self.current_channel_in_list = 0
 
         self.config_table = {
-            "signal": {
-                "init": self.model.pause_data_thread,
-                "main": self.setup_projection,
-                "cleanup": self.model.resume_data_thread
-            },
-            "node": {
-                "node_type": "multi_step", 
-                "device_related": True
-                }
+            "signal": {"main": self.toggle_projection_mode}
         }
 
-    def setup_projection(self):
-
-        from navigate.model.waveforms import remote_focus_ramp
-
+    def toggle_projection_mode(self):
+        
         self.microscope_state = self.model.configuration["experiment"]["MicroscopeState"]
         self.waveform_constants = self.model.configuration["waveform_constants"]
-
-        self.microscope_state["waveform_template"] = "Confocal-Projection"
-
-        self.channels = self.microscope_state["selected_channels"]
 
         (
             self.exposure_times,
             self.sweep_times
         ) = self.model.active_microscope.get_exposure_sweep_times()
+
+        if self.enable:
+            self.setup_projection()
+        else:
+            self.disable_projection()
+
+        return True
+
+    def setup_projection(self):
+
+        self.microscope_state["waveform_template"] = "Confocal-Projection"
+
+        self.channels = self.microscope_state["selected_channels"]
 
         remote_focus_delay = float(self.waveform_constants["other_constants"][
             "remote_focus_delay"
@@ -249,16 +253,28 @@ class ProjectionMode:
         
         self.galvo_stage.update_waveform(waveform_dict)
 
+        self.set_shear_amplitude(shear_amp)
+
+    def set_shear_amplitude(self, amp):
+            
         self.waveform_constants["galvo_constants"][f"Galvo {self.galvo_num}"][
-                self.microscope_state["microscope_name"]
-            ][
-                self.microscope_state["zoom"]
-            ]["amplitude"] = shear_amp
+        self.microscope_state["microscope_name"]
+        ][
+            self.microscope_state["zoom"]
+        ]["amplitude"] = amp
 
         self.shear_galvo.adjust(
             self.exposure_times,
             self.sweep_times
         )
+
+    def disable_projection(self):
+
+        self.microscope_state["waveform_template"] = "Default"        
+
+        self.set_shear_amplitude(0)
+
+        self.galvo_stage.switch_mode("normal")
 
 class WaitToContinue:
     """WaitToContinue class for synchronizing signal and data acquisition.
