@@ -163,6 +163,8 @@ class NIStage(StageBase, NIDevice):
         #: object: DAQ ao task
         self.ao_task = None
 
+        self.backup_ao_task = None
+
         self.switch_mode("normal")
 
     # for stacking, we could have 2 axis here or not, y is for tiling, not necessary
@@ -320,10 +322,10 @@ class NIStage(StageBase, NIDevice):
                     self.configuration["experiment"]["StageParameters"][self.axes[0]]
                 ),
             )
-        elif self.ao_task:
-            self.ao_task.stop()
-            self.ao_task.close()
-            self.ao_task = None
+        # elif self.ao_task:
+        #     self.ao_task.stop()
+        #     self.ao_task.close()
+        #     self.ao_task = None
 
     def close(self) -> None:
         """Close the Galvo stage."""

@@ -202,7 +202,7 @@ class ProjectionMode:
         }
 
     def toggle_projection_mode(self):
-        
+
         self.microscope_state = self.model.configuration["experiment"]["MicroscopeState"]
         self.waveform_constants = self.model.configuration["waveform_constants"]
 
@@ -215,6 +215,13 @@ class ProjectionMode:
             self.setup_projection()
         else:
             self.disable_projection()
+
+        # debugging
+        print(f"------- galvo_stage (enabled = {self.enable}) --------\n")
+        mems = vars(self.galvo_stage)
+        for mem in mems:
+            print(f"{mem}:\t{mems[mem]}")
+        print("----------------------------------------------------\n")
 
         return True
 
@@ -272,9 +279,17 @@ class ProjectionMode:
 
         self.microscope_state["waveform_template"] = "Default"        
 
+        self.galvo_stage.waveform_dict = {}
+
         self.set_shear_amplitude(0)
 
-        self.galvo_stage.switch_mode("normal")
+        # self.galvo_stage.ao_task = None
+
+        self.galvo_stage.switch_mode(
+            "normal",
+            # exposure_times = self.exposure_times,
+            # sweep_times = self.sweep_times
+            )
 
 class WaitToContinue:
     """WaitToContinue class for synchronizing signal and data acquisition.
