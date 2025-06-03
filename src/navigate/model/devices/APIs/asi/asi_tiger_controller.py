@@ -985,12 +985,12 @@ class TigerController:
             self.read_response()
 
     def logic_card_on(self, axis : str):
-        """Turn on the logic card
+        """Turn on the logic card output
 
         Parameters
         ----------
         axis : str
-            The axis of the logic card
+            The axis of the logic card output
         """
 
         axis = int(axis) + 32
@@ -1000,12 +1000,12 @@ class TigerController:
         self.read_response()
         
     def logic_card_off(self, axis : str):
-        """Turn off the logic card
+        """Turn off the logic card output
 
         Parameters
         ----------
         axis : str
-            The axis of the logic card
+            The axis of the logic card output
         """
         axis = int(axis) + 32
         self.send_command(f'6 M E = {axis}\r')
@@ -1079,19 +1079,31 @@ class TigerController:
         self.read_response()
 
     def setup_control_loop(self,delays,camera_delay,rfvc_delay,sweep_time : float, analog_outputs : dict): # delay (ms), sweep_time (ms)
-    # def setup_control_loop(self, analog_outputs: dict):
         """
-        Sets up the control loop
+        Sets up the control loop for triggering the RFVC, Galvo/s, and Camera Trigger
         
-        Arguments: self, waveform type dict (axis, waveform)
+        Parameters
+        ----------
+        delays:
 
+        camera_delay:
+
+        rfvc_delay:
+
+        sweep_time:
+
+        analog_outputs:
+
+        
         If/Else statements: send the right loop
         
         """
-        # channels = analog_outputs.keys()
+        # Reference values for TTLs that correspond to outputs A-C
         TTLs = {'A': 42, 'B': 44, 'C': 46}
-        # if channels:
-        start_delay = int(delays[0]*4) #- int(round(period))
+
+        start_delay = int(delays[0]*4) # Unit conversion from ms to 1/4 ms
+        
+        # If/Else to handle either 1 or two galvos
         if len(delays) > 1:
             galvo2_delay = int((delays[0] - delays[1])*4) 
             galvo1_axis = analog_outputs["galvo 0"]
@@ -1103,10 +1115,11 @@ class TigerController:
             galvo2_delay = 0
         rfvc_axis = analog_outputs["remote_focus"]       
 
+        sweep_time = int(sweep_time*4) - 2 #Hardcoded -2 to account for delays within controller
 
-
-        sweep_time = int(sweep_time*4) - 2
-
+        # Dynamic delay processing. Instead of having each delay handled seperately, to save some cell space delays are programmed based on some simple calculation logic.
+        # Cell 6 is the direct output for the logical loop, and cell 12 is the post-delay output. So whichever delay is longer (accounting for hardware delays), will get input from 12
+        # Additionally, delay is calculated as a shifted difference between the higher and lower delay
         if rfvc_delay > camera_delay + 2:
             camera_output = 6
             rfvc_output = 12
@@ -1121,188 +1134,126 @@ class TigerController:
             camera_output = 6
             rfvc_output = 6
             start_delay += int((camera_delay + 2) * 4)
-            difference_delay = int((rfvc_delay - (camera_delay + 2)) * 4)
-
-
-        print(f"Delays: {delays}, RFVC Delay: {rfvc_delay}, Camera Delay: {camera_delay}")
-
-        print(f"Camera: {camera_output}, RFVC: {rfvc_output}")
-        
-        print(f'Sweep Time Cycles: {sweep_time}')
-        print(f"Start Delay: {start_delay}, Difference Delay: {difference_delay}")
-        print(f"Galvo2_delay: {galvo2_delay}")
+            difference_delay = 0
 
         commands = [
+            # Resets programmable logic cell configurations to constant cells
+            # This handles configuring cell 1 and cell 8
             '6 CCA X=0',
-
-            # Set cell 2 to one shot to trigger TTL for galvo, For I am the LORD
+            # Cell 2, a one-shot triggered by the rising edge of Cell 1
             '6 m e = 2',
             '6 cca y = 8',
             '6 cca z = 10',
             '6 ccb x = 1',
             '6 ccb y = 192',
-            # Set cell 3 to delay cell to give time to send serial commands, For I am the LORD
+            # Cell 3, delay cell that is used to sync up the loop after Galvo initialization
+            # Delay time is based on the start delay variable (in 1/4 ms)
             '6 m e = 3',
             '6 cca y = 9',
             f'6 cca z = {start_delay}',
             '6 ccb x = 1',
             '6 ccb y = 192',
-            # Set cell 4 to JK-Flop, to trigger & cell, For I am the LORD
+            # Cell 4, JK flop used for toggling on and off state of the loop
+            # Cells 3 and 8 serve as the inputs of this cell
             '6 m e = 4',
             '6 cca y = 13',
             '6 ccb x = 3',
             '6 ccb y = 8',
             '6 ccb z = 192',
-            # Set cell 5 to & cell for loop, For I am the LORD
+            # Cell 5, AND cell used to check if the loop is still operating
+            # Cell inputs are the output of cell 4 and the inverse of cell 7 (64+7)
             '6 m e = 5',
             '6 cca y = 5',
             '6 ccb x = 4',
             '6 ccb y = 71',
-            # Set cell 6 to one-shot to trigger TTL for RFVC repeatedly and to trigger CT, For I am the LORD
+            # Cell 6, a one-shot triggered by the rising edge of Cell 5
             '6 m e = 6',
             '6 cca y = 8',
             '6 cca z = 10',
             '6 ccb x = 5',
             '6 ccb y = 192',
-            # Set cell 7 to delay cell for loop, For I am the LORD
+            # Cell 7, delay cell that waits for the sweep time until retriggering. Used for the main loop
+            # Timing is dependent on the sweep_time variable
             '6 m e = 7',
             '6 cca y = 9',
             f'6 cca z= {sweep_time}',
             '6 ccb x = 6',
             '6 ccb y = 192',
-            #Sets cell 9 to a delay cell to account for the second galvo
+            # Cell 9, delay used to sync the phase of the Galvos
+            # This is because the Tiger Controller can not arbitrarily start waveforms
             '6 m e = 9',
             '6 cca y = 9',
             f'6 cca z = {galvo2_delay}',
             '6 ccb x = 2',
             '6 ccb y = 192',
-            #Sets cell 10 to a one shot to trigger Galvo 2
-            'm e = 10',
-            'cca y = 8',
-            'cca z = 10',
-            'ccb x = 9',
-            'ccb y = 192',
-            #Sets cell 11 to a delay reading the output of cell 6
+            # Cell 10, a one-shot triggered by the rising edge of Cell 9
+            '6 m e = 10',
+            '6 cca y = 8',
+            '6 cca z = 10',
+            '6 ccb x = 9',
+            '6 ccb y = 192',
+            # Cell 11, delay cell used to sync up the camera trigger and remote focus oupout based on configuration
             '6 m e = 11',
             '6 cca y = 9',
             f'6 cca z = {difference_delay}',
             '6 ccb x = 6',
             '6 ccb y = 192',
-            #Sets cell 12 to one shot to trigger camera
-            'm e = 12',
-            'cca y = 8',
-            'cca z = 10',
-            'ccb x = 11',
-            'ccb y = 192',
-            #Sets TTL2 to output from the RFVC cell in this case , For I am the LORD
+            # Cell 12, a one-shot triggered by the rising edge of Cell 11
+            '6 m e = 12',
+            '6 cca y = 8',
+            '6 cca z = 10',
+            '6 ccb x = 11',
+            '6 ccb y = 192',
+            # Routes the output of the RFVC trigger to the TTL output from the PLC
             f'6 m e = {TTLs[rfvc_axis]+1}',
             '6 cca y = 1',
             f'6 cca z = {rfvc_output}',
-            #Sets TTL1 to output the same thing as TTL0, For I am the LORD
+            # Routes the TTL output from the preious section to a different TTL to actually trigger the waveform
             f'6 m e = {TTLs[rfvc_axis]}',
             '6 cca y = 1',
             f'6 cca z = {TTLs[rfvc_axis]+1}',
-            #Sets PLC output 3 to cell 6
+            # Sets the camera signal output to the first physical PLC output
             '6 m e = 33',
             f'6 cca z = {camera_output}',
         ]
-        # if galvos exist
+        # Creates object to hold galvo commands
         galvo_commands = []
-        if len(delays) > 0:
+        # Single Galvo case, just sets up the first Galvo
+        if len(delays) == 1:
             galvo_commands = [
-            #Sets TTL4 to output for the first Galvo, For I am the LORD
+            # Sets the output of Cell 2 as the input to the TTL corresponding to the first Galvo pair
             f'6 m e = {TTLs[galvo1_axis]+1}',
             '6 cca y = 1',
             '6 cca z = 2',
-            #Sets TTL3 to output the same thing as TTL2
+            # Sets the output of the first Galvo TTL to the Galvo TTL that actually triggers it
             f'6 m e = {TTLs[galvo1_axis]}',
-            'cca y = 1',
-            f'cca z = {TTLs[galvo1_axis]+1}',
+            '6 cca y = 1',
+            f'6 cca z = {TTLs[galvo1_axis]+1}',
             ]
-
-        if len(delays) > 1:
+        # Multiple Galvo case, has the first set of commands and the commands for the second Galvo
+        elif len(delays) > 1:
             galvo_commands = [
-             #Sets TTL4 to output for the first Galvo, For I am the LORD
+            # Sets the output of Cell 2 as the input to the TTL corresponding to the first Galvo pair
             f'6 m e = {TTLs[galvo1_axis]+1}',
             '6 cca y = 1',
             '6 cca z = 2',
-            #Sets TTL3 to output the same thing as TTL2
+            # Sets the output of the first Galvo TTL to the Galvo TTL that actually triggers it
             f'6 m e = {TTLs[galvo1_axis]}',
-            'cca y = 1',
-            f'cca z = {TTLs[galvo1_axis]+1}',
-            #Sets TTL4 to output for the first Galvo, For I am the LORD
+            '6 cca y = 1',
+            f'6 cca z = {TTLs[galvo1_axis]+1}',
+            # Sets the output of Cell 10 as the input to the TTL corresponding to the second Galvo pair
             f'6 m e = {TTLs[galvo2_axis]+1}',
             '6 cca y = 1',
             '6 cca z = 10',
-            #Sets TTL3 to output the same thing as TTL2
+            # Sets the output of the second Galvo TTL to the Galvo TTL that actually triggers it
             f'6 m e = {TTLs[galvo2_axis]}',
-            'cca y = 1',
-            f'cca z = {TTLs[galvo2_axis]+1}',
+            '6 cca y = 1',
+            f'6 cca z = {TTLs[galvo2_axis]+1}',
             ]
-            print(galvo_commands)
-            
-        print(analog_outputs)
-        print(f"{TTLs[galvo1_axis]+ 1}")
+        # Runs the main setup commands, followed by the Galvo specific commands
         for command in commands:
-            # Send data
             self.send_command(f'{command}\r')
             self.read_response()
         for command in galvo_commands:
             self.send_command(f'{command}\r')
-            self.read_response()
-
-    def tweak_control_loop(self, delays, sweep_time):
-
-        start_delay = int(delays[0]*4) #- int(round(period))
-        if len(delays) > 1:
-            galvo2_delay = int((delays[0] - delays[1])*4) 
-        else:
-            galvo2_delay = 0
-        
-        sweep_time = int(sweep_time*4) - 2
-
-        print(f'Sweep Time Cycles: {sweep_time}')
-
-        commands = [            
-            # Set cell 3 to delay cell to give time to send serial commands, For I am the LORD
-            '6 m e = 3',
-            '6 cca y = 9'
-            f'6 cca z = {start_delay}',
-            '6 ccb x = 1',
-            '6 ccb y = 192',
-            # Set cell 7 to delay cell for loop, For I am the LORD
-            '6 m e = 7',
-            '6 cca y = 9'
-            f'6 cca z= {sweep_time}',
-            '6 ccb x = 6',
-            '6 ccb y = 192',
-            #Sets cell 9 to a delay cell to account for the second galvo
-            '6 m e = 9',
-            '6 cca y = 9'
-            f'6 cca z = {galvo2_delay}',
-            '6 ccb x = 2',
-            '6 ccb y = 192',
-        ]
-        for command in commands:
-            # Send data
-            self.send_command(f'{command}\r')
-            self.read_response()
-
-    def send_ttl_pulse(self, channel: int, pulse_width_ms: int, delay_ms: int) -> str:
-    
-        command = f"TTL X={channel} P={pulse_width_ms} D={delay_ms}"
-        self.send_command(command)
-        response = self.read_response()
-        return response
-    
-    # def trigger_acquisition(self):
-    #     commands = [
-    #         #Changes the TTL input from cell 2 to cell 6, For I am the LORD
-    #         '6 m e = 43',
-    #         '6 cca z = 6',
-    #     ]
-    #     for command in commands:
-    #         # Send data
-    #         self.send_command(f'{command}\r')
-    #         self.read_response()
-        
+            self.read_response()  
