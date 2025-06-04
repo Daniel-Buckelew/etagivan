@@ -52,7 +52,8 @@ are externally controlled via analog signals delivered from the ASI
 Tiger Controller.
 
 The ASI Tiger Controller has a few limitations for the analog signals. First, the 
-minimum voltage must be zero volts. Second, there are three analog waveforms offered, sawtooth,  
+minimum voltage must be zero volts. Second, the period value needs to be a whole number.
+Third, there are three analog waveforms offered, sawtooth,  
 triangle, and sine waves.
 
 The sawtooth waveform is a periodic analog waveform. There are three duty cycle values 
@@ -71,7 +72,7 @@ the waveform is a rising sawtooth waveform.
                -
                 hardware:
                   type: ASI
-                  channel: PXI6259/ao1
+                  axis: A
                   min: 0
                   max: 1.0
                 waveform: sine
@@ -79,7 +80,7 @@ the waveform is a rising sawtooth waveform.
                -
                 hardware:
                   type: ASI
-                  channel: PXI6259/ao1
+                  axis: B
                   min: 0
                   max: 1.0
                 waveform: sine

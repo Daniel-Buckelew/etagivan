@@ -467,7 +467,7 @@ remote_focus_hardware_widgets = {
     "frame_config": {"ref": "hardware"},
 }
 
-galvo_device_types = {"Analog Device": ("NI", "ni"), "Virtual Device": ("Synthetic", "synthetic")}
+galvo_device_types = {"Analog Device": ("NI", "ni"), "ASI Device": ("ASI", "asi"),"Virtual Device": ("Synthetic", "synthetic")}
 
 waveform_types = {
     "Sine": "sine",
@@ -476,6 +476,7 @@ waveform_types = {
 }
 
 galvo_hardware_widgets = {
+    "hardware/axis": ["Axis", "Input", "string", None, "Example: A"],
     "hardware/type": ["Device Type", "Combobox", "string", galvo_device_types, None],
     "hardware/channel": [
         "DAQ Channel",
