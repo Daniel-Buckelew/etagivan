@@ -327,26 +327,12 @@ class ASIGalvo(GalvoBase , SerialDevice):
 
         Parameters
         ----------
-        sample_rate : int, optional
-            Unit - Hz, by default 100000
-        sweep_time : float, optional
-            Unit - Seconds, by default 0.4
-        frequency : int, optional
-            Unit - Hz, by default 10
-        amplitude : float, optional
-            Unit - Volts, by default 1
-        offset : float, optional
-            Unit - Volts, by default 0
-        phase : float, optional
-            Unit - Radians, by default 0
-
-        Returns
-        -------
-        waveform : np.array
-
-        Examples
-        --------
-        >>> typical_laser = sine_wave(sample_rate, sweep_time, 10, 1, 0, 0)
+        period : Float
+            Unit - Seconds
+        amplitude : Float
+            Unit - Volts
+        offset : Float
+            Unit - Volts 
 
         """
 
