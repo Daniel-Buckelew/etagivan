@@ -1078,24 +1078,24 @@ class TigerController:
         self.send_command(f"3 SAM {axis}={mode}")
         self.read_response()
 
-    def setup_control_loop(self,delays,camera_delay,rfvc_delay,sweep_time : float, analog_outputs : dict): # delay (ms), sweep_time (ms)
+    def setup_control_loop(self,delays,camera_delay,rfvc_delay,sweep_time : float, analog_outputs : dict):
         """
         Sets up the control loop for triggering the RFVC, Galvo/s, and Camera Trigger
         
         Parameters
         ----------
-        delays:
-
-        camera_delay:
-
-        rfvc_delay:
-
-        sweep_time:
-
-        analog_outputs:
-
+        delays: float
+            One or two floats that are the delays for the galvos triggering
+        camera_delay: float
+            Delay in ms for the camera to turn on relative to the master trigger
+        rfvc_delay: float
+            Delay in ms for the remote focus to turn on relative to the master trigger
+        sweep_time: flaot
+            THe time in ms between each iteration of the master trigger
+        analog_outputs: dict
+            Dictionary that includes the device and the output axis on the DAC4 card, as specified in config
         
-        If/Else statements: send the right loop
+        If/Else statements: Used to handle either single or multiple galvo cases
         
         """
         # Reference values for TTLs that correspond to outputs A-C
