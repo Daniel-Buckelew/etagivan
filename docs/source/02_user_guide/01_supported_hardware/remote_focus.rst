@@ -119,10 +119,11 @@ ASI
 ---
 
 The ASI Tiger Controller has a few limitations for the analog signals. First, the 
-minimum voltage must be zero volts. There are two analog waveforms offered, triangle 
-and ramp waves. The triangle waveform is a periodic analog waveform, with no delay 
-periods. The sawtooth waveform is a periodic analog waveform with a delay period 
-between each cycle. 
+minimum voltage must be zero volts. Second, the period value needs to be a whole number.
+
+There are two analog waveforms offered, triangle and ramp waves. The triangle waveform is 
+a periodic analog waveform, with no delay periods. The sawtooth waveform is a periodic 
+analog waveform with a delay period between each cycle. 
 
 .. collapse:: Configuration File
 
