@@ -133,7 +133,7 @@ between each cycle.
           remote_focus_device:
             hardware: 
               type: ASI
-              channel: PXI6269/ao3
+              axis: A
               min: 0
               max: 5
               port: COM2
