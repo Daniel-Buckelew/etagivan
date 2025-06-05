@@ -32,7 +32,6 @@
 
 #  Standard Library Imports
 import logging
-import time
 from typing import Any, Dict
 
 # Third Party Imports
@@ -50,7 +49,7 @@ logger = logging.getLogger(p)
 
 @log_initialization
 class ASIRemoteFocus(RemoteFocusBase , SerialDevice):
-    """RemoteFocusNI Class - Analog control of the remote focus device."""
+    """ASIRemoteFocus Class - Analog control of the remote focus device."""
 
     def __init__(
         self,
@@ -60,7 +59,7 @@ class ASIRemoteFocus(RemoteFocusBase , SerialDevice):
         *args,
         **kwargs,
     ) -> None:
-        """Initialize the RemoteFocusNI class.
+        """Initialize the ASIRemoteFocus class.
 
         Parameters
         ----------
@@ -142,7 +141,10 @@ class ASIRemoteFocus(RemoteFocusBase , SerialDevice):
         return tiger_controller
 
     def adjust(self, exposure_times, sweep_times, offset=None):
-        """Adjusts the remote focus waveform based on the readout time.
+        """Adjust the waveform.
+
+        This method adjusts the waveform parameters.
+        Based on the sensor mode and readout direction, either the triangle or ramp function will be called. 
 
         Parameters
         ----------
@@ -152,11 +154,6 @@ class ASIRemoteFocus(RemoteFocusBase , SerialDevice):
             Dictionary of sweep times for each selected channel
         offset : float, optional
             Offset value for the remote focus waveform, by default None
-
-        Returns
-        -------
-        waveform : numpy.ndarray
-            Waveform for the remote focus device.
         """
 
         # to determine if the waveform has to be triangular
@@ -171,17 +168,6 @@ class ASIRemoteFocus(RemoteFocusBase , SerialDevice):
         waveform_constants = self.configuration["waveform_constants"]
         imaging_mode = microscope_state["microscope_name"]
         zoom = microscope_state["zoom"]
-        # ramp_type = self.configuration["configuration"]["microscopes"][
-        #     self.microscope_name]['remote focus device']['ramp_type']
-
-        remote_focus_delay = (
-            float(waveform_constants["other_constants"]["remote_focus_delay"]) / 1000
-        )
-
-        remote_focus_ramp_falling = (
-            float(waveform_constants["other_constants"]["remote_focus_ramp_falling"])
-            / 1000
-        )
 
         for channel_key in microscope_state["channels"].keys():
             # channel includes 'is_selected', 'laser', 'filter', 'camera_exposure'...
@@ -197,6 +183,7 @@ class ASIRemoteFocus(RemoteFocusBase , SerialDevice):
                 self.sweep_time = sweep_times[channel_key]
 
                 # Remote Focus Parameters
+                # Validation for when user puts a '-' or '.' in spinbox
                 temp = waveform_constants["remote_focus_constants"][imaging_mode][zoom][
                     laser
                 ]["amplitude"]
@@ -240,14 +227,7 @@ class ASIRemoteFocus(RemoteFocusBase , SerialDevice):
                     self.triangle(sweep_time, amplitude, offset)
 
                 else:
-                    self.ramp(exposure_time=exposure_time,
-                              sweep_time=self.sweep_time,
-                              remote_focus_delay=remote_focus_delay,
-                              camera_delay=self.camera_delay,
-                              fall=remote_focus_ramp_falling,
-                              amplitude=amplitude, 
-                              offset=remote_focus_offset
-                              )
+                    self.ramp(exposure_time, amplitude, remote_focus_offset)
     
     def triangle(
         self,
@@ -255,7 +235,12 @@ class ASIRemoteFocus(RemoteFocusBase , SerialDevice):
         amplitude=1,
         offset=0,
     ):
-        """Sends the tiger controller commands to initiate the triangle wave
+        """Sends the tiger controller commands to initiate the triangle wave.
+        
+        The waveform starts at the offset and immediately rises linearly to 2x amplitude 
+        (amplitude here refers to 1/2 peak-to-peak) and immediately falls linearly back
+        to the offset. The waveform is a periodic waveform with no delay periods between
+        cycles.
 
         Parameters
         ----------
@@ -267,24 +252,30 @@ class ASIRemoteFocus(RemoteFocusBase , SerialDevice):
             Unit - Volts
         """
 
-        period = int(round(sweep_time * 1000))
+        # Converts sweep_time to ms and amplitude and offset to mV
+        period = int(round(sweep_time * 1000)) 
         amplitude *= 1000
         offset *= 1000
 
+        # Triangle waveform
         self.remote_focus.SA_waveform(self.axis, 1, amplitude, offset, period)
+        # Waveform is free running after it is triggered 
         self.remote_focus.SAM(self.axis, 4)
 
     def ramp(
         self,
         exposure_time=0.2,
-        sweep_time=0.24,
-        remote_focus_delay=0.005,
-        camera_delay=0.001,
-        fall=0.05,
         amplitude=1,
         offset=0.5,
     ):
-        """Sends the tiger controller commands to make the ramp wave
+        """Sends the tiger controller commands to initiate the ramp wave.
+
+        The waveform starts at offset and immediately rises linearly to 2x amplitude 
+        (amplitude here refers to 1/2 peak-to-peak) and then immediately drops back 
+        down to the offset voltage during the fall period. 
+
+        There is a delay period after each cycle that comes from the PLC, which is 
+        not included in this function. 
 
         Parameters
         ----------
@@ -304,25 +295,14 @@ class ASIRemoteFocus(RemoteFocusBase , SerialDevice):
             Unit - Volts
         """
 
-        # rise period
-
-        # print(f"{exposure_time}, {camera_delay}, {remote_focus_delay}")
-        # period = int(
-        #     (exposure_time + camera_delay - remote_focus_delay) * 1000
-        # )
-
-        # delay period
-        # extra_samples = int(int(sweep_time)- (remote_focus_delay + period + fall))
-        # if extra_samples > 0:
-        #     _delay_time = remote_focus_delay + fall + extra_samples
-        # else:
-        #     _delay_time = remote_focus_delay + fall
-        
+        # Converts exposure_time to ms and amplitude and offset to mV
         amplitude *= 1000
         offset *= 1000
         exposure_time = int(round(exposure_time * 1000))
-        #print(f"RFVC: {amplitude} {offset} {exposure_time}")
+
+        # Ramp waveform that is triggered on TTL inputs
         self.remote_focus.SA_waveform(self.axis, 128, amplitude, offset, exposure_time)
+        # The waveform cycles once and waits for another TTL inputs
         self.remote_focus.SAM(self.axis, 2)
     
     def move(self, exposure_times, sweep_times, offset=None):
