@@ -492,7 +492,7 @@ def start_device(
     device_not_found(microscope_name, device_category, device_type, device_id)
 
 
-def start_daq(configuration: Dict[str, Any], device_type: str = "NI", name: str = "name") -> DAQBase:
+def start_daq(configuration: Dict[str, Any], device_type: str = "NI") -> DAQBase:
     """Initializes the data acquisition (DAQ) class on a dedicated thread.
 
     Load daq information from the configuration file. Proper daq types include NI and

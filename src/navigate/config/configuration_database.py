@@ -475,7 +475,6 @@ waveform_types = {
 }
 
 galvo_hardware_widgets = {
-   
     "hardware/type": ["Device Type", "Combobox", "string", galvo_device_types, None],
     "hardware/channel": [
         "DAQ Channel",
