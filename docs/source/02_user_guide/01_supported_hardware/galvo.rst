@@ -58,7 +58,7 @@ triangle, and sine waves.
 
 The sawtooth waveform is a periodic analog waveform. There are three duty cycle values 
 accepted, 0, 50, and 100. If the duty cycle is 0, the waveform is a falling sawtooth 
-waveform. If the duty cyle is 50, then it is a triangle wave. If the duty cycle is 100, 
+waveform. If the duty cycle is 50, then it is a triangle wave. If the duty cycle is 100, 
 the waveform is a rising sawtooth waveform. 
 
 
