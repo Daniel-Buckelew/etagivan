@@ -124,7 +124,7 @@ class ASIGalvo(GalvoBase , SerialDevice):
         self.galvo_waveform = self.device_config.get("waveform", "sawtooth")
 
         self.axis = self.device_config["hardware"]["axis"]#.get("axis","B")
-        print(f'galvo axis: {self.axis}')
+        logger.debug(f'galvo axis: {self.axis}')
 
     def __str__(self) -> str:
         """Return string representation of the GalvoASI."""
