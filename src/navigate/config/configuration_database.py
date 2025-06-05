@@ -109,7 +109,6 @@ filter_wheel_hardware_widgets = {
 daq_device_types = {
     "National Instruments": "NI",
     "Virtual Device": "Synthetic",
-    "Applied Scientific Instrumentation": "ASI"
 }
 
 daq_hardware_widgets = {
@@ -441,9 +440,9 @@ remote_focus_device_types = {
 }
 
 remote_focus_hardware_widgets = {
-    "axis": ["Device Type", "Input", "string", None, "Example: A"],
     "type": ["Device Type", "Combobox", "string", remote_focus_device_types, None],
     "channel": ["DAQ Channel", "Input", "string", None, "Example: PXI6259/ao3"],
+    "axis": ["Device Type", "Input", "string", None, "Example: A"],
     "min": [
         "Minimum Voltage",
         "Spinbox",
