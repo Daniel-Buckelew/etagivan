@@ -1044,7 +1044,7 @@ class TigerController:
         """
 
         "Verify if this is for synchronous or asynchronous"
-        print(f"Period (ms): {frequency}")
+        logger.debug(f"Period (ms): {frequency}")
         if (waveform % 128 == 3):
             offset = .5*(offset+amplitude)
         amplitude = amplitude*2            
