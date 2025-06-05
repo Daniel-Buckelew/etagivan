@@ -515,12 +515,6 @@ def start_daq(configuration: Dict[str, Any], device_type: str = "NI", name: str 
         from navigate.model.devices.daq.ni import NIDAQ
 
         return NIDAQ(configuration)
-    
-    elif device_type == "asi.ASI":
-        # from navigate.model.devices.daq.asi import ASIDaq
-        # name = "Microscope-0"
-        return start_device(name, configuration, "daq")
-       
 
     elif device_type.lower().startswith("synthetic"):
         from navigate.model.devices.daq.synthetic import SyntheticDAQ
@@ -600,10 +594,6 @@ def load_devices(
         ]["hardware"]["type"]
 
     if device_type not in devices_dict["daq"]:
-        print(device_type)
-        if (device_type == "asi.ASI"):
-            devices_dict["daq"][device_type] = start_daq(configuration, device_type, microscope_name)
-        else:
-            devices_dict["daq"][device_type] = start_daq(configuration, device_type)
+        devices_dict["daq"][device_type] = start_daq(configuration, device_type)
 
     return devices_dict
