@@ -42,6 +42,7 @@ import numpy as np
 from scipy.optimize import curve_fit
 
 # Local imports
+from navigate.model.features.common_features import PrepareNextChannel
 from navigate.model.features.feature_container import load_features
 import navigate.model.analysis.image_contrast as img_contrast
 from navigate.model.features.image_writer import ImageWriter
@@ -156,7 +157,12 @@ def fourier_annulus(im, radius_1=0, radius_2=64):
 class TonyWilson:
     """Tony Wilson iterative AO routine"""
 
-    def __init__(self, model, n_iter=None, n_steps=None, coef_amp=None):
+    def __init__(self, 
+                 model, 
+                 n_iter=None, 
+                 n_steps=None, 
+                 coef_amp=None
+                 ):
         """Initialize the Tony Wilson iterative AO routine
 
         Parameters
@@ -193,6 +199,10 @@ class TonyWilson:
         #: navigate.model.Model: Model object
         self.model = model
 
+        self.tw_settings = self.model.configuration["experiment"][
+            "AdaptiveOpticsParameters"
+        ]["TonyWilson"]
+
         #: navigate.model.devices.mirrors.mirror_imop.ImagineOpticsMirror: Mirror object
         self.mirror_controller = self.model.active_microscope.mirror.mirror_controller
 
@@ -206,9 +216,7 @@ class TonyWilson:
 
         #: list: List of coefficients to change
         self.change_coef = []
-        modes_armed_dict = self.model.configuration["experiment"][
-            "AdaptiveOpticsParameters"
-        ]["TonyWilson"]["modes_armed"]
+        modes_armed_dict = self.tw_settings["modes_armed"]
 
         #: list: List of mode names
         self.mode_names = modes_armed_dict.keys()
@@ -217,17 +225,11 @@ class TonyWilson:
                 self.change_coef += [i]
         self.n_coefs = len(self.change_coef)
 
-        self.start_from = self.model.configuration["experiment"][
-            "AdaptiveOpticsParameters"
-        ]["TonyWilson"]["from"]
+        self.start_from = self.tw_settings["from"]
 
-        self.metric = self.model.configuration["experiment"][
-            "AdaptiveOpticsParameters"
-        ]["TonyWilson"]["metric"]
+        self.metric = self.tw_settings["metric"]
 
-        self.fit_func = self.model.configuration["experiment"][
-            "AdaptiveOpticsParameters"
-        ]["TonyWilson"]["fitfunc"]
+        self.fit_func = self.tw_settings["fitfunc"]
 
         # if start_from == "flat":
         #     self.best_coefs = np.zeros(self.n_modes, dtype=np.float32)
@@ -284,38 +286,47 @@ class TonyWilson:
             return
 
         # Opens correct shutter and puts all signals to false
-        self.model.prepare_acquisition()
-        self.model.active_microscope.prepare_next_channel()
+        # self.model.prepare_acquisition()
+        # self.model.active_microscope.prepare_next_channel()
 
-        # load signal and data containers
-        self.model.signal_container, self.model.data_container = load_features(
-            self.model, [[{"name": TonyWilson}]]
-        )
+        self.model.addon_feature = [
+            [
+                {"name": PrepareNextChannel},
+                {"name": TonyWilson}
+            ]
+        ]
 
-        self.model.signal_thread = threading.Thread(
-            target=self.model.run_acquisition, name="TonyWilson Signal"
-        )
+        self.model.configuration["experiment"]["MicroscopeState"][
+            "image_mode"
+        ] = "customized"
 
-        self.model.data_thread = threading.Thread(
-            target=self.model.run_data_process,
-            # args=(frame_num,),
-            kwargs={"data_func": self.image_writer.save_image},
-            name="TonyWilson Data",
-        )
+        self.model.run_command("acquire")
 
-        print("\n**** STARTING TONY WILSON ****\n")
+        # # load signal and data containers
+        # self.model.signal_container, self.model.data_container = load_features(
+        #     self.model, [[{"name": TonyWilson}]]
+        # )
 
-        # Start Threads
-        self.model.signal_thread.start()
-        self.model.data_thread.start()
+        # self.model.signal_thread = threading.Thread(
+        #     target=self.model.run_acquisition, name="TonyWilson Signal"
+        # )
+
+        # self.model.data_thread = threading.Thread(
+        #     target=self.model.run_data_process,
+        #     # args=(frame_num,),
+        #     kwargs={"data_func": self.image_writer.save_image},
+        #     name="TonyWilson Data",
+        # )
+
+        # print("\n**** STARTING TONY WILSON ****\n")
+
+        # # Start Threads
+        # self.model.signal_thread.start()
+        # self.model.data_thread.start()
 
     def get_tw_frame_num(self):
         """Calculate how many frames are needed: iterations x steps x num_coefs"""
-        settings = self.model.configuration["experiment"]["AdaptiveOpticsParameters"][
-            "TonyWilson"
-        ]
-        frames = settings["iterations"] * settings["steps"] * self.n_coefs
-        return frames
+        return self.tw_settings["iterations"] * self.tw_settings["steps"] * self.n_coefs
 
     # don't need this?
     def get_steps(self, ranges, step_size):
@@ -346,18 +357,11 @@ class TonyWilson:
         # Timing
         self.start_time = time.time()
 
-        tw_settings = self.model.configuration["experiment"][
-            "AdaptiveOpticsParameters"
-        ]["TonyWilson"]
-
         self.done_all = False
 
-        if self.n_iter is None:
-            self.n_iter = tw_settings["iterations"]
-        if self.n_steps is None:
-            self.n_steps = tw_settings["steps"]
-        if self.coef_amp is None:
-            self.coef_amp = tw_settings["amplitude"]
+        self.n_iter = self.tw_settings["iterations"]
+        self.n_steps = self.tw_settings["steps"]
+        self.coef_amp = self.tw_settings["amplitude"]
 
         self.coef_sweep = np.linspace(
             -self.coef_amp, self.coef_amp, self.n_steps

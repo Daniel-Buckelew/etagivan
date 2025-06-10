@@ -177,7 +177,7 @@ class WaitForExternalTrigger:
 
 class ProjectionMode:
 
-    def __init__(self, model, z_range=None, shear_amp=None, axis='z', galvo_num=0, enable=True):
+    def __init__(self, model, axis='z', galvo_num=0, enable=True, z_range=None, shear_amp=None):
 
         self.model = model
 
