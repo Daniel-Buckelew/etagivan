@@ -58,7 +58,7 @@ class ASIException(Exception):
         - command: error code received from ASI Console
     """
 
-    def __init__(self, code: str):
+    def __init__(self, code: str) -> None:
         """Initialize the ASIException class
         Parameters
         ----------
@@ -94,7 +94,7 @@ class ASIException(Exception):
         super().__init__(self.message)
         # Sends message to base exception constructor for python purposes
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Overrides base Exception string to be displayed
         in traceback"""
         return f"{self.code} -> {self.message}"
@@ -103,7 +103,7 @@ class ASIException(Exception):
 class TigerController:
     """Tiger Controller class"""
 
-    def __init__(self, com_port: str, baud_rate: int, verbose: bool = False):
+    def __init__(self, com_port: str, baud_rate: int, verbose: bool = False) -> None:
         """Initialize the Tiger Controller class
 
 
@@ -249,9 +249,8 @@ class TigerController:
                 motor_axes.pop(i)
         return motor_axes
 
-    ##### TODO: Modify these to accept dictionaries and send a
-    #           single command for all axes
-    def set_feedback_alignment(self, axis, aa):
+    ##### TODO: Modify to accept dictionaries and send a single command for all axes
+    def set_feedback_alignment(self, axis: str, aa: float) -> None:
         """Set the stage feedback alignment.
 
         Adjusts the drive strength by writing to a non-volatile on-board
@@ -277,7 +276,7 @@ class TigerController:
         self.send_command(f"AZ {axis}\r")
         self.read_response()
 
-    def set_backlash(self, axis, val):
+    def set_backlash(self, axis: str, val: float) -> None:
         """Enable/disable stage backlash correction.
 
         This command sets (or displays) the amount of distance in millimeters of the
@@ -303,7 +302,7 @@ class TigerController:
         self.send_command(f"B {axis}={val:.7f}\r")
         self.read_response()
 
-    def set_finishing_accuracy(self, axis, ac):
+    def set_finishing_accuracy(self, axis: str, ac: float) -> None:
         """Set the stage finishing accuracy.
 
         This command sets/displays the Finish Error setting, which controls when the
@@ -325,7 +324,7 @@ class TigerController:
         self.send_command(f"PC {axis}={ac:.7f}\r")
         self.read_response()
 
-    def set_error(self, axis, ac):
+    def set_error(self, axis: str, ac: float) -> None:
         """Set the stage drift error
 
         This command sets the Drift Error setting. This setting controls the
@@ -638,7 +637,7 @@ class TigerController:
         if self.verbose:
             print(f"Waited {waiting_time:.2f} s")
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop all stage movement immediately"""
 
         self.send_command("HALT")
@@ -646,7 +645,7 @@ class TigerController:
         if self.verbose:
             print("ASI Stages stopped successfully")
 
-    def set_speed(self, speed_dict):
+    def set_speed(self, speed_dict: dict) -> None:
         """Set speed
 
         Parameters
@@ -658,7 +657,7 @@ class TigerController:
         self.send_command(f"S {axes}")
         self.read_response()
 
-    def set_speed_as_percent_max(self, pct):
+    def set_speed_as_percent_max(self, pct: float) -> None:
         """Set speed as a percentage of the maximum speed
 
         Parameters
@@ -667,8 +666,9 @@ class TigerController:
             Percentage of the maximum speed
         """
         if self.default_axes_sequence is None:
-            logger.error(f"{str(self)}, Default axes sequence is not set. "
-            f"Cannot set speed.")
+            logger.error(
+                f"{str(self)}, Default axes sequence is not set. " f"Cannot set speed."
+            )
             raise ASIException(
                 "Unable to query system for axis sequence. Cannot set speed."
             )
@@ -952,39 +952,36 @@ class TigerController:
             Delay time in quarter milliseconds
         """
 
-        commands = ['CCA X=0',
-
-        'M E=2',
-        'CCA Y=15',
-        f'CCA Z={delay_time}',
-        'CCB X=68 Y=192 Z=0',
-
-        'M E=3',
-        'CCA Y=5',
-        'CCB X=1 Y=66',
-
-        'M E=4',
-        'CCA Y=14',
-        f'CCA Z={on_time}',
-        'CCB X=3 Y=192 Z=0',
-
-        'M E=33',
-        'CCA Z=1',
-        'M E=34',
-        'CCA Z=2',
-        'M E=35',
-        'CCA Z=3',
-        'M E=36',
-        'CCA Z=4',
-
-        'M E=1',
-        'CCA Z=1']
+        commands = [
+            "CCA X=0",
+            "M E=2",
+            "CCA Y=15",
+            f"CCA Z={delay_time}",
+            "CCB X=68 Y=192 Z=0",
+            "M E=3",
+            "CCA Y=5",
+            "CCB X=1 Y=66",
+            "M E=4",
+            "CCA Y=14",
+            f"CCA Z={on_time}",
+            "CCB X=3 Y=192 Z=0",
+            "M E=33",
+            "CCA Z=1",
+            "M E=34",
+            "CCA Z=2",
+            "M E=35",
+            "CCA Z=3",
+            "M E=36",
+            "CCA Z=4",
+            "M E=1",
+            "CCA Z=1",
+        ]
         for command in commands:
             # Send data
-            self.send_command(f'{command}\r')
+            self.send_command(f"{command}\r")
             self.read_response()
 
-    def logic_card_on(self, axis : str):
+    def logic_card_on(self, axis: str):
         """Turn on the logic card
 
         Parameters
@@ -994,12 +991,12 @@ class TigerController:
         """
 
         axis = int(axis) + 32
-        self.send_command(f'6 M E = {axis}\r')
+        self.send_command(f"6 M E = {axis}\r")
         self.read_response()
-        self.send_command(f'6 CCA Z=64\r')
+        self.send_command(f"6 CCA Z=64\r")
         self.read_response()
-        
-    def logic_card_off(self, axis : str):
+
+    def logic_card_off(self, axis: str):
         """Turn off the logic card
 
         Parameters
@@ -1008,54 +1005,33 @@ class TigerController:
             The axis of the logic card
         """
         axis = int(axis) + 32
-        self.send_command(f'6 M E = {axis}\r')
+        self.send_command(f"6 M E = {axis}\r")
         self.read_response()
-        self.send_command(f'6 CCA Z=0\r')
-        self.read_response()
-
-    def logic_cell_on(self, axis : str):
-        self.send_command(f'M E = {axis}\r')
-        self.read_response()
-        self.send_command(f'CCA Z=1\r')
+        self.send_command(f"6 CCA Z=0\r")
         self.read_response()
 
-    def logic_cell_off(self, axis :str):
-        self.send_command(f'M E = {axis}\r')
-        self.read_response()
-        self.send_command(f'CCA Z=0\r')
-        self.read_response()
-
-    def SA_waveform(self, axis:str, waveform=0, amplitude=1000, offset=500, frequency=1000):
+    def SA_waveform(self, axis: str, waveform=0, amplitude=1000, offset=500):
         """Programs the analog waveforms using SAA, SAO, and SAP
         Default waveform is a sawtooth waveform with an amplitude of 1V with an offset of 0.5V
 
         Parameters
         ----------
         axis: str
-            Tiger Controller axis
-        waveform: 
+            Laser axis
+        waveform:
             Type of waveform pattern according to https://asiimaging.com/docs/commands/sap
         amplitude:
-            amplitude of the waveform in mV
+            amplitude of the waveform
         offset:
-            sets the center position of the waveform in mV
-        frequency:
-            sets the period of the waveform in milliseconds       
+            sets the center position of the waveform
         """
 
         "Verify if this is for synchronous or asynchronous"
-        logger.debug(f"Period (ms): {frequency}")
-        if (waveform % 128 == 3):
-            offset = .5*(offset+amplitude)
-        amplitude = amplitude*2            
-
-        self.send_command(f"3 SAP {axis}={waveform}")
+        self.send_command(f"SAP {axis}={waveform}")
         self.read_response()
-        self.send_command(f"3 SAA {axis}={amplitude}")
+        self.send_command(f"SAA {axis}={amplitude}")
         self.read_response()
-        self.send_command(f"3 SAO {axis}={offset}")
-        self.read_response()
-        self.send_command(f"3 SAF {axis}={frequency}")
+        self.send_command(f"SAO {axis}={offset}")
         self.read_response()
 
     def SAM(self, axis: str, mode: int):
@@ -1071,9 +1047,9 @@ class TigerController:
         ----------
         axis: str
             Laser axis
-        mode: 
-            Integer code     
+        mode:
+            Integer code
         """
 
-        self.send_command(f"3 SAM {axis}={mode}")
+        self.send_command(f"SAM {axis}={mode}")
         self.read_response()

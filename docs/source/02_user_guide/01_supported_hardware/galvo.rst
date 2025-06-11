@@ -7,13 +7,10 @@ Galvo mirrors are used for fast scanning, shadow reduction, and occasionally as 
 
 ------------
 
-Analog-Controlled Galvo
------------------------
+National Instruments
+--------------------
 
-Multiple types of galvanometers have been used, including Cambridge
-Technologies/Novanta, Thorlabs, and ScannerMAX. Each of these devices
-are externally controlled via analog signals delivered from a data
-acquisition card.
+Multiple types of galvanometers have been used, including Cambridge Technologies/Novanta, Thorlabs, and ScannerMAX. Each of these devices are externally controlled via analog signals delivered from an NI-based data acquisition card.
 
 .. collapse:: Configuration File
 

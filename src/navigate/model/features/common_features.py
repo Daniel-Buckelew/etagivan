@@ -48,6 +48,7 @@ from navigate.tools.common_functions import VariableWithLock
 p = __name__.split(".")[1]
 logger = logging.getLogger(p)
 
+
 class Snap:
     """Snap class for capturing data frames using a microscope.
 
@@ -391,17 +392,14 @@ class LoopByCount:
                 "init": self.pre_func,
                 "main": self.signal_func,
             },
-            "data": {
-                "init": self.pre_func,
-                "main": self.data_func
-            },
+            "data": {"init": self.pre_func, "main": self.data_func},
         }
 
     def pre_func(self):
         """Initialize loop parameters"""
         if self.initialized.value:
             return
-        
+
         with self.initialized as initialized:
             if initialized.value:
                 return
@@ -488,10 +486,10 @@ class LoopByCount:
                 return len(steps)
             else:
                 return int(steps)
-    
+
     def synchronize(self, thread_name):
         """Synchronize signal and data function
-        
+
         Parameters:
         ----------
         thread_name : bool
@@ -511,7 +509,6 @@ class LoopByCount:
         self.end_count.value = 0
 
         logger.debug(f"LoopByCount-Synchronize {thread_name} ends.")
-        
 
 
 class PrepareNextChannel:
@@ -638,11 +635,14 @@ class MoveToNextPositionInMultiPositionTable:
 
         #: str: The microscope name/resolution name
         self.resolution_value = resolution_value
+
         #: str: The zoom value
         self.zoom_value = zoom_value
+
         #: dict: stage offset table
         self.offset = offset
-        #: bool: The flag inidicates whether this node is initialized
+
+        #: bool: The flag indicates whether this node is initialized
         self.initialized = False
 
     def pre_signal_func(self):
@@ -650,10 +650,16 @@ class MoveToNextPositionInMultiPositionTable:
         if self.initialized:
             return
         self.initialized = True
+
         # the first row will be headers
         self.multiposition_table = self.model.configuration["multi_positions"][1:]
         headers = self.model.configuration["multi_positions"][0]
+
+        #: list: The list of stage axes (e.g., X, Y, Z, THETA, F)
         self.stage_axes = list(self.model.active_microscope.stages.keys())
+
+        #: list: The list of axes indices corresponding to the stage axes in the
+        #: multi-position table.
         self.axes_index = [headers.index(axis.upper()) for axis in self.stage_axes]
         self.position_count = len(self.multiposition_table)
         axes_num = len(self.stage_axes)
@@ -667,7 +673,9 @@ class MoveToNextPositionInMultiPositionTable:
 
         # assert offset has values for each axis
         if len(self.offset) < axes_num:
-            self.offset[len(self.offset) : axes_num] = [0] * (axes_num - len(self.offset))
+            self.offset[len(self.offset) : axes_num] = [0] * (
+                axes_num - len(self.offset)
+            )
         for i in range(axes_num):
             try:
                 self.offset[i] = float(self.offset[i])
@@ -737,7 +745,8 @@ class MoveToNextPositionInMultiPositionTable:
             zip(
                 self.stage_axes,
                 [
-                    self.multiposition_table[self.current_idx][self.axes_index[i]] + self.offset[i]
+                    self.multiposition_table[self.current_idx][self.axes_index[i]]
+                    + self.offset[i]
                     for i in range(len(self.axes_index))
                 ],
             )
@@ -756,16 +765,19 @@ class MoveToNextPositionInMultiPositionTable:
                 zip(
                     self.stage_axes,
                     [
-                        self.multiposition_table[self.current_idx - 1][self.axes_index[i]]
+                        self.multiposition_table[self.current_idx - 1][
+                            self.axes_index[i]
+                        ]
                         + self.offset[i]
                         for i in range(len(self.axes_index))
                     ],
                 )
             )
-        delta_distances = [abs(pos_dict[axis] - pre_stage_pos[axis]) for axis in self.stage_axes]
+        delta_distances = [
+            abs(pos_dict[axis] - pre_stage_pos[axis]) for axis in self.stage_axes
+        ]
         should_pause_data_thread = any(
-            distance > self.stage_distance_threshold
-            for distance in delta_distances
+            distance > self.stage_distance_threshold for distance in delta_distances
         )
         if should_pause_data_thread:
             self.model.pause_data_thread()
@@ -902,7 +914,12 @@ class ZStackAcquisition:
     """
 
     def __init__(
-        self, model, get_origin=False, saving_flag=False, saving_dir="z-stack", force_multiposition=False
+        self,
+        model,
+        get_origin=False,
+        saving_flag=False,
+        saving_dir="z-stack",
+        force_multiposition=False,
     ):
         """Initialize the ZStackAcquisition class.
 
@@ -916,11 +933,14 @@ class ZStackAcquisition:
         saving_flag : bool, optional
             Flag to enable image saving during z-stack acquisition. Default is False.
         saving_dir : str, optional
-            The sub-directory for saving z-stack images. Default is "z-stack".
+            The subdirectory for saving z-stack images. The default is "z-stack".
 
         """
         #: MicroscopeModel: The microscope model associated with z-stack acquisition.
         self.model = model
+
+        #: int: The current channel being acquired in the z-stack
+        self.current_channel_in_list = None
 
         #: bool: Flag to determine whether to get the z and focus origin positions.
         self.get_origin = get_origin
@@ -930,6 +950,18 @@ class ZStackAcquisition:
 
         #: float: The start z position for the z-stack.
         self.start_z_position = 0
+
+        #: float: The z stack distance for the z-stack.
+        self.z_stack_distance = None
+
+        #: float: The focus stack distance for the z-stack.
+        self.f_stack_distance = None
+
+        #: float: The z position of the channel being acquired in the z-stack
+        self.restore_z = None
+
+        #: float: The f position of the channel being acquired in the z-stack
+        self.restore_f = None
 
         #: float: The start focus position for the z-stack.
         self.start_focus = 0
@@ -942,6 +974,15 @@ class ZStackAcquisition:
 
         #: dict: A dictionary defining the multi-position table for z-stack acquisition.
         self.positions = {}
+
+        #: list: The list of stage axes (e.g., X, Y, Z, THETA, F)
+        self.position_headers = []
+
+        #: list: A list of each header position in the multi-position table.
+        self.axes_index = []
+
+        #: dict: A dictionary defining the current position in the multi-position table.
+        self.current_position = None
 
         #: int: The current index of the position being acquired in the multi-position
         self.current_position_idx = 0
@@ -958,6 +999,17 @@ class ZStackAcquisition:
         #: bool: Flag to determine whether to move the z position
         self.need_to_move_z_position = True
 
+        #: bool: Flag to determine whether to pause the data thread.
+        self.should_pause_data_thread = None
+
+        # TODO: distance > 1000 should not be hardcoded and somehow related to
+        #  different kinds of stage devices.
+        #: int: The stage distance threshold for pausing the data thread.
+        self.stage_distance_threshold = 1000
+
+        #: dict: A dictionary of the previous position in the multi-position table.
+        self.pre_position = None
+
         #: int: The number of times the z position has been moved
         self.z_position_moved_time = 0
 
@@ -972,6 +1024,16 @@ class ZStackAcquisition:
 
         #: bool: Force multiposition
         self.force_multiposition = force_multiposition
+
+        #: int: The number of frames received by the data thread.
+        self.received_frames = None
+
+        # TODO: This does not include timepoints.
+        #: int: The number of frames anticipated by the data thread.
+        self.total_frames = None
+
+        #: int: The number of timepoints in the z-stack acquisition.
+        self.timepoints = None
 
         #: ImageWriter: An image writer object for saving z-stack images.
         self.image_writer = None
@@ -996,15 +1058,28 @@ class ZStackAcquisition:
             "node": {"node_type": "multi-step", "device_related": True},
         }
 
-    def pre_signal_func(self):
-        """Initialize z-stack acquisition parameters before the signal stage.
+    def get_microscope_state(self, microscope_state: dict) -> None:
+        """Get the microscope state from the configuration.
 
-        This method initializes z-stack acquisition parameters, including position,
-        focus, and data thread management, before the signal stage.
+        Parameters:
+        ----------
+        microscope_state : dict
+            The microscope state configuration dictionary.
         """
-        microscope_state = self.model.configuration["experiment"]["MicroscopeState"]
-
+        self.timepoints = microscope_state["timepoints"]
         self.stack_cycling_mode = microscope_state["stack_cycling_mode"]
+
+        self.stage_axes = list(self.model.active_microscope.stages.keys())
+        # primary z and f axes, secondary stack settings
+        self.primary_z_axis = microscope_state.get("primary_z_axis", "z")
+        self.primary_f_axis = microscope_state.get("primary_f_axis", "f")
+        self.secondary_stack_settings = microscope_state.get("secondary_stack_settings", {})
+        self.tiling_axes = list(
+            set(self.stage_axes) - 
+            set([self.primary_z_axis, self.primary_f_axis]) - 
+            set(self.secondary_stack_settings.keys())
+        )
+        
 
         # get available channels
         self.channels = len(
@@ -1015,91 +1090,95 @@ class ZStackAcquisition:
                 )
             )
         )
-        #: int: The current channel being acquired in the z-stack
         self.current_channel_in_list = 0
 
+    def get_z_stack_parameters(self, microscope_state: dict) -> None:
+        """Get z-stack parameters from the configuration.
+
+        Parameters:
+        ----------
+        microscope_state : dict
+            The microscope state configuration dictionary.
+        """
         self.number_z_steps = int(microscope_state["number_z_steps"])
         self.start_z_position = float(microscope_state["start_position"])
-        # end_z_position = float(microscope_state["end_position"])
         self.z_step_size = float(microscope_state["step_size"])
-        #: float: The z stack distance for the z-stack.
         self.z_stack_distance = abs(
             self.start_z_position - float(microscope_state["end_position"])
         )
 
+    def get_f_stack_parameters(self, microscope_state: dict) -> None:
+        """Get focus stack parameters from the configuration.
+
+        Parameters:
+        ----------
+        microscope_state : dict
+            The microscope state configuration dictionary.
+        """
         self.start_focus = float(microscope_state["start_focus"])
         end_focus = float(microscope_state["end_focus"])
         self.focus_step_size = (end_focus - self.start_focus) / self.number_z_steps
-        #: float: The focus stack distance for the z-stack.
         self.f_stack_distance = abs(end_focus - self.start_focus)
+
+    def pre_signal_func(self) -> None:
+        """Initialize z-stack acquisition parameters before the signal stage.
+
+        This method initializes z-stack acquisition parameters, including position,
+        focus, and data thread management, before the signal stage.
+        """
+        microscope_state = self.model.configuration["experiment"]["MicroscopeState"]
+        self.get_microscope_state(microscope_state)
+        self.get_z_stack_parameters(microscope_state)
+        self.get_f_stack_parameters(microscope_state)
 
         # restore z, f
         pos_dict = self.model.get_stage_position()
-
-        #: float: The z position of the channel being acquired in the z-stack
         self.restore_z = pos_dict["z_pos"]
-
-        #: float: The f position of the channel being acquired in the z-stack
         self.restore_f = pos_dict["f_pos"]
 
         # position: x, y, z, theta, f
-        # TODO: Update axes headers and get positions accordingly
         if bool(microscope_state["is_multiposition"]) or self.force_multiposition:
             self.position_headers = self.model.configuration["multi_positions"][0]
             self.positions = self.model.configuration["multi_positions"][1:]
         else:
-            self.position_headers = ["X", "Y", "Z", "THETA", "F"]
-            self.positions = [
-                [
-                    float(pos_dict["x_pos"]),
-                    float(pos_dict["y_pos"]),
-                    float(
-                        microscope_state.get(
-                            "stack_z_origin",
-                            pos_dict["z_pos"],
-                        )
-                        if not self.get_origin
-                        else pos_dict["z_pos"]
-                    ),
-                    float(pos_dict["theta_pos"]),
-                    float(
-                        microscope_state.get(
-                            "stack_focus_origin",
-                            pos_dict["f_pos"],
-                        )
-                        if not self.get_origin
-                        else pos_dict["f_pos"]
-                    ),
-                ]
-            ]
-        self.axes_index = [self.position_headers.index(axis.upper()) for axis in ["x", "y", "z", "theta", "f"]]
+            self.position_headers = [axis.upper() for axis in self.stage_axes]
+            self.positions = [[float(pos_dict[f"{axis}_pos"]) for axis in self.stage_axes]]
 
-        # Setup next channel down here, to ensure defocus isn't merged into
+            # get origin for primary z and f
+            if not self.get_origin:
+                self.positions[0][self.stage_axes.index(self.primary_z_axis)] = microscope_state.get(
+                    "stack_z_origin",
+                    pos_dict[f"{self.primary_z_axis}_pos"]
+                )
+                self.positions[0][self.stage_axes.index(self.primary_f_axis)] = microscope_state.get(
+                    "stack_focus_origin",
+                    pos_dict[f"{self.primary_f_axis}_pos"]
+                )
+
+        self.axes_index = [self.position_headers.index(axis.upper()) for axis in self.stage_axes]
+
+        # Set up the next channel down here to ensure defocus isn't merged into
         # restore f_pos, positions
         self.model.active_microscope.central_focus = None
         self.model.active_microscope.current_channel = 0
         for microscope_name in self.model.virtual_microscopes:
             self.model.virtual_microscopes[microscope_name].current_channel = 0
-        # prepare next channel
         self.prepare_next_channel.signal_func()
 
         logger.info(
-            f"ZStackAcquisition. Positions {self.positions}, "
+            f"ZStackAcquisition: Positions {self.positions}, "
+            f"Timepoints {self.timepoints}, "
             f"Starting Focus {self.start_focus}, "
             f"Starting Z-Position {self.start_z_position}"
         )
         self.current_position_idx = 0
         self.current_position = dict(
-            zip(["x", "y", "z", "theta", "f"], [self.positions[0][i] for i in self.axes_index])
+            zip(self.stage_axes, [self.positions[0][i] for i in self.axes_index])
         )
         self.z_position_moved_time = 0
         self.need_to_move_new_position = True
         self.need_to_move_z_position = True
-        #: bool: Flag to determine whether to pause the data thread.
         self.should_pause_data_thread = False
-        # TODO: distance > 1000 should not be hardcoded and somehow related to
-        #  different kinds of stage devices.
-        self.stage_distance_threshold = 1000
 
         self.defocus = [
             v["defocus"]
@@ -1127,63 +1206,57 @@ class ZStackAcquisition:
         # move stage X, Y, Theta
         if self.need_to_move_new_position:
             self.need_to_move_new_position = False
-
             self.pre_position = self.current_position
             self.current_position = dict(
                 zip(
-                    ["x", "y", "z", "theta", "f"],
+                    self.stage_axes,
                     [self.positions[self.current_position_idx][i] for i in self.axes_index],
                 )
             )
 
             # calculate first z, f position
-            self.current_z_position = self.start_z_position + self.current_position["z"]
-            self.current_focus_position = self.start_focus + self.current_position["f"]
+            self.current_z_position = self.start_z_position + self.current_position[self.primary_z_axis]
+            self.current_focus_position = self.start_focus + self.current_position[self.primary_f_axis]
             if self.defocus is not None:
                 self.current_focus_position += self.defocus[
                     self.current_channel_in_list
                 ]
 
-            # calculate delta_x, delta_y
-            # TODO: Here.
             pos_dict = dict(
                 map(
                     lambda ax: (
                         f"{ax}_abs",
                         self.current_position[ax],
                     ),
-                    ["x", "y", "theta"],
+                    self.tiling_axes,
                 )
             )
 
             if self.current_position_idx > 0:
-                delta_x = self.current_position["x"] - self.pre_position["x"]
-                delta_y = self.current_position["y"] - self.pre_position["y"]
-                delta_z = (
-                    self.current_position["z"]
-                    - self.pre_position["z"]
+                delta_distances = [self.current_position[axis] - self.pre_position[axis] for axis in self.tiling_axes if axis != "theta"]
+                delta_distances.append(
+                    self.current_position[self.primary_z_axis]
+                    - self.pre_position[self.primary_z_axis]
                     + self.z_stack_distance
                 )
-                delta_f = (
-                    self.current_position["f"]
-                    - self.pre_position["f"]
+                delta_distances.append(
+                    self.current_position[self.primary_f_axis]
+                    - self.pre_position[self.primary_f_axis]
                     + self.f_stack_distance
                 )
             else:
-                delta_x = 0
-                delta_y = 0
-                delta_z = 0
-                delta_f = 0
+                axes_num = len(self.tiling_axes) + 2 - (1 if "theta" in self.tiling_axes else 0)
+                delta_distances = [0] * axes_num
 
             # displacement = [delta_z, delta_f, delta_x, delta_y]
-            # Check the distance between current position and previous position,
+            # Check the distance between the current position and previous position,
             # if it is too far, then we can call self.model.pause_data_thread() and
             # self.model.resume_data_thread() after the stage has completed the move
             # to the next position.
 
             self.should_pause_data_thread = any(
                 distance > self.stage_distance_threshold
-                for distance in [delta_x, delta_y, delta_z, delta_f]
+                for distance in delta_distances
             )
             if self.should_pause_data_thread:
                 self.model.pause_data_thread()
@@ -1191,19 +1264,20 @@ class ZStackAcquisition:
 
             self.model.move_stage(pos_dict, wait_until_done=True)
 
+        # Potentially pause the data thread and move z, f position
         if self.need_to_move_z_position:
-            # move z, f
-            # self.model.pause_data_thread()
-
             if self.should_pause_data_thread and not data_thread_is_paused:
                 self.model.pause_data_thread()
                 logger.info("Data thread paused.")
 
+            stack_pos = [
+                (f"{self.primary_z_axis}_abs", self.current_z_position),
+                (f"{self.primary_f_axis}_abs", self.current_focus_position)
+            ]
+            for axis, offset in self.secondary_stack_settings.items():
+                stack_pos.append((f"{axis}_abs", self.current_z_position + offset))
             self.model.move_stage(
-                {
-                    "z_abs": self.current_z_position,
-                    "f_abs": self.current_focus_position,
-                },
+                dict(stack_pos),
                 wait_until_done=True,
             )
 
@@ -1215,11 +1289,11 @@ class ZStackAcquisition:
 
         return True
 
-    def signal_end(self):
+    def signal_end(self) -> bool:
         """Handle the end of the signal stage and position cycling.
 
         This method handles the end of the signal stage, including position cycling and
-        channel updates for multi-channel acquisitions.
+        channel updates for multichannel acquisitions.
 
         Returns:
         -------
@@ -1232,7 +1306,7 @@ class ZStackAcquisition:
             return True
 
         if self.stack_cycling_mode != "per_stack":
-            # update channel for each z position in 'per_slice'
+            # update the channel for each z position in 'per_slice'
             if self.defocus is not None:
                 self.current_focus_position -= self.defocus[
                     self.current_channel_in_list
@@ -1240,7 +1314,8 @@ class ZStackAcquisition:
             self.update_channel()
             self.need_to_move_z_position = self.current_channel_in_list == 0
 
-        # in 'per_slice', move to next z position if all the channels have been acquired
+        # in 'per_slice', move to the next z position if all the channels have been
+        # acquired
         if self.need_to_move_z_position:
             # next z, f position
             self.current_z_position += self.z_step_size
@@ -1249,12 +1324,12 @@ class ZStackAcquisition:
             # update z position moved time
             self.z_position_moved_time += 1
 
-        # decide whether to move X,Y,Theta
+        # decide whether to move X, Y, Theta
         if self.z_position_moved_time >= self.number_z_steps:
             self.z_position_moved_time = 0
             # calculate first z, f position
-            self.current_z_position = self.start_z_position + self.current_position["z"]
-            self.current_focus_position = self.start_focus + self.current_position["f"]
+            self.current_z_position = self.start_z_position + self.current_position[self.primary_z_axis]
+            self.current_focus_position = self.start_focus + self.current_position[self.primary_f_axis]
             if (
                 self.z_stack_distance > self.stage_distance_threshold
                 or self.f_stack_distance > self.stage_distance_threshold
@@ -1264,31 +1339,37 @@ class ZStackAcquisition:
             # after running through a z-stack, update channel
             if self.stack_cycling_mode == "per_stack":
                 self.update_channel()
-                # if run through all the channels, move to next position
+                # if run through all the channels, move to the next position
                 if self.current_channel_in_list == 0:
                     self.need_to_move_new_position = True
             else:
                 self.need_to_move_new_position = True
 
             if self.need_to_move_new_position:
-                # move to next position
+                # move to the next position
                 self.current_position_idx += 1
 
         if self.current_position_idx >= len(self.positions):
             self.current_position_idx = 0
-            # restore z
+            # restore z, f, and secondary z if any
+            stack_pos = [
+                (f"{self.primary_z_axis}_abs", self.restore_z),
+                (f"{self.primary_f_axis}_abs", self.restore_f)
+            ]
+            for axis, offset in self.secondary_stack_settings.items():
+                stack_pos.append((f"{axis}_abs", self.restore_z + offset))
             self.model.move_stage(
-                {"z_abs": self.restore_z, "f_abs": self.restore_f},
+                dict(stack_pos),
                 wait_until_done=False,
             )  # Update position
             return True
 
         return False
 
-    def update_channel(self):
-        """Update the active channel during multi-channel acquisition.
+    def update_channel(self) -> None:
+        """Update the active channel during multichannel acquisition.
 
-        This method updates the active channel for multi-channel acquisitions, allowing
+        This method updates the active channel for multichannel acquisitions, allowing
         cycling through channels.
         """
         self.current_channel_in_list = (
@@ -1299,7 +1380,7 @@ class ZStackAcquisition:
         if self.defocus is not None:
             self.current_focus_position += self.defocus[self.current_channel_in_list]
 
-    def pre_data_func(self):
+    def pre_data_func(self) -> None:
         """Initialize data-related parameters before data acquisition.
 
         This method initializes data-related parameters before data acquisition,
@@ -1309,7 +1390,7 @@ class ZStackAcquisition:
         self.received_frames = 0
         self.total_frames = self.channels * self.number_z_steps * len(self.positions)
 
-    def in_data_func(self, frame_ids):
+    def in_data_func(self, frame_ids: list) -> None:
         """Handle incoming data frames during data acquisition.
 
         This method handles incoming data frames during data acquisition, updating the
@@ -1325,7 +1406,7 @@ class ZStackAcquisition:
         if self.image_writer is not None:
             self.image_writer.save_image(frame_ids)
 
-    def end_data_func(self):
+    def end_data_func(self) -> bool:
         """Check if all expected data frames have been received.
 
         This method checks whether all expected data frames have been received during
@@ -1340,8 +1421,8 @@ class ZStackAcquisition:
 
         return self.received_frames >= self.total_frames
 
-    def cleanup_data_func(self):
-        """Perform cleanup actions after data acquisition, if image saving is enabled.
+    def cleanup_data_func(self) -> None:
+        """Perform cleanup actions after data acquisition if image saving is enabled.
 
         This method performs cleanup actions after data acquisition, such as cleaning up
          image writing, if image saving is enabled.
@@ -1579,4 +1660,3 @@ class FindTissueSimple2D:
             )
 
             self.model.event_queue.put(("multiposition", table_values))
-
