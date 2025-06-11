@@ -1032,7 +1032,7 @@ class TigerController:
             sets the center position of the waveform
         """
 
-        "Verify if this is for synchronous or asynchronous"
+        # TODO: Verify if this is for synchronous or asynchronous
         self.send_command(f"SAP {axis}={waveform}")
         self.read_response()
         self.send_command(f"SAA {axis}={amplitude}")
@@ -1053,8 +1053,8 @@ class TigerController:
         ----------
         axis: str
             Laser axis
-        mode:
-            Integer code
+        mode: int
+            Integer code.
         """
 
         self.send_command(f"SAM {axis}={mode}")
