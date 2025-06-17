@@ -159,9 +159,7 @@ class TonyWilson:
 
     def __init__(self, 
                  model, 
-                 n_iter=None, 
-                 n_steps=None, 
-                 coef_amp=None
+                 verbose=False
                  ):
         """Initialize the Tony Wilson iterative AO routine
 
@@ -173,15 +171,6 @@ class TonyWilson:
         #: int: Number of modes
         self.n_modes = None
 
-        #: int: Number of iterations
-        self.n_iter = n_iter
-
-        #: int: Number of steps
-        self.n_steps = n_steps
-
-        #: float: Coefficient amplitude
-        self.coef_amp = coef_amp
-
         #: bool: True if all iterations are done, False otherwise
         self.done_all = False
 
@@ -190,6 +179,8 @@ class TonyWilson:
 
         #: list: detailed report to save as JSON after
         self.report = []
+
+        self.verbose = verbose
 
         # TODO: I don't think these are used...
         self.laser = None
@@ -371,7 +362,7 @@ class TonyWilson:
         self.target_signal_id = 0
         self.total_frame_num = self.get_tw_frame_num()
 
-        print(f"Total frame num: {self.total_frame_num}")
+        # print(f"Total frame num: {self.total_frame_num}")
 
         if self.start_from == "flat":
             self.best_coefs = np.zeros(self.n_modes, dtype=np.float32)
@@ -395,8 +386,8 @@ class TonyWilson:
         bool
             True if the signal is done, False otherwise
         """
+        
         out_str = "in_func_signal\n"
-
         out_str += f"\tSignal:\t{self.signal_id}\n"
 
         step = self.signal_id % self.n_steps
@@ -427,6 +418,7 @@ class TonyWilson:
 
         try:
             curr_mirror_coefs = self.mirror_controller.get_modal_coefs()[0]
+            
             out_str += (
                 f"\tCoefs:\t[{' '.join([f'{c:.2f}' for c in curr_mirror_coefs])}]\n"
             )
@@ -445,7 +437,6 @@ class TonyWilson:
         if (applied_coefs == curr_mirror_coefs).all() or (applied_coefs == 0).all():
             self.signal_id += 1
 
-            out_str += "\tSending tw_frame_queue...\n"
             self.tw_frame_queue.put(
                 (
                     self.model.frame_id,
@@ -458,7 +449,8 @@ class TonyWilson:
         else:
             out_str += "\tMirror update failed...\n"
 
-        print(out_str)
+        if self.verbose:
+            print(out_str)
 
         return self.signal_id >= self.total_frame_num
 
@@ -470,8 +462,6 @@ class TonyWilson:
         bool
             True if the signal is done, False otherwise
         """
-        print("end_func_signal() called!!!")
-
         if self.model.stop_acquisition:
             return True
 
@@ -642,13 +632,14 @@ class TonyWilson:
                         self.done_all = True
                         out_str += "\tDone all!!!\n"
 
-        out_str += "\tSending tw_data_queue...\n"
         self.tw_data_queue.put((self.frames_done,))
 
-        print(out_str)
+        if self.verbose:
+            print(out_str)
+        elif self.done_itr:
+            print(f"Done iteration {itr + 1} / {self.n_iter} ...")
 
         if self.frames_done >= self.total_frame_num:
-            print(">>> in_func_data ended!!!")
             return frame_ids
 
     def build_report(self):
@@ -680,8 +671,6 @@ class TonyWilson:
         bool
             True if the data is done, False otherwise
         """
-        print("end_func_data() called!!!")
-
         if self.done_all:
             self.best_coefs = self.best_coefs_overall
             # self.model.stop_acquisition = True

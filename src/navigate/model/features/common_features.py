@@ -219,13 +219,6 @@ class ProjectionMode:
         else:
             self.disable_projection()
 
-        # debugging
-        print(f"------- galvo_stage (enabled = {self.enable}) --------\n")
-        mems = vars(self.galvo_stage)
-        for mem in mems:
-            print(f"{mem}:\t{mems[mem]}")
-        print("----------------------------------------------------\n")
-
         return True
 
     def setup_projection(self):
