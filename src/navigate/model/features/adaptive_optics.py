@@ -180,11 +180,9 @@ class TonyWilson:
         #: list: detailed report to save as JSON after
         self.report = []
 
+        #: bool: True if you want to print the full output string each step
         self.verbose = verbose
 
-        # TODO: I don't think these are used...
-        self.laser = None
-        self.laser_power = 0
         self.start_time = 0
 
         #: navigate.model.Model: Model object
@@ -221,21 +219,6 @@ class TonyWilson:
         self.metric = self.tw_settings["metric"]
 
         self.fit_func = self.tw_settings["fitfunc"]
-
-        # if start_from == "flat":
-        #     self.best_coefs = np.zeros(self.n_modes, dtype=np.float32)
-        # elif start_from == "current":
-        #     curr_expt_coefs = list(
-        #         self.model.configuration["experiment"]["MirrorParameters"][
-        #             "modes"
-        #         ].values()
-        #     )
-        #     self.best_coefs = np.asarray(curr_expt_coefs, dtype=np.float32)
-
-        # self.best_coefs_overall = deepcopy(self.best_coefs)
-        # self.best_metric = 0.0
-        # self.coef_sweep = None
-        # self.best_peaks = []
 
         # Queue
         self.tw_frame_queue = Queue()
@@ -276,10 +259,6 @@ class TonyWilson:
         if frame_num < 1:
             return
 
-        # Opens correct shutter and puts all signals to false
-        # self.model.prepare_acquisition()
-        # self.model.active_microscope.prepare_next_channel()
-
         self.model.addon_feature = [
             [
                 {"name": PrepareNextChannel},
@@ -292,28 +271,6 @@ class TonyWilson:
         ] = "customized"
 
         self.model.run_command("acquire")
-
-        # # load signal and data containers
-        # self.model.signal_container, self.model.data_container = load_features(
-        #     self.model, [[{"name": TonyWilson}]]
-        # )
-
-        # self.model.signal_thread = threading.Thread(
-        #     target=self.model.run_acquisition, name="TonyWilson Signal"
-        # )
-
-        # self.model.data_thread = threading.Thread(
-        #     target=self.model.run_data_process,
-        #     # args=(frame_num,),
-        #     kwargs={"data_func": self.image_writer.save_image},
-        #     name="TonyWilson Data",
-        # )
-
-        # print("\n**** STARTING TONY WILSON ****\n")
-
-        # # Start Threads
-        # self.model.signal_thread.start()
-        # self.model.data_thread.start()
 
     def get_tw_frame_num(self):
         """Calculate how many frames are needed: iterations x steps x num_coefs"""
@@ -361,8 +318,6 @@ class TonyWilson:
         self.signal_id = 0
         self.target_signal_id = 0
         self.total_frame_num = self.get_tw_frame_num()
-
-        # print(f"Total frame num: {self.total_frame_num}")
 
         if self.start_from == "flat":
             self.best_coefs = np.zeros(self.n_modes, dtype=np.float32)
@@ -673,9 +628,6 @@ class TonyWilson:
         """
         if self.done_all:
             self.best_coefs = self.best_coefs_overall
-            # self.model.stop_acquisition = True
-            # self.model.end_acquisition()
-            # print("Ending acquisition...")
             try:
                 stop_time = time.time()
                 print(f"Total runtime:\t{(stop_time - self.start_time):.3f} sec")
