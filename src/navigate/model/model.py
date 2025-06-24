@@ -730,8 +730,16 @@ class Model:
             coefficients = self.active_microscope.mirror.set_from_wcs_file(path=args[0])
             self.update_mirror(coef=coefficients)
         elif command == "tony_wilson":
-            tony_wilson = TonyWilson(self)
-            tony_wilson.run(*args)
+            # tony_wilson = TonyWilson(self)
+            # tony_wilson.run(*args)
+            self.configuration["experiment"]["MicroscopeState"][
+                "image_mode"
+            ] = "customized"
+            self.addon_feature = [
+                    {"name": PrepareNextChannel},
+                    {"name": TonyWilson}
+                ]
+            self.run_command("acquire")            
 
         elif command == "load_feature":
             """
