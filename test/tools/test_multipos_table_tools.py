@@ -65,70 +65,58 @@ def listize(x):
 @pytest.mark.parametrize("x_start", listize((np.random.rand() - 0.5) * 1000))
 @pytest.mark.parametrize("x_tiles", listize(np.random.randint(0, 5)))
 @pytest.mark.parametrize("x_length", listize(np.random.rand() * 1000))
-@pytest.mark.parametrize("x_overlap", listize(np.random.rand()))
 @pytest.mark.parametrize("y_start", listize(((np.random.rand() - 0.5) * 1000)))
 @pytest.mark.parametrize("y_tiles", listize(np.random.randint(0, 5)))
 @pytest.mark.parametrize("y_length", listize(np.random.rand() * 1000))
-@pytest.mark.parametrize("y_overlap", listize(np.random.rand()))
 @pytest.mark.parametrize("z_start", listize(((np.random.rand() - 0.5) * 1000)))
 @pytest.mark.parametrize("z_tiles", listize(np.random.randint(0, 5)))
 @pytest.mark.parametrize("z_length", listize(np.random.rand() * 1000))
-@pytest.mark.parametrize("z_overlap", listize(np.random.rand()))
 @pytest.mark.parametrize("theta_start", listize(((np.random.rand() - 0.5) * 180)))
 @pytest.mark.parametrize("theta_tiles", listize(np.random.randint(0, 5)))
 @pytest.mark.parametrize("theta_length", listize((np.random.rand() * 5)))
-@pytest.mark.parametrize("theta_overlap", listize(np.random.rand()))
 @pytest.mark.parametrize("f_start", listize(((np.random.rand() - 0.5) * 1000)))
 @pytest.mark.parametrize("f_tiles", listize(np.random.randint(0, 5)))
 @pytest.mark.parametrize("f_length", listize(np.random.rand() * 1000))
-@pytest.mark.parametrize("f_overlap", listize(np.random.rand()))
+@pytest.mark.parametrize("overlap", listize(np.random.rand()))
 @pytest.mark.parametrize("f_track_with_z", [True, False])
 def test_compute_tiles_from_bounding_box(
     x_start,
     x_tiles,
     x_length,
-    x_overlap,
     y_start,
     y_tiles,
     y_length,
-    y_overlap,
     z_start,
     z_tiles,
     z_length,
-    z_overlap,
     theta_start,
     theta_tiles,
     theta_length,
-    theta_overlap,
     f_start,
     f_tiles,
     f_length,
-    f_overlap,
+    overlap,
     f_track_with_z,
 ):
     from navigate.tools.multipos_table_tools import compute_tiles_from_bounding_box
 
-    tiles = compute_tiles_from_bounding_box(
+    axes, tiles = compute_tiles_from_bounding_box(
         x_start,
         x_tiles,
         x_length,
-        x_overlap,
         y_start,
         y_tiles,
         y_length,
-        y_overlap,
         z_start,
         z_tiles,
         z_length,
-        z_overlap,
         theta_start,
         theta_tiles,
         theta_length,
-        theta_overlap,
         f_start,
         f_tiles,
         f_length,
-        f_overlap,
+        overlap,
         f_track_with_z,
     )
 
@@ -138,11 +126,11 @@ def test_compute_tiles_from_bounding_box(
     theta_tiles = 1 if theta_tiles <= 0 else theta_tiles
     f_tiles = 1 if f_tiles <= 0 else f_tiles
 
-    x_max = x_start + (1 - x_overlap) * x_length * (x_tiles - 1)
-    y_max = y_start + (1 - y_overlap) * y_length * (y_tiles - 1)
-    z_max = z_start + (1 - z_overlap) * z_length * (z_tiles - 1)
-    theta_max = theta_start + (1 - theta_overlap) * theta_length * (theta_tiles - 1)
-    f_max = f_start + (1 - f_overlap) * f_length * (f_tiles - 1)
+    x_max = x_start + (1 - overlap) * x_length * (x_tiles - 1)
+    y_max = y_start + (1 - overlap) * y_length * (y_tiles - 1)
+    z_max = z_start + (1 - overlap) * z_length * (z_tiles - 1)
+    theta_max = theta_start + (1 - overlap) * theta_length * (theta_tiles - 1)
+    f_max = f_start + (1 - overlap) * f_length * (f_tiles - 1)
 
     # check extrema
     assert tiles[0, 0] == x_start
@@ -213,19 +201,19 @@ class UpdateTableTestCase(unittest.TestCase):
     def test_update_table_1(self):
         pos = np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [11, 12, 13, 14, 15]])
 
-        update_table(table=self.table, pos=pos, append=False)
+        update_table(table=self.table, pos=pos, axes=["X", "Y", "Z", "THETA", "F"], append=False)
 
         np.testing.assert_array_equal(self.table.model.df["X"], pos[:, 0])
         np.testing.assert_array_equal(self.table.model.df["Y"], pos[:, 1])
         np.testing.assert_array_equal(self.table.model.df["Z"], pos[:, 2])
-        np.testing.assert_array_equal(self.table.model.df["R"], pos[:, 3])
+        np.testing.assert_array_equal(self.table.model.df["THETA"], pos[:, 3])
         np.testing.assert_array_equal(self.table.model.df["F"], pos[:, 4])
         assert self.table.currentrow == 2
 
         new_positions = np.array([[16, 17, 18, 19, 20], [21, 22, 23, 24, 25]])
 
         print(self.table.model.df.shape)
-        update_table(self.table, pos=new_positions, append=True)
+        update_table(self.table, pos=new_positions, axes=["X", "Y", "Z", "THETA", "F"], append=True)
         assert self.table.currentrow == 4
         np.testing.assert_array_equal(
             self.table.model.df["X"][
@@ -246,7 +234,7 @@ class UpdateTableTestCase(unittest.TestCase):
             new_positions[:, 2],
         )
         np.testing.assert_array_equal(
-            self.table.model.df["R"][
+            self.table.model.df["THETA"][
                 3:,
             ],
             new_positions[:, 3],

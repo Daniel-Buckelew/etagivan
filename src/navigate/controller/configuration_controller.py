@@ -411,23 +411,27 @@ class ConfigurationController:
             return self.microscope_config["stage"]
         return None
 
-    @property
-    def z_stages(self):
-        """Return a list of all z stage names.
+    def get_stages_by_axis(self, axis_prefix="z"):
+        """Return a list of all stage names.
+
+        Parameters
+        ----------
+        axis_prefix : str
+            The axis prefix to get the stage names for.
 
         Returns
         -------
-        z_stages : list
-            A list of z stage names.
+        stages : list
+            A list of stage names.
         """
         if self.microscope_config is not None:
             stages = self.microscope_config["stage"]["hardware"]
             if isinstance(stages, ListProxy):
                 stages = list(stages)
-                return [stage["type"] for stage in stages if "z" in stage["axes"]]
-            elif isinstance(stages, DictProxy):
-                stages = dict(stages)
-                return [stages["type"]] if "z" in stages["axes"] else []
+            else:
+                stages = [stages]
+            return [f"{stage['type']} - {axis}" for stage in stages for axis in stage["axes"] if axis.startswith(axis_prefix)]
+        return []
 
     @property
     def number_of_channels(self):
