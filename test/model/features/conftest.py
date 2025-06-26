@@ -75,6 +75,8 @@ class RecordObj:
     def __call__(self, *args, **kwargs):
         kwargs["__test_frame_id"] = self.frame_id
         kwargs["__test_frame_id_completed"] = self.frame_id_completed
+        if self.name_list == "active_microscope.stages.keys":
+            return ["x", "y", "z", "theta", "f"]
         print("* calling", self.name_list, args, kwargs)
         self.record_list.append((self.name_list, args, kwargs))
 

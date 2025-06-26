@@ -1,36 +1,74 @@
 ======
 Lasers
 ======
-We currently support laser control via voltage signals. In the near-future, we will consider implementing
-laser control via serial communication for power control, but digital modulation will still be controlled via
-voltage signals.
+We currently support laser control via voltage signals. In the near-future, we will consider implementing laser control via serial communication for power control, but digital modulation will still be controlled via voltage signals. The ``onoff`` entry is for digital modulation. The ``power`` entry is for analog modulation.
 
 ---------------------
 
-Analog/Digital-Controlled Lasers
+Applied Scientific Instrumentation
+----------------------------------
+
+
+Tiger Controller
+~~~~~~~~~~~~~~~~~~
+
+The Tiger Controller from ASI can also be used to perform analog, digital, and mixed modulation of lasers. Digital modulation is controlled with a `TGPLC <https://asiimaging.com/docs/tiger_programmable_logic_card>`_ or `TGGALVO <https://asiimaging.com/docs/tggalvo>`_ control cards, while analog modulation is controlled with a TGGALVO control card.
+
 --------------------------------
 
-Most lasers are controlled externally via mixed analog and digital modulation.
-The ``onoff`` entry is for digital modulation. The ``power`` entry is for analog
-modulation.
+.. collapse:: Configuration File
+
+    .. code-block:: yaml
+
+      microscopes:
+        microscope_name:
+            lasers:
+               -
+                wavelength: 488
+                onoff:
+                  hardware:
+                    type: ASI
+                    axis: [2-8]
+                    min: 0.0
+                    max: 5.0
+                power:
+                  hardware:
+                    type: ASI
+                    axis: A
+                    min: 0.0
+                    max: 5.0
+               -
+                wavelength: 561
+                onoff:
+                  hardware:
+                    type: ASI
+                    axis: [2-8]
+                    min: 0.0
+                    max: 5.0
+                power:
+                  hardware:
+                    type: ASI
+                    axis: B
+                    min: 0.0
+                    max: 5.0
+
+
+-------------------
+
+
+National Instruments
+--------------------
+
+Most lasers are controlled externally via mixed analog and digital modulation. Thus, a NI data acquisition card may be used to control the laser. In general, an analog output can be used to control both the digital and analog modulation of the laser, whereas a digital output can only be used to control the digital modulation of the laser.
 
 .. note::
-    Omicron LightHUB Ultra laser launches include both Coherent- and LuxX lasers,
-    which vary according to wavelength. LuxX lasers should be operated in an ACC
-    operating mode with the analog modulation option enabled. The Coherent Obis lasers
-    should be set in the mixed modulation mode.
+    Omicron LightHUB Ultra laser launches include both Coherent- and LuxX lasers, which vary according to wavelength. LuxX lasers should be operated in an ACC operating mode with the analog modulation option enabled. The Coherent Obis lasers should be set in the mixed modulation mode.
 
 .. note::
-    Coherent Obis lasers should be set in the mixed modulation mode. It is not uncommon
-    for the slew rate from the data acquisition card to be insufficient to drive the modulation
-    of the laser if the laser is set to an analog modulation mode.
+    Coherent Obis lasers should be set in the mixed modulation mode. It is not uncommon for the slew rate from the data acquisition card to be insufficient to drive the modulation of the laser if the laser is set to an analog modulation mode.
 
 .. note::
-    Users have reported intermittent connection issues at random intervals arising
-    from USB-based communication instance with Coherent Obis controllers. Specifically,
-    these errors were observed as a conflict over COM port assignments between the
-    Coherent OBIS laser and the ASI Tiger controller. These issues are discussed in
-    depth in the :ref:`communication challenges <obis_tiger_connection>` section.
+    Users have reported intermittent connection issues at random intervals arising from USB-based communication instance with Coherent Obis controllers. Specifically, these errors were observed as a conflict over COM port assignments between the Coherent OBIS laser and the ASI Tiger controller. These issues are discussed in depth in the :ref:`communication challenges <obis_tiger_connection>` section.
 
 
 .. collapse:: Configuration File
@@ -68,11 +106,9 @@ modulation.
                     channel: PXI6733/ao1
                     min: 0.0
                     max: 5.0
-
 |
 
 -------------------
-
 
 Synthetic Lasers
 --------------------------------
@@ -113,5 +149,4 @@ Synthetic Lasers
                     channel: PXI6733/ao1
                     min: 0.0
                     max: 5.0
-
 |

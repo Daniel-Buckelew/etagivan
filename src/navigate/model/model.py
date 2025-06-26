@@ -74,7 +74,6 @@ from navigate.log_files.log_functions import log_setup
 from navigate.tools.common_dict_tools import update_stage_dict
 from navigate.tools.common_functions import load_module_from_file, VariableWithLock
 from navigate.tools.file_functions import load_yaml_file, save_yaml_file
-from navigate.model.device_startup_functions import load_devices
 from navigate.model.microscope import Microscope
 from navigate.config.config import get_navigate_path
 from navigate.model.plugins_model import PluginsModel
@@ -123,11 +122,7 @@ class Model:
         self.plugin_acquisition_modes = plugin_acquisition_modes
 
         # Devices
-        # devices_dict = load_devices(
-        #     configuration, args.synthetic_hardware, plugin_devices
-        # )
-        devices_dict = {}
-        devices_dict["__plugins__"] = plugin_devices
+        devices_dict = {"__plugins__": plugin_devices}
 
         #: dict: Dictionary of virtual microscopes.
         self.virtual_microscopes = {}
@@ -148,7 +143,6 @@ class Model:
         self.active_microscope_name = None
         self.get_active_microscope()
 
-        # Acquisition Housekeeping
         #: str: Imaging mode.
         self.imaging_mode = None
 
@@ -201,7 +195,6 @@ class Model:
         #: bool: Is the model acquiring?
         self.is_acquiring = False
 
-        # Autofocusing
         #: float: Current focus position.
         self.f_position = None
 
@@ -218,7 +211,6 @@ class Model:
         #: threading.Thread: Data thread.
         self.data_thread = None
 
-        # show image function/pipe handler
         #: multiprocessing.connection.Connection: Show image pipe.
         self.show_img_pipe = None
 
@@ -234,7 +226,6 @@ class Model:
         #: int: Frame ID.
         self.frame_id = 0
 
-        # flags
         #: bool: Inject a feature list?
         self.injected_flag = VariableWithLock(bool)  # autofocus
 
@@ -256,10 +247,9 @@ class Model:
         #: threading.Lock: Pause data ready lock.
         self.pause_data_ready_lock = threading.Lock()
 
-        #: bool: Ask to pause data thread?
+        #: bool: Submit a request to pause the data thread?
         self.ask_to_pause_data_thread = False
 
-        # data buffer for image frames
         #: int: Number of frames in the data buffer.
         self.number_of_frames = self.configuration["experiment"]["CameraParameters"][
             "databuffer_size"
@@ -270,11 +260,9 @@ class Model:
             shape=(self.number_of_frames, 5), dtype=float
         )  # x, y, z, theta, f
 
-        # Image Writer/Save functionality
         #: ImageWriter: Image writer.
         self.image_writer = None
 
-        # feature list
         #: list: add on feature in customized mode
         self.addon_feature = None
 
@@ -395,9 +383,9 @@ class Model:
         }
         # append plugin acquisition mode
         for mode in self.plugin_acquisition_modes:
-            self.acquisition_modes_feature_setting[
-                mode
-            ] = self.plugin_acquisition_modes[mode].feature_list
+            self.acquisition_modes_feature_setting[mode] = (
+                self.plugin_acquisition_modes[mode].feature_list
+            )
 
         self.load_feature_records()
 
@@ -410,6 +398,11 @@ class Model:
             Number of active pixels in the x-dimension.
         img_height : int
             Number of active pixels in the y-dimension.
+
+        Returns
+        -------
+        None
+            Completes after the data buffer is resized and reinitialized.
         """
         self.img_width = img_width
         self.img_height = img_height
@@ -435,7 +428,7 @@ class Model:
         """Get the data buffer.
 
         If the number of active pixels in x and y changes, updates the data buffer and
-        returns newly-sized buffer.
+        returns newly sized buffer.
 
         Parameters
         ----------
@@ -473,8 +466,8 @@ class Model:
 
         Returns
         -------
-        end1 : multiprocessing.Pipe
-            Connection object.
+        multiprocessing.Pipe
+            The writable end of the newly created duplex pipe.
         """
         self.release_pipe(pipe_name)
         end1, end2 = multiprocessing.Pipe()
@@ -488,6 +481,11 @@ class Model:
         ----------
         pipe_name : str
             Name of pipe to close.
+
+        Returns
+        -------
+        None
+            Always returns None.
         """
         if hasattr(self, pipe_name):
             pipe = getattr(self, pipe_name)
@@ -523,7 +521,7 @@ class Model:
 
     def run_command(
         self, command: str, *args: List[Union[str, int]], **kwargs: Dict[str, Any]
-    ):
+    ) -> None:
         """Receives commands from the controller.
 
         Parameters
@@ -534,6 +532,11 @@ class Model:
             List of arguments to pass to the command.
         **kwargs : Dict[str, Any]
             Dictionary of keyword arguments to pass to the command.
+
+        Returns
+        -------
+        None
+            This method always returns None.
         """
         logging.info(f"Received command: {command}, {args}, {kwargs}")
         if not self.data_buffer:
@@ -558,11 +561,13 @@ class Model:
             r = self.prepare_acquisition()
             if not r:
                 self.show_img_pipe.send("stop")
-                self.event_queue.put((
-                    "warning", 
-                    "Acquisition aborted because of camera ROI setting failed.\n"
-                    "Please do not use center ROI for the Ximea Camera."
-                    ))
+                self.event_queue.put(
+                    (
+                        "warning",
+                        "Acquisition aborted because of camera ROI setting failed.\n"
+                        "Please do not use center ROI for the Ximea Camera.",
+                    )
+                )
                 return
 
             # load features
@@ -725,8 +730,16 @@ class Model:
             coefficients = self.active_microscope.mirror.set_from_wcs_file(path=args[0])
             self.update_mirror(coef=coefficients)
         elif command == "tony_wilson":
-            tony_wilson = TonyWilson(self)
-            tony_wilson.run(*args)
+            # tony_wilson = TonyWilson(self)
+            # tony_wilson.run(*args)
+            self.configuration["experiment"]["MicroscopeState"][
+                "image_mode"
+            ] = "customized"
+            self.addon_feature = [
+                    {"name": PrepareNextChannel},
+                    {"name": TonyWilson}
+                ]
+            self.run_command("acquire")            
 
         elif command == "load_feature":
             """
@@ -907,7 +920,15 @@ class Model:
     ) -> None:
         """Run the data process.
 
-        This function is the structure of data thread.
+        This function is the structure of the data thread.
+
+        So long as the acquisition is not stopped, it will keep acquiring frames. If
+        it expects a frame, but does not receive one, it will wait for a certain number
+        of iterations before aborting the acquisition. If it receives a frame,
+        it will count it, send it to the controller for display, and run the data_func
+        function on the acquired data. If the data_func is not provided, it will
+        simply display the image. If the number of frames to acquire is specified, it
+        will stop acquiring frames when the specified number is reached.
 
         Parameters
         ----------
@@ -915,11 +936,15 @@ class Model:
             Number of frames to acquire. Default is 0.
         data_func : Optional[callable]
             Function to run on the acquired data. Default is None.
+        Returns
+        -------
+        None
+            Terminates when acquisition ends or errors occur.
         """
         wait_num = self.camera_wait_iterations
         acquired_frame_num = 0
 
-        # whether acquire specific number of frames.
+        # whether acquire a specific number of frames.
         count_frame = num_of_frames > 0
 
         while not self.stop_acquisition:
@@ -976,7 +1001,7 @@ class Model:
         self.logger.info("Data thread stopped.")
         self.logger.info(f"Received frames in total: {acquired_frame_num}")
 
-        # release the lock when data thread ends
+        # release the lock when the data thread ends
         if self.pause_data_ready_lock.locked():
             self.pause_data_ready_lock.release()
 
@@ -986,6 +1011,11 @@ class Model:
         """Pause the data thread.
 
         Function is called when user pauses the acquisition.
+
+        Returns
+        -------
+        None
+            Execution pauses until resume_data_thread() is called.
         """
 
         self.pause_data_ready_lock.acquire()
@@ -995,7 +1025,12 @@ class Model:
     def resume_data_thread(self) -> None:
         """Resume the data thread.
 
-        Function is called when user resumes the acquisition.
+        Function is called when the user resumes the acquisition.
+
+        Returns
+        -------
+        None
+            Execution continues after pause.
         """
 
         self.ask_to_pause_data_thread = False
@@ -1019,6 +1054,11 @@ class Model:
             The pipe for delivering images to the Controller.
         data_func : callable
             Function to run on the acquired data.
+
+        Returns
+        -------
+        None
+            Terminates when acquisition stops.
         """
 
         acquired_frame_num = 0
@@ -1035,7 +1075,7 @@ class Model:
             if not frame_ids:
                 continue
 
-            # Leave it here for now to work with current ImageWriter workflow
+            # Leave it here for now to work with the current ImageWriter workflow
             # Will move it feature container later
             if data_func:
                 data_func(frame_ids)
@@ -1055,9 +1095,9 @@ class Model:
     def prepare_acquisition(self, turn_off_flags: bool = True) -> bool:
         """Prepare the acquisition.
 
-        This function is called when user starts the acquisition.
-        Sets flags. Calculates all the waveforms. Sets the Camera Sensor Mode
-        Initializes the data buffer and starts camera. Opens Shutters
+        This function is called when the user starts the acquisition, sets flags,
+        calculates all the waveforms, sets the Camera Sensor Mode, initializes the
+        data buffer and starts the cameras, and opens Shutters.
 
         Parameters
         ----------
@@ -1090,7 +1130,7 @@ class Model:
         waveform_dict = self.active_microscope.prepare_acquisition()
         if waveform_dict is None:
             return False
-        
+
         self.event_queue.put(("waveform", waveform_dict))
 
         self.frame_id = 0
@@ -1102,6 +1142,11 @@ class Model:
         Can be used in acquisitions where changing waveforms are required,
         but there is additional overhead due to the need to write the
         waveforms into the buffers of the DAQ cards.
+
+        Returns
+        -------
+        None
+            Completes after the image is captured and buffered.
         """
         if hasattr(self, "signal_container"):
             self.signal_container.run()
@@ -1149,6 +1194,11 @@ class Model:
 
         Recalculates the waveforms for each image, thereby allowing people to adjust
         acquisition parameters in real-time.
+
+        Returns
+        -------
+        None
+            Terminates when live acquisition is stopped.
         """
         self.stop_acquisition = False
         while not self.stop_acquisition and not self.stop_send_signal:
@@ -1163,7 +1213,13 @@ class Model:
         self.get_stage_position()
 
     def run_acquisition(self) -> None:
-        """Run acquisition along with a feature list one time."""
+        """Run acquisition along with a feature list one time.
+
+        Returns
+        -------
+        None
+            Completes after acquisition pass ends.
+        """
         if not hasattr(self, "signal_container"):
             self.snap_image()
             return
@@ -1475,14 +1531,14 @@ class Model:
             self.virtual_microscopes[microscope_name].terminate()
 
     def load_feature_list_from_file(self, filename: str, features: list[str]) -> None:
-        """Append feature list from file
+        """Append feature list from the file
 
         Parameters
         ----------
         filename: str
             filename of the feature list.
         features: list[str]
-            list of feature names to load from file.
+            list of feature names to load from the file.
         """
         module = load_module_from_file(filename[filename.rindex("/") + 1 :], filename)
         for name in features:
@@ -1514,7 +1570,7 @@ class Model:
         feature_records = load_yaml_file(f"{feature_lists_path}/__sequence.yml")
         if feature_records is None:
             feature_records = []
-        # add non added feature lists
+        # add non-added feature lists
         feature_list_files = [
             temp
             for temp in os.listdir(feature_lists_path)
@@ -1576,7 +1632,7 @@ class Model:
         Parameters
         ----------
         idx: int
-            index of feature list
+            index of the feature list
 
         Returns
         -------

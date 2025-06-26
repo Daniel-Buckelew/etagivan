@@ -109,7 +109,6 @@ filter_wheel_hardware_widgets = {
 daq_device_types = {
     "National Instruments": "NI",
     "Virtual Device": "Synthetic",
-    "Applied Scientific Instrumentation": "ASI"
 }
 
 daq_hardware_widgets = {
@@ -161,8 +160,8 @@ shutter_device_types = {
 shutter_hardware_widgets = {
     "type": ["Device Type", "Combobox", "string", shutter_device_types, None],
     "channel": ["NI Channel", "Input", "string", None, "Example: PXI6259/port0/line0"],
-    "port": ["COM Port", "Input", "string", None, "e.g., COM3"],
-    "axis": ["Shutter Axis", "Input", "string", None, "e.g., A, B, C"],
+    "port": ["COM Port", "Input", "string", None, "Example: COM3"],
+    "axis": ["Shutter Axis", "Input", "string", None, "Example: 1"],
     "min": ["Minimum Voltage", "Spinbox", "float", None, "Example: 0"],
     "max": ["Maximum Voltage", "Spinbox", "float", None, "Example: 5"],
     "frame_config": {"ref": "hardware"},
@@ -436,12 +435,14 @@ stage_constants_widgets = {
 remote_focus_device_types = {
     "Equipment Solutions": ("EquipmentSolutions", "equipment_solutions"),
     "Analog Device": ("NI", "ni"),
+    "ASI Device": ("ASI", "asi"),
     "Virtual Device": ("Synthetic", "synthetic"),
 }
 
 remote_focus_hardware_widgets = {
     "type": ["Device Type", "Combobox", "string", remote_focus_device_types, None],
     "channel": ["DAQ Channel", "Input", "string", None, "Example: PXI6259/ao3"],
+    "axis": ["Device Type", "Input", "string", None, "Example: A"],
     "min": [
         "Minimum Voltage",
         "Spinbox",
@@ -573,12 +574,13 @@ mirror_hardware_widgets = {
     "n_modes": ["Number of Modes", "Input", "int", None, "Example: 32", 32],
 }
 
-laser_device_types = {"Analog Device": ("NI", "ni"), "Virtual Device": ("Synthetic", "synthetic")}
+laser_device_types = {"Analog Device": ("NI", "ni"), "ASI Laser": ("ASI", "asi"), "Virtual Device": ("Synthetic", "synthetic")}
 
 laser_hardware_widgets = {
     "wavelength": ["Wavelength", "Input", "int", None, "Example: 488", 488],
     "onoff": ["On/Off Setting", "Label", None, None, None],
     "onoff/hardware/type": ["Type", "Combobox", "string", laser_device_types, None],
+    "onoff/hardware/axis": ["Digital Axis", "Input", "string", None, "Example: 2"],
     "onoff/hardware/channel": [
         "DAQ Channel",
         "Input",
@@ -602,6 +604,7 @@ laser_hardware_widgets = {
     ],
     "power": ["Power Setting", "Label", None, None, None],
     "power/hardware/type": ["Type", "Combobox", "string", laser_device_types, None],
+    "power/hardware/axis": ["Analog Axis", "Input", "string", None, "Example: B"],
     "power/hardware/channel": [
         "DAQ Channel",
         "Input",

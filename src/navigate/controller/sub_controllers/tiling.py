@@ -133,10 +133,19 @@ class TilingWizardController(GUIController):
         self.cam_settings_widgets["FOV_Y"].get_variable().trace_add(
             "write", lambda *args: self.update_fov("x")
         )
-        self.stack_acq_widgets["abs_z_start"].get_variable().trace_add(
+        # primary z/f
+        self.primary_z_axis = self.stack_acq_widgets["z_device"].get().split(" - ")[1]
+        self.primary_f_axis = self.stack_acq_widgets["f_device"].get().split(" - ")[1]
+        self.stack_acq_widgets["z_device"].get_variable().trace_add(
+            "write", lambda *args: self.update_fov("z_device")
+        )
+        self.stack_acq_widgets["f_device"].get_variable().trace_add(
+            "write", lambda *args: self.update_fov("f_device")
+        )
+        self.stack_acq_widgets["start_position"].get_variable().trace_add(
             "write", lambda *args: self.update_fov("z")
         )
-        self.stack_acq_widgets["abs_z_end"].get_variable().trace_add(
+        self.stack_acq_widgets["end_position"].get_variable().trace_add(
             "write", lambda *args: self.update_fov("z")
         )
         self.stack_acq_widgets["start_focus"].get_variable().trace_add(
@@ -157,12 +166,6 @@ class TilingWizardController(GUIController):
             # Bind FOV changes
             self.variables[f"{axis}_fov"].trace_add(
                 "write", lambda *args, axis=axis: self.calculate_tiles(axis)
-            )
-            self.variables[f"{axis}_start"].trace_add(
-                "write", lambda *args, axis=axis: self.update_fov(axis)
-            )
-            self.variables[f"{axis}_end"].trace_add(
-                "write", lambda *args, axis=axis: self.update_fov(axis)
             )
 
             # Calculating Number of Tiles traces
@@ -248,45 +251,7 @@ class TilingWizardController(GUIController):
         pandas dataframe which is then set as the new table data.
         The table is then redrawn.
         """
-        if False in self.is_validated.values():
-            messagebox.showwarning(
-                title="Navigate",
-                message="Can't calculate positions, "
-                "please make sure all FOV Dists are correct!",
-            )
-            return
 
-        x_start = float(self.variables["x_start"].get())
-        x_stop = float(self.variables["x_end"].get())
-        x_tiles = int(self.variables["x_tiles"].get())
-
-        y_start = float(self.variables["y_start"].get())
-        y_stop = float(self.variables["y_end"].get())
-        y_tiles = int(self.variables["y_tiles"].get())
-
-        # shift z by coordinate origin of local z-stack
-        z_start = float(self.variables["z_start"].get()) - float(
-            self.stack_acq_widgets["start_position"].get()
-        )
-        z_stop = float(self.variables["z_end"].get()) - float(
-            self.stack_acq_widgets["end_position"].get()
-        )
-        z_tiles = int(self.variables["z_tiles"].get())
-
-        # Default to fixed theta
-        r_start = float(self.stage_position_vars["theta"].get())
-        r_stop = float(self.stage_position_vars["theta"].get())
-        r_tiles = 1
-
-        f_start = float(self.variables["f_start"].get()) - float(
-            self.stack_acq_widgets["start_focus"].get()
-        )
-        f_stop = float(self.variables["f_end"].get()) - float(
-            self.stack_acq_widgets["end_focus"].get()
-        )
-        f_tiles = int(self.variables["f_tiles"].get())
-
-        # for consistency, always go from low to high
         def sort_vars(a, b):
             """Sort two variables from low to high
 
@@ -305,38 +270,54 @@ class TilingWizardController(GUIController):
             if a > b:
                 return b, a
             return a, b
+    
+        if False in self.is_validated.values():
+            messagebox.showwarning(
+                title="Navigate",
+                message="Can't calculate positions, "
+                "please make sure all FOV Dists are correct!",
+            )
+            return
+        
+        tiling_setting = {}
+        for axis in self._axes:
+            start_pos = float(self.variables[f"{axis}_start"].get())
+            stop_pos = float(self.variables[f"{axis}_end"].get())
+            tiles = int(self.variables[f"{axis}_tiles"].get())
+            fov = float(self.variables[f"{axis}_fov"].get())
 
-        x_start, x_stop = sort_vars(x_start, x_stop)
-        y_start, y_stop = sort_vars(y_start, y_stop)
-        z_start, z_stop = sort_vars(z_start, z_stop)
-        r_start, r_stop = sort_vars(r_start, r_stop)
-        f_start, f_stop = sort_vars(f_start, f_stop)
+            if axis == self.primary_z_axis:
+                start_pos -= float(
+                    self.stack_acq_widgets["start_position"].get()
+                )
+                stop_pos -= float(
+                    self.stack_acq_widgets["end_position"].get()
+                )
+            elif axis == self.primary_f_axis:
+                start_pos -= float(
+                    self.stack_acq_widgets["start_focus"].get()
+                )
+                stop_pos -= float(
+                    self.stack_acq_widgets["end_focus"].get()
+                )
+
+            start_pos, stop_pos = sort_vars(start_pos, stop_pos)
+            tiling_setting[f"{axis}_start"] = start_pos
+            # tiling_setting[f"{axis}_stop"] = stop_pos
+            tiling_setting[f"{axis}_tiles"] = tiles
+            tiling_setting[f"{axis}_length"] = fov
+
+        tiling_setting["theta_start"] = float(self.stage_position_vars["theta"].get())
+        tiling_setting["theta_tiles"] = 1
+        tiling_setting["theta_length"] = 0
 
         overlap = float(self._percent_overlap) / 100
-        table_values = compute_tiles_from_bounding_box(
-            x_start=x_start,
-            x_tiles=x_tiles,
-            x_length=float(self.variables["x_fov"].get()),
-            x_overlap=overlap,
-            y_start=y_start,
-            y_tiles=y_tiles,
-            y_length=float(self.variables["y_fov"].get()),
-            y_overlap=overlap,
-            z_start=z_start,
-            z_tiles=z_tiles,
-            z_length=float(self.variables["z_fov"].get()),
-            z_overlap=overlap,
-            theta_start=r_start,
-            theta_tiles=r_tiles,
-            theta_length=0,
-            theta_overlap=overlap,
-            f_start=f_start,
-            f_tiles=f_tiles,
-            f_length=float(self.variables["f_fov"].get()),
-            f_overlap=overlap,
+        columns, table_values = compute_tiles_from_bounding_box(
+            overlap=overlap,
+            **tiling_setting
         )
 
-        update_table(self.multipoint_table, table_values)
+        update_table(self.multipoint_table, table_values, columns)
 
         # If we have additional axes, create self.d{axis} for each
         # additional axis, to ensure we keep track of the step size
@@ -498,11 +479,28 @@ class TilingWizardController(GUIController):
         """
 
         if axis is None:
-            axis = self._axes
+            axes = self._axes
         elif isinstance(axis, str):
-            axis = [axis]
+            if axis == "z_device":
+                # get the new primary z axis
+                primary_z = self.stack_acq_widgets["z_device"].get().split(" - ")[1]
+                if self.primary_z_axis != primary_z:
+                    self.variables[f"{primary_z}_fov"].set(self.variables[f"{self.primary_z_axis}_fov"].get())
+                    self.variables[f"{self.primary_z_axis}_fov"].set(0)
+                    self.primary_z_axis = primary_z
+                return
+            elif axis == "f_device":
+                # get the new primary f axis
+                primary_f = self.stack_acq_widgets["f_device"].get().split(" - ")[1]
+                if self.primary_f_axis != primary_f:
+                    self.variables[f"{primary_f}_fov"].set(self.variables[f"{self.primary_f_axis}_fov"].get())
+                    self.variables[f"{self.primary_f_axis}_fov"].set(0)
+                    self.primary_f_axis = primary_f
+                return
+            else:
+                axes = [axis]
 
-        for ax in axis:
+        for ax in axes:
             try:
                 # Calculate signed fov
                 if ax == "y":
@@ -510,27 +508,31 @@ class TilingWizardController(GUIController):
                         float(self.variables["x_end"].get())
                         - float(self.variables["x_start"].get())
                     )
+                    axis = "y"
                 elif ax == "x":
                     x = float(self.cam_settings_widgets["FOV_Y"].get()) * sign(
                         float(self.variables["y_end"].get())
                         - float(self.variables["y_start"].get())
                     )
+                    axis = "x"
                 elif ax == "z":
                     z = float(self.stack_acq_widgets["end_position"].get()) - float(
                         self.stack_acq_widgets["start_position"].get()
                     )
+                    axis = self.primary_z_axis
                 elif ax == "f":
                     f = float(self.stack_acq_widgets["end_focus"].get()) - float(
                         self.stack_acq_widgets["start_focus"].get()
                     )
+                    axis = self.primary_f_axis
 
                 # for ax in self._axes:
                 # self._fov[ax] = locals().get(ax)
-                self.variables[f"{ax}_fov"].set(
+                self.variables[f"{axis}_fov"].set(
                     abs(locals().get(ax))
                 )  # abs(self._fov[ax]))
 
-                self.calculate_tiles(ax)
+                self.calculate_tiles(axis)
             except (TypeError, ValueError) as e:
                 logger.debug(
                     f"Controller - Tiling Wizard - Caught ValueError: {e}. "
