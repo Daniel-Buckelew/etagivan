@@ -112,6 +112,34 @@ Optotune Focus Tunable Lens
 
 ------------------
 
+ASI
+---
+
+The ASI Tiger Controller has a few limitations for the analog signals. First, the 
+minimum voltage must be zero volts. Second, the period value needs to be a whole number.
+
+There are two analog waveforms offered, triangle and ramp waves. The triangle waveform is 
+a periodic analog waveform, with no delay periods. The sawtooth waveform is a periodic 
+analog waveform with a delay period between each cycle. 
+
+.. collapse:: Configuration File
+
+    .. code-block:: yaml
+
+      microscopes: 
+        microscope_name:
+          remote_focus_device:
+            hardware: 
+              type: ASI
+              axis: A
+              min: 0
+              max: 5
+              port: COM2
+              baudrate: 9600
+|
+
+------------------
+
 Synthetic Remote Focus Device
 -----------------------------
 If no remote focus device is present, one must configure the software to use a synthetic
