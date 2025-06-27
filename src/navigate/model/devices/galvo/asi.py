@@ -84,45 +84,7 @@ class ASIGalvo(GalvoBase , SerialDevice):
         #: int: Galvo ID.
         self.galvo_id = device_id
 
-        #: str: Name of the NI port for galvo control.
-        self.trigger_source = configuration["configuration"]["microscopes"][
-            microscope_name
-        ]["daq"]["trigger_source"]
-
-        #: str: Name of the galvo.
-        self.galvo_name = "Galvo " + str(device_id)
-
-        #: dict: Dictionary of device connections.
-        self.device_config = configuration["configuration"]["microscopes"][
-            microscope_name
-        ]["galvo"][device_id]
-
-        #: int: Sample rate.
-        self.sample_rate = configuration["configuration"]["microscopes"][
-            microscope_name
-        ]["daq"]["sample_rate"]
-
-        #: float: Sweep time.
-        self.sweep_time = 0
-
-        #: float: Camera delay
-        self.camera_delay = (
-            configuration["configuration"]["microscopes"][microscope_name]["camera"][
-                "delay"
-            ]
-            / 1000
-        )
-
-        #: float: Galvo max voltage.
-        self.galvo_max_voltage = self.device_config["hardware"]["max"]
-
-        #: float: Galvo min voltage.
-        self.galvo_min_voltage = self.device_config["hardware"]["min"]
-
-        # Galvo Waveform Information
-        #: str: Galvo waveform. Waveform or Sawtooth.
-        self.galvo_waveform = self.device_config.get("waveform", "sawtooth")
-
+        #: str: Galvo Axis
         self.axis = self.device_config["hardware"]["axis"]#.get("axis","B")
         logger.debug(f'galvo axis: {self.axis}')
 

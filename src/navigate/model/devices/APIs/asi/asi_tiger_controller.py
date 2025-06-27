@@ -955,7 +955,6 @@ class TigerController:
         delay_time : int
             Delay time in quarter milliseconds
         """
-
         commands = [
             "CCA X=0",
             "M E=2",
@@ -993,7 +992,6 @@ class TigerController:
         axis : str
             The axis of the logic card
         """
-
         axis = int(axis) + 32
         self.send_command(f"6 M E = {axis}\r")
         self.read_response()
@@ -1031,8 +1029,6 @@ class TigerController:
         offset: int
             sets the center position of the waveform
         """
-
-        # TODO: Verify if this is for synchronous or asynchronous
         self.send_command(f"SAP {axis}={waveform}")
         self.read_response()
         self.send_command(f"SAA {axis}={amplitude}")
@@ -1056,6 +1052,5 @@ class TigerController:
         mode: int
             Integer code.
         """
-
         self.send_command(f"SAM {axis}={mode}")
         self.read_response()
