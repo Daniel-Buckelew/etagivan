@@ -536,7 +536,7 @@ def start_daq(configuration: Dict[str, Any], device_type: str = "NI") -> DAQBase
         from navigate.model.devices.daq.ni import NIDAQ
 
         return NIDAQ(configuration)
-    
+
     elif device_type.lower().startswith("synthetic"):
         from navigate.model.devices.daq.synthetic import SyntheticDAQ
 

@@ -468,7 +468,7 @@ remote_focus_hardware_widgets = {
     "frame_config": {"ref": "hardware"},
 }
 
-galvo_device_types = {"Analog Device": ("NI", "ni"), "Virtual Device": ("Synthetic", "synthetic")}
+galvo_device_types = {"Analog Device": ("NI", "ni"), "ASI Device": ("ASI", "asi"), "Virtual Device": ("Synthetic", "synthetic")}
 
 waveform_types = {
     "Sine": "sine",
@@ -485,6 +485,7 @@ galvo_hardware_widgets = {
         None,
         "*Analog Device only. Example: PXI6259/ao1",
     ],
+    "hardware/axis": ["Axis", "Input", "string", None, "Example: A"],
     "hardware/min": [
         "Minimum Voltage",
         "Spinbox",

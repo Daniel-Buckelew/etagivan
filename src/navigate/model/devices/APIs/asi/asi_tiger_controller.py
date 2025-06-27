@@ -534,7 +534,7 @@ class TigerController:
         response = self.read_response()
         return float(response.split(" ")[1]) / 10.0
 
-    def get_position(self, axes) -> dict:
+    def get_position(self, axes: list[str]) -> dict:
         """Return current stage position in ASI units.
 
         If default axes sequence has gotten from the ASI device,
@@ -667,7 +667,7 @@ class TigerController:
         """
         if self.default_axes_sequence is None:
             logger.error(
-                f"{str(self)}, Default axes sequence is not set. " f"Cannot set speed."
+                f"{str(self)}, Default axes sequence is not set. Cannot set speed."
             )
             raise ASIException(
                 "Unable to query system for axis sequence. Cannot set speed."
@@ -862,15 +862,14 @@ class TigerController:
         # print(f"Sent Command: {command.decode(encoding='ascii')}")
 
     def select_filter_wheel(self, filter_wheel_number: int = 0) -> None:
-        """Select the filter wheel, e.g., 0, 1...
+        """
+        Select the filter wheel, e.g., 0, 1...
 
-        Sets the current filter wheel for later commands. Prompt shows the currently
-        selected wheel, e.g., 0> is a result of FW 0 command. If the selected wheel is
+        Sets the current filter wheel for subsequent commands. Prompt shows currently
+        selected wheel, e.g., 0> is result of FW 0 command. If the selected wheel is
         HOMED and ready to go, the FW command returns the selected wheel as normal. If
         the wheel is not ready for any reason, the response ERR is returned. Example:
 
-        Notes
-        ----------
         0> FW 1 1 Normal – switch to FW 1
         1> FW 0 ERR FW 0 not ready
         0> Although FW 0 not ready – can still change FW 0 parameters.
@@ -878,7 +877,7 @@ class TigerController:
         Parameters
         ----------
         filter_wheel_number : int
-            The filter-wheel number to select.
+            The filter wheel number to select.
         """
         self.send_filter_wheel_command(f"FW {filter_wheel_number}")
         self.read_response()
@@ -900,13 +899,13 @@ class TigerController:
     def move_filter_wheel_to_home(self) -> None:
         """Move the Filter Wheel to Home Position
 
-        Causes the current wheel to seek its home position.
+        Causes current wheel to seek its home position.
         """
         self.send_filter_wheel_command("HO")
         self.read_response()
 
     def change_filter_wheel_speed(self, speed: int = 0) -> None:
-        """Change the Filter-Wheel Speed
+        """Change the Filter Wheel Speed
 
         Selects a consistent set of preset acceleration and speed parameters.
         Supported in version 2.4 and later.
@@ -914,14 +913,16 @@ class TigerController:
         Parameters
         ----------
         speed : int
-            Speed of the filter wheel. The speed is a preset value that can be set
-            between 0 and 9, where 0 is the default speed, 1 is the slowest but
-            smoothest switching speed, and 9 is the fastest yet least reliable speed.
+            Speed of the filter wheel. The speed can be set to one of the following values:
+        - 0: Default - directly set and saved AU, AD, and VR parameters are used.
+        - 1: Slowest and smoothest switching speed.
+        - 2 to 8: Intermediate switching speeds.
+        - 9: Fastest but least reliable switching speed.
         """
         self.send_filter_wheel_command(f"SV {speed}")
         self.read_response()
 
-    def halt_filter_wheel(self) -> None:
+    def halt_filter_wheel(self):
         """Halt filter wheel"""
         self.send_filter_wheel_command("HA")
         self.read_response()
@@ -945,6 +946,8 @@ class TigerController:
     def square_wave(self, on_time: int, delay_time: int) -> None:
         """Square wave modulation.
 
+        For testing only.
+
         Parameters
         ----------
         on_time : int
@@ -952,7 +955,6 @@ class TigerController:
         delay_time : int
             Delay time in quarter milliseconds
         """
-
         commands = [
             "CCA X=0",
             "M E=2",
@@ -990,7 +992,6 @@ class TigerController:
         axis : str
             The axis of the logic card
         """
-
         axis = int(axis) + 32
         self.send_command(f"6 M E = {axis}\r")
         self.read_response()
@@ -1006,57 +1007,36 @@ class TigerController:
             The axis of the logic card
         """
         axis = int(axis) + 32
-        self.send_command(f'6 M E = {axis}\r')
+        self.send_command(f"6 M E = {axis}\r")
         self.read_response()
-        self.send_command(f'6 CCA Z=0\r')
-        self.read_response()
-        
-    def logic_cell_on(self, axis : str):
-        self.send_command(f'M E = {axis}\r')
-        self.read_response()
-        self.send_command(f'CCA Z=1\r')
+        self.send_command(f"6 CCA Z=0\r")
         self.read_response()
 
-    def logic_cell_off(self, axis :str):
-        self.send_command(f'M E = {axis}\r')
-        self.read_response()
-        self.send_command(f'CCA Z=0\r')
-        self.read_response()
-
-    def SA_waveform(self, axis:str, waveform=0, amplitude=1000, offset=500, frequency=1000):
+    def SA_waveform(
+        self, axis: str, waveform: int = 0, amplitude: int = 1000, offset: int = 500
+    ) -> None:
         """Programs the analog waveforms using SAA, SAO, and SAP
         Default waveform is a sawtooth waveform with an amplitude of 1V with an offset of 0.5V
 
         Parameters
         ----------
         axis: str
-            Tiger Controller axis
-        waveform: 
+            Laser axis
+        waveform: int
             Type of waveform pattern according to https://asiimaging.com/docs/commands/sap
-        amplitude:
-            amplitude of the waveform in mV
-        offset:
-            sets the center position of the waveform in mV
-        frequency:
-            sets the period of the waveform in milliseconds       
+        amplitude: int
+            amplitude of the waveform
+        offset: int
+            sets the center position of the waveform
         """
-
-        "Verify if this is for synchronous or asynchronous"
-        print(f"Period (ms): {frequency}")
-        if (waveform % 128 == 3):
-            offset = .5*(offset+amplitude)
-        amplitude = amplitude*2            
-
-        self.send_command(f"3 SAP {axis}={waveform}")
+        self.send_command(f"SAP {axis}={waveform}")
         self.read_response()
-        self.send_command(f"3 SAA {axis}={amplitude}")
+        self.send_command(f"SAA {axis}={amplitude}")
         self.read_response()
-        self.send_command(f"3 SAO {axis}={offset}")
-        self.read_response()
-        self.send_command(f"3 SAF {axis}={frequency}")
+        self.send_command(f"SAO {axis}={offset}")
         self.read_response()
 
-    def SAM(self, axis: str, mode: int):
+    def SAM(self, axis: str, mode: int) -> None:
         """Sets the single-axis mode according to the integer code.
 
         0: stops waveforms if they are running
@@ -1069,10 +1049,236 @@ class TigerController:
         ----------
         axis: str
             Laser axis
-        mode: 
-            Integer code     
+        mode: int
+            Integer code.
         """
-
-        self.send_command(f"3 SAM {axis}={mode}")
+        self.send_command(f"SAM {axis}={mode}")
         self.read_response()
 
+    def setup_control_loop(self,delays,camera_delay,rfvc_delay,sweep_time : float, analog_outputs : dict): # delay (ms), sweep_time (ms)
+    # def setup_control_loop(self, analog_outputs: dict):
+        """
+        Sets up the control loop
+        
+        Arguments: self, waveform type dict (axis, waveform)
+
+        If/Else statements: send the right loop
+        
+        """
+        # channels = analog_outputs.keys()
+        TTLs = {'A': 42, 'B': 44, 'C': 46}
+        # if channels:
+        start_delay = int(delays[0]*4) #- int(round(period))
+        if len(delays) > 1:
+            galvo2_delay = int((delays[0] - delays[1])*4) 
+            galvo1_axis = analog_outputs["galvo 0"]
+            galvo2_axis = analog_outputs["galvo 1"]
+        elif len(delays) == 1:
+            galvo1_axis = analog_outputs["galvo 0"]
+            galvo2_delay = 0
+        else:
+            galvo2_delay = 0
+        rfvc_axis = analog_outputs["remote_focus"]       
+
+
+
+        sweep_time = int(sweep_time*4) - 2
+
+        if rfvc_delay > camera_delay + 2:
+            camera_output = 6
+            rfvc_output = 12
+            start_delay += int((camera_delay + 2) * 4)
+            difference_delay = int((rfvc_delay - (camera_delay + 2)) * 4)
+        elif rfvc_delay < camera_delay + 2:
+            camera_output = 12
+            rfvc_output = 6
+            start_delay += int((rfvc_delay) * 4)
+            difference_delay = int(((camera_delay + 2) - rfvc_delay) * 4)
+        elif rfvc_delay == camera_delay + 2:
+            camera_output = 6
+            rfvc_output = 6
+            start_delay += int((camera_delay + 2) * 4)
+            difference_delay = int((rfvc_delay - (camera_delay + 2)) * 4)
+
+
+        print(f"Delays: {delays}, RFVC Delay: {rfvc_delay}, Camera Delay: {camera_delay}")
+
+        print(f"Camera: {camera_output}, RFVC: {rfvc_output}")
+        
+        print(f'Sweep Time Cycles: {sweep_time}')
+        print(f"Start Delay: {start_delay}, Difference Delay: {difference_delay}")
+        print(f"Galvo2_delay: {galvo2_delay}")
+
+        commands = [
+            '6 CCA X=0',
+
+            # Set cell 2 to one shot to trigger TTL for galvo, For I am the LORD
+            '6 m e = 2',
+            '6 cca y = 8',
+            '6 cca z = 10',
+            '6 ccb x = 1',
+            '6 ccb y = 192',
+            # Set cell 3 to delay cell to give time to send serial commands, For I am the LORD
+            '6 m e = 3',
+            '6 cca y = 9',
+            f'6 cca z = {start_delay}',
+            '6 ccb x = 1',
+            '6 ccb y = 192',
+            # Set cell 4 to JK-Flop, to trigger & cell, For I am the LORD
+            '6 m e = 4',
+            '6 cca y = 13',
+            '6 ccb x = 3',
+            '6 ccb y = 8',
+            '6 ccb z = 192',
+            # Set cell 5 to & cell for loop, For I am the LORD
+            '6 m e = 5',
+            '6 cca y = 5',
+            '6 ccb x = 4',
+            '6 ccb y = 71',
+            # Set cell 6 to one-shot to trigger TTL for RFVC repeatedly and to trigger CT, For I am the LORD
+            '6 m e = 6',
+            '6 cca y = 8',
+            '6 cca z = 10',
+            '6 ccb x = 5',
+            '6 ccb y = 192',
+            # Set cell 7 to delay cell for loop, For I am the LORD
+            '6 m e = 7',
+            '6 cca y = 9',
+            f'6 cca z= {sweep_time}',
+            '6 ccb x = 6',
+            '6 ccb y = 192',
+            #Sets cell 9 to a delay cell to account for the second galvo
+            '6 m e = 9',
+            '6 cca y = 9',
+            f'6 cca z = {galvo2_delay}',
+            '6 ccb x = 2',
+            '6 ccb y = 192',
+            #Sets cell 10 to a one shot to trigger Galvo 2
+            'm e = 10',
+            'cca y = 8',
+            'cca z = 10',
+            'ccb x = 9',
+            'ccb y = 192',
+            #Sets cell 11 to a delay reading the output of cell 6
+            '6 m e = 11',
+            '6 cca y = 9',
+            f'6 cca z = {difference_delay}',
+            '6 ccb x = 6',
+            '6 ccb y = 192',
+            #Sets cell 12 to one shot to trigger camera
+            'm e = 12',
+            'cca y = 8',
+            'cca z = 10',
+            'ccb x = 11',
+            'ccb y = 192',
+            #Sets TTL2 to output from the RFVC cell in this case , For I am the LORD
+            f'6 m e = {TTLs[rfvc_axis]+1}',
+            '6 cca y = 1',
+            f'6 cca z = {rfvc_output}',
+            #Sets TTL1 to output the same thing as TTL0, For I am the LORD
+            f'6 m e = {TTLs[rfvc_axis]}',
+            '6 cca y = 1',
+            f'6 cca z = {TTLs[rfvc_axis]+1}',
+            #Sets PLC output 3 to cell 6
+            '6 m e = 33',
+            f'6 cca z = {camera_output}',
+        ]
+        # if galvos exist
+        galvo_commands = []
+        if len(delays) > 0:
+            galvo_commands = [
+            #Sets TTL4 to output for the first Galvo, For I am the LORD
+            f'6 m e = {TTLs[galvo1_axis]+1}',
+            '6 cca y = 1',
+            '6 cca z = 2',
+            #Sets TTL3 to output the same thing as TTL2
+            f'6 m e = {TTLs[galvo1_axis]}',
+            'cca y = 1',
+            f'cca z = {TTLs[galvo1_axis]+1}',
+            ]
+
+        if len(delays) > 1:
+            galvo_commands = [
+             #Sets TTL4 to output for the first Galvo, For I am the LORD
+            f'6 m e = {TTLs[galvo1_axis]+1}',
+            '6 cca y = 1',
+            '6 cca z = 2',
+            #Sets TTL3 to output the same thing as TTL2
+            f'6 m e = {TTLs[galvo1_axis]}',
+            'cca y = 1',
+            f'cca z = {TTLs[galvo1_axis]+1}',
+            #Sets TTL4 to output for the first Galvo, For I am the LORD
+            f'6 m e = {TTLs[galvo2_axis]+1}',
+            '6 cca y = 1',
+            '6 cca z = 10',
+            #Sets TTL3 to output the same thing as TTL2
+            f'6 m e = {TTLs[galvo2_axis]}',
+            'cca y = 1',
+            f'cca z = {TTLs[galvo2_axis]+1}',
+            ]
+            print(galvo_commands)
+            
+        print(analog_outputs)
+        print(f"{TTLs[galvo1_axis]+ 1}")
+        for command in commands:
+            # Send data
+            self.send_command(f'{command}\r')
+            self.read_response()
+        for command in galvo_commands:
+            self.send_command(f'{command}\r')
+            self.read_response()
+
+    def tweak_control_loop(self, delays, sweep_time):
+
+        start_delay = int(delays[0]*4) #- int(round(period))
+        if len(delays) > 1:
+            galvo2_delay = int((delays[0] - delays[1])*4) 
+        else:
+            galvo2_delay = 0
+        
+        sweep_time = int(sweep_time*4) - 2
+
+        print(f'Sweep Time Cycles: {sweep_time}')
+
+        commands = [            
+            # Set cell 3 to delay cell to give time to send serial commands, For I am the LORD
+            '6 m e = 3',
+            '6 cca y = 9'
+            f'6 cca z = {start_delay}',
+            '6 ccb x = 1',
+            '6 ccb y = 192',
+            # Set cell 7 to delay cell for loop, For I am the LORD
+            '6 m e = 7',
+            '6 cca y = 9'
+            f'6 cca z= {sweep_time}',
+            '6 ccb x = 6',
+            '6 ccb y = 192',
+            #Sets cell 9 to a delay cell to account for the second galvo
+            '6 m e = 9',
+            '6 cca y = 9'
+            f'6 cca z = {galvo2_delay}',
+            '6 ccb x = 2',
+            '6 ccb y = 192',
+        ]
+        for command in commands:
+            # Send data
+            self.send_command(f'{command}\r')
+            self.read_response()
+
+    def send_ttl_pulse(self, channel: int, pulse_width_ms: int, delay_ms: int) -> str:
+    
+        command = f"TTL X={channel} P={pulse_width_ms} D={delay_ms}"
+        self.send_command(command)
+        response = self.read_response()
+        return response
+    
+    # def trigger_acquisition(self):
+    #     commands = [
+    #         #Changes the TTL input from cell 2 to cell 6, For I am the LORD
+    #         '6 m e = 43',
+    #         '6 cca z = 6',
+    #     ]
+    #     for command in commands:
+    #         # Send data
+    #         self.send_command(f'{command}\r')
+    #         self.read_response()
