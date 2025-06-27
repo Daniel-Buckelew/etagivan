@@ -325,6 +325,8 @@ def start_device(
         Index of device in the configuration dictionary. Default is 0.
     is_synthetic : bool
         Run synthetic version of hardware. Default is False.
+    daq_connection: Optional[Any]
+        Data acquisition connection. Default is None.
     plugin_devices : Optional[Dict]
         Dictionary of plugin devices. Default is None.
 
@@ -371,10 +373,11 @@ def start_device(
     if is_synthetic or device_type.lower().startswith("synthetic"):
         device_type = "Synthetic"
     elif device_type.endswith(class_name_suffix):
-        device_type = device_type[:-len(class_name_suffix)]
+        device_type = device_type[: -len(class_name_suffix)]
 
     # device type naming rules: manufacturer(file_name).device_model
-    # if the device is currrently supported in Navigate, you can use device_model as device type.
+    # if the device is currently supported in Navigate, you can use device_model as the
+    # device type.
     if "." in device_type:
         device_manufacturer, device_type = device_type.split(".")[:2]
     elif device_type in temp_device_ref:
@@ -382,15 +385,23 @@ def start_device(
     else:
         device_manufacturer = None
 
-    if device_manufacturer is not None and importlib.util.find_spec(f"navigate.model.devices.{device_category}.{device_manufacturer}"):
+    if device_manufacturer is not None and importlib.util.find_spec(
+        f"navigate.model.devices.{device_category}.{device_manufacturer}"
+    ):
         module = importlib.import_module(
             f"navigate.model.devices.{device_category}.{device_manufacturer}"
         )
         try:
             _class = getattr(module, device_type + class_name_suffix)
         except (KeyError, AttributeError):
-            logger.error(f"There is no device class {device_type + class_name_suffix} in the file: {device_manufacturer}.py")
-            return device_not_found(microscope_name, device_category, device_type, device_id)
+            logger.error(
+                f"There is no device class {device_type + class_name_suffix} in the file: {device_manufacturer}.py"
+            )
+            return device_not_found(
+                microscope_name, device_category, device_type, device_id
+            )
+
+        # Load serial devices via the SerialDevice factory.
         if issubclass(_class, SerialDevice):
             device_connection = SerialConnectionFactory.build_connection(
                 _class.connect,
@@ -401,6 +412,8 @@ def start_device(
                 ),
                 exception=Exception,
             )
+
+        # Load integrated devices via the IntegratedDevice factory.
         elif issubclass(_class, IntegratedDevice):
             # get connection parameters
             connection_params = []
@@ -459,25 +472,31 @@ def start_device(
     elif device_category in plugin_devices:
         # device_category in ["stage", "shutter", "filter_wheel", "remote_focus", "camera", "galvo", "zoom", "laser"]
         if device_category == "stage":
-            hardware_configuration = configuration["configuration"]["microscopes"][microscope_name][
-                device_category]["hardware"][device_id]
+            hardware_configuration = configuration["configuration"]["microscopes"][
+                microscope_name
+            ][device_category]["hardware"][device_id]
         else:
-            hardware_configuration = configuration["configuration"]["microscopes"][microscope_name][
-                device_category][device_id]["hardware"]
+            hardware_configuration = configuration["configuration"]["microscopes"][
+                microscope_name
+            ][device_category][device_id]["hardware"]
         # find the device in plugins
         if device_type + class_name_suffix in plugin_devices[device_category]:
             device_type += class_name_suffix
         elif device_type not in plugin_devices[device_category]:
             device_not_found(microscope_name, device_category, device_type, device_id)
-        
+
         try:
-            
-            device_connection = plugin_devices[device_category][device_type]["load_device"](
+
+            device_connection = plugin_devices[device_category][device_type][
+                "load_device"
+            ](
                 hardware_configuration,
                 is_synthetic,
-                device_type = device_category,
+                device_type=device_category,
             )
-            start_function = plugin_devices[device_category][device_type]["start_device"]
+            start_function = plugin_devices[device_category][device_type][
+                "start_device"
+            ]
             return start_function(
                 microscope_name,
                 device_connection,
@@ -487,12 +506,14 @@ def start_device(
                 device_type=device_category,
             )
         except RuntimeError:
-            print(f"{device_category}:{device_type} can't be loaded correctly, "
-                  f"make sure you have specify SUPPORTED_DEVICE_TYPES in your plugin!")
+            print(
+                f"{device_category}:{device_type} can't be loaded correctly, "
+                f"make sure you have specify SUPPORTED_DEVICE_TYPES in your plugin!"
+            )
     device_not_found(microscope_name, device_category, device_type, device_id)
 
 
-def start_daq(configuration: Dict[str, Any], device_type: str = "NI", name: str = "name") -> DAQBase:
+def start_daq(configuration: Dict[str, Any], device_type: str = "NI") -> DAQBase:
     """Initializes the data acquisition (DAQ) class on a dedicated thread.
 
     Load daq information from the configuration file. Proper daq types include NI and
@@ -515,12 +536,6 @@ def start_daq(configuration: Dict[str, Any], device_type: str = "NI", name: str 
         from navigate.model.devices.daq.ni import NIDAQ
 
         return NIDAQ(configuration)
-    
-    elif device_type == "asi.ASI":
-        # from navigate.model.devices.daq.asi import ASIDaq
-        # name = "Microscope-0"
-        return start_device(name, configuration, "daq")
-       
 
     elif device_type.lower().startswith("synthetic"):
         from navigate.model.devices.daq.synthetic import SyntheticDAQ
@@ -600,10 +615,6 @@ def load_devices(
         ]["hardware"]["type"]
 
     if device_type not in devices_dict["daq"]:
-        print(device_type)
-        if (device_type == "asi.ASI"):
-            devices_dict["daq"][device_type] = start_daq(configuration, device_type, microscope_name)
-        else:
-            devices_dict["daq"][device_type] = start_daq(configuration, device_type)
+        devices_dict["daq"][device_type] = start_daq(configuration, device_type)
 
     return devices_dict

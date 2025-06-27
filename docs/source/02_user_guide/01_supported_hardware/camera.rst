@@ -149,9 +149,7 @@ Photometrics
 
 .. note::
 
-    **navigate** has been tested with the following versions of the Photometric's
-    drivers:
-
+    **navigate** has been tested with the following versions of the Photometric's drivers:
     - PVCAM: 3.9.13
 
 -----------------
@@ -168,6 +166,32 @@ Iris 15
             camera:
               hardware:
                 type: Photometrics
+                serial_number: 111
+                camera_connection: PMPCIECam00
+              defect_correct_mode: 2.0
+              delay: 1.0  #ms
+              settle_down: 0.1 #ms
+              flip_x: False
+              flip_y: False
+|
+
+-----------------
+
+Ximea
+--------------------------------
+
+MU196MR-ON
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. collapse:: Configuration File
+
+    .. code-block:: yaml
+
+      microscopes:
+        microscope_name:
+            camera:
+              hardware:
+                type: ximea
                 serial_number: 111
                 camera_connection: PMPCIECam00
               defect_correct_mode: 2.0

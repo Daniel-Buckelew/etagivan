@@ -53,6 +53,41 @@ file as follows:
 
 -----------
 
+ASI
+---
+
+FW-1000
+~~~~~~~
+
+The ASI `filter wheel <https://www.asiimaging
+.com/illumination-control/fw-1000-high-speed-filter-wheel/>`_ is controlled by the
+ASI Tiger Controller. Thus, you should provide the same ``comport`` entry as you did
+for the stage. A single communication instance is used for both the stage and filter wheel.
+
+.. collapse:: Configuration File
+
+    .. code-block:: yaml
+
+      microscopes:
+        microscope_name:
+          -
+            filter_wheel:
+              hardware:
+                type: ASI
+                wheel_number: 1
+                port: COM1
+                baudrate: 115200
+              filter_wheel_delay: 0.03
+              available_filters:
+                Empty-Alignment: 0
+                GFP: 1
+                RFP: 2
+                Far-Red: 3
+
+|
+
+--------------
+
 Sutter Instruments
 ------------------
 
@@ -93,41 +128,6 @@ enable control of both filter wheels independently.
 
 -------------
 
-ASI
----
-
-FW-1000
-~~~~~~~
-
-The ASI `filter wheel <https://www.asiimaging
-.com/illumination-control/fw-1000-high-speed-filter-wheel/>`_ is controlled by the
-ASI Tiger Controller. Thus, you should provide the same ``comport`` entry as you did
-for the stage. A single communication instance is used for both the stage and filter wheel.
-
-.. collapse:: Configuration File
-
-    .. code-block:: yaml
-
-      microscopes:
-        microscope_name:
-          -
-            filter_wheel:
-              hardware:
-                type: ASI
-                wheel_number: 1
-                port: COM1
-                baudrate: 115200
-              filter_wheel_delay: 0.03
-              available_filters:
-                Empty-Alignment: 0
-                GFP: 1
-                RFP: 2
-                Far-Red: 3
-
-|
-
---------------
-
 LUDL Electronic Products
 ------------------------
 
@@ -164,13 +164,10 @@ MAC6000
 
 -------------
 
-Analog/Digital Devices
-----------------------
+National Instruments
+--------------------
 
-Some manufacturers provide filter wheels that are controlled by analog or digital signals.
-Here, each digital signal corresponds to a filter position. The user must specify the
-number of filters in the filter wheel and the digital signal that corresponds to each
-filter position.
+Some manufacturers provide filter wheels that are controlled by analog or digital signals. Here, each digital signal corresponds to a filter position. The user must specify the number of filters in the filter wheel and the digital signal that corresponds to each filter position.
 
 .. collapse:: Configuration File
 

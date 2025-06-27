@@ -519,8 +519,8 @@ KST101
 
 .. _galvo_stage:
 
-Analog-Controlled Galvo/Piezo
------------------------------
+National Instruments
+--------------------
 
 We sometimes control position via a galvo or piezo with no software API.
 In this case, we treat a standard galvo mirror or piezo as a stage axis. We control the

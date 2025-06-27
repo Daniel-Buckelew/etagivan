@@ -32,7 +32,6 @@
 
 #  Standard Library Imports
 import logging
-import time
 from typing import Any, Dict
 
 
@@ -58,7 +57,7 @@ class ASIGalvo(GalvoBase , SerialDevice):
         configuration: Dict[str, Any],
         device_id: int = 0,
     ) -> None:
-        """Initialize the GalvoNI class.
+        """Initialize the GalvoASI class.
 
         Parameters
         ----------
@@ -85,47 +84,9 @@ class ASIGalvo(GalvoBase , SerialDevice):
         #: int: Galvo ID.
         self.galvo_id = device_id
 
-        #: str: Name of the NI port for galvo control.
-        self.trigger_source = configuration["configuration"]["microscopes"][
-            microscope_name
-        ]["daq"]["trigger_source"]
-
-        #: str: Name of the galvo.
-        self.galvo_name = "Galvo " + str(device_id)
-
-        #: dict: Dictionary of device connections.
-        self.device_config = configuration["configuration"]["microscopes"][
-            microscope_name
-        ]["galvo"][device_id]
-
-        #: int: Sample rate.
-        self.sample_rate = configuration["configuration"]["microscopes"][
-            microscope_name
-        ]["daq"]["sample_rate"]
-
-        #: float: Sweep time.
-        self.sweep_time = 0
-
-        #: float: Camera delay
-        self.camera_delay = (
-            configuration["configuration"]["microscopes"][microscope_name]["camera"][
-                "delay"
-            ]
-            / 1000
-        )
-
-        #: float: Galvo max voltage.
-        self.galvo_max_voltage = self.device_config["hardware"]["max"]
-
-        #: float: Galvo min voltage.
-        self.galvo_min_voltage = self.device_config["hardware"]["min"]
-
-        # Galvo Waveform Information
-        #: str: Galvo waveform. Waveform or Sawtooth.
-        self.galvo_waveform = self.device_config.get("waveform", "sawtooth")
-
+        #: str: Galvo Axis
         self.axis = self.device_config["hardware"]["axis"]#.get("axis","B")
-        print(f'galvo axis: {self.axis}')
+        logger.debug(f'galvo axis: {self.axis}')
 
     def __str__(self) -> str:
         """Return string representation of the GalvoASI."""
@@ -238,8 +199,10 @@ class ASIGalvo(GalvoBase , SerialDevice):
                     amplitude=galvo_amplitude
                     offset=galvo_offset
                     duty_cycle=galvo_rising_ramp
-
-                    if duty_cycle != 0 or duty_cycle != 50 or duty_cycle != 100:
+                    
+                    # Duty cycle must be either 0, 50, or 100
+                    # If the duty cycle is not 0, 50, or 100, it will round to the nearest value
+                    if duty_cycle not in (0, 50, 100):
                         temp = duty_cycle
                         remainder = duty_cycle % 100
                         if remainder < 25:
@@ -276,7 +239,9 @@ class ASIGalvo(GalvoBase , SerialDevice):
         duty_cycle=100
     ):
         """
-        Sends the tiger controller commands to make the sawtooth wave (actually triangle)
+        Sends the tiger controller commands to intiate the sawtooth wave.
+
+        If the duty cycle given is 50, a triangle wave will be initiated.
 
         Parameters
         ----------
@@ -290,18 +255,28 @@ class ASIGalvo(GalvoBase , SerialDevice):
             Unit - Percent 
         """
 
+        # Converts period to ms and amplitude and offset to mV
         period = int(round(period*1000))
         amplitude *= 1000
         offset *= 1000
-        #print(f'Galvo: {amplitude} {offset} {period}')
+
         if duty_cycle == 0:
+            # Negative amplitude reverses the polarity of the waveform
             amplitude = amplitude * -1
+            # Sawtooth waveform that is triggered on TTL input
             self.galvo.SA_waveform(self.axis, 128, amplitude, offset, period)
+        
         if duty_cycle == 50:
+            # Adjusts the period for a triangle waveform
             period = 2*round(period/2)
+            # Triangle waveform that is triggered on TTL input
             self.galvo.SA_waveform(self.axis, 129, amplitude, offset, period)
+        
         if duty_cycle == 100:
+            # Sawtooth waveform that is triggered on TTL input
             self.galvo.SA_waveform(self.axis, 128, amplitude, offset, period)
+        
+        # Waveform is free running after TTL input
         self.galvo.SAM(self.axis, 4)
 
     def sine_wave(
@@ -310,39 +285,27 @@ class ASIGalvo(GalvoBase , SerialDevice):
         amplitude=1.0, 
         offset=0.0
     ):
-        """Returns a numpy array with a sine waveform
-
-        Used for creating analog laser drive voltage.
+        """Sends the tiger controller commands to intiate the sine wave.
 
         Parameters
         ----------
-        sample_rate : int, optional
-            Unit - Hz, by default 100000
-        sweep_time : float, optional
-            Unit - Seconds, by default 0.4
-        frequency : int, optional
-            Unit - Hz, by default 10
-        amplitude : float, optional
-            Unit - Volts, by default 1
-        offset : float, optional
-            Unit - Volts, by default 0
-        phase : float, optional
-            Unit - Radians, by default 0
-
-        Returns
-        -------
-        waveform : np.array
-
-        Examples
-        --------
-        >>> typical_laser = sine_wave(sample_rate, sweep_time, 10, 1, 0, 0)
+        period : Float
+            Unit - Seconds
+        amplitude : Float
+            Unit - Volts
+        offset : Float
+            Unit - Volts 
 
         """
+
+        # Converts period to ms and amplitude and offset to mV
         period = int(round(period*1000))
         amplitude *= 1000
         offset *= 1000
-        print(f'Galvo: {amplitude} {offset} {period}')
+
+        # Sine wave that is triggered on TTL input
         self.galvo.SA_waveform(self.axis, 131, amplitude, offset, period)
+        # Waveform is free running after it is triggered
         self.galvo.SAM(self.axis, 4)
 
     def turn_off(self): 

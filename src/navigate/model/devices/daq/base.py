@@ -168,4 +168,3 @@ class DAQBase:
         self.sample_rate = self.configuration["configuration"]["microscopes"][
             microscope_name
         ]["daq"]["sample_rate"]
-
