@@ -435,12 +435,14 @@ stage_constants_widgets = {
 remote_focus_device_types = {
     "Equipment Solutions": ("EquipmentSolutions", "equipment_solutions"),
     "Analog Device": ("NI", "ni"),
+    "ASI Device": ("ASI", "asi"),
     "Virtual Device": ("Synthetic", "synthetic"),
 }
 
 remote_focus_hardware_widgets = {
     "type": ["Device Type", "Combobox", "string", remote_focus_device_types, None],
     "channel": ["DAQ Channel", "Input", "string", None, "Example: PXI6259/ao3"],
+    "axis": ["Device Type", "Input", "string", None, "Example: A"],
     "min": [
         "Minimum Voltage",
         "Spinbox",

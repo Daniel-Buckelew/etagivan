@@ -1010,3 +1010,69 @@ class TigerController:
         self.read_response()
         self.send_command(f'6 CCA Z=0\r')
         self.read_response()
+        
+    def logic_cell_on(self, axis : str):
+        self.send_command(f'M E = {axis}\r')
+        self.read_response()
+        self.send_command(f'CCA Z=1\r')
+        self.read_response()
+
+    def logic_cell_off(self, axis :str):
+        self.send_command(f'M E = {axis}\r')
+        self.read_response()
+        self.send_command(f'CCA Z=0\r')
+        self.read_response()
+
+    def SA_waveform(self, axis:str, waveform=0, amplitude=1000, offset=500, frequency=1000):
+        """Programs the analog waveforms using SAA, SAO, and SAP
+        Default waveform is a sawtooth waveform with an amplitude of 1V with an offset of 0.5V
+
+        Parameters
+        ----------
+        axis: str
+            Tiger Controller axis
+        waveform: 
+            Type of waveform pattern according to https://asiimaging.com/docs/commands/sap
+        amplitude:
+            amplitude of the waveform in mV
+        offset:
+            sets the center position of the waveform in mV
+        frequency:
+            sets the period of the waveform in milliseconds       
+        """
+
+        "Verify if this is for synchronous or asynchronous"
+        print(f"Period (ms): {frequency}")
+        if (waveform % 128 == 3):
+            offset = .5*(offset+amplitude)
+        amplitude = amplitude*2            
+
+        self.send_command(f"3 SAP {axis}={waveform}")
+        self.read_response()
+        self.send_command(f"3 SAA {axis}={amplitude}")
+        self.read_response()
+        self.send_command(f"3 SAO {axis}={offset}")
+        self.read_response()
+        self.send_command(f"3 SAF {axis}={frequency}")
+        self.read_response()
+
+    def SAM(self, axis: str, mode: int):
+        """Sets the single-axis mode according to the integer code.
+
+        0: stops waveforms if they are running
+        1: starts generating the waveform pattern
+        2: waveform only runs for one cycle, then waits for another trigger
+        3: starts generating the waveform pattern, restarts the other waveform on the same card
+        4: starts generating the waveform, free running after the trigger
+
+        Parameters
+        ----------
+        axis: str
+            Laser axis
+        mode: 
+            Integer code     
+        """
+
+        self.send_command(f"3 SAM {axis}={mode}")
+        self.read_response()
+
