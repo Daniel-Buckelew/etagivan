@@ -47,7 +47,7 @@ logger = logging.getLogger(p)
 
 
 @log_initialization
-class ASIGalvo(GalvoBase , SerialDevice):
+class ASIGalvo(GalvoBase, SerialDevice):
     """GalvoASI Class - ASI DAQ Control of Galvanometers"""
 
     def __init__(
@@ -77,7 +77,7 @@ class ASIGalvo(GalvoBase , SerialDevice):
 
         #: dict: Dictionary of microscope configuration parameters.
         self.configuration = configuration
-        
+
         #: str: Name of the microscope.
         self.microscope_name = microscope_name
 
@@ -85,13 +85,13 @@ class ASIGalvo(GalvoBase , SerialDevice):
         self.galvo_id = device_id
 
         #: str: Galvo Axis
-        self.axis = self.device_config["hardware"]["axis"]#.get("axis","B")
-        logger.debug(f'galvo axis: {self.axis}')
+        self.axis = self.device_config["hardware"]["axis"]  # .get("axis","B")
+        logger.debug(f"galvo axis: {self.axis}")
 
     def __str__(self) -> str:
         """Return string representation of the GalvoASI."""
         return "GalvoASI"
-    
+
     @classmethod
     def connect(cls, port, baudrate=115200, timeout=0.25):
         """Build ASILaser Serial Port connection
@@ -135,6 +135,11 @@ class ASIGalvo(GalvoBase , SerialDevice):
         waveform_dict : dict
             Dictionary that includes the galvo waveforms on a per-channel basis.
         """
+
+        # TODO: variables galvo_amplitude, offset, etc., are local in the parent
+        #  method and not assigned as an attribute. As such, much of this code is
+        #  duplicated. We could consider refactoring this to avoid duplication.
+
         microscope_state = self.configuration["experiment"]["MicroscopeState"]
         microscope_name = microscope_state["microscope_name"]
         zoom_value = microscope_state["zoom"]
@@ -168,8 +173,8 @@ class ASIGalvo(GalvoBase , SerialDevice):
                     if float(galvo_parameters.get("frequency", 10)) == 0:
                         galvo_period = exposure_time
                     else:
-                        galvo_period = (
-                            exposure_time/float(galvo_parameters.get("frequency", 10))
+                        galvo_period = exposure_time / float(
+                            galvo_parameters.get("frequency", 10)
                         )
                     factor_name = None
                     if galvo_factor == "channel":
@@ -195,11 +200,11 @@ class ASIGalvo(GalvoBase , SerialDevice):
 
                 # Calculate the Waveforms
                 if self.galvo_waveform == "sawtooth":
-                    period=galvo_period
-                    amplitude=galvo_amplitude
-                    offset=galvo_offset
-                    duty_cycle=galvo_rising_ramp
-                    
+                    period = galvo_period
+                    amplitude = galvo_amplitude
+                    offset = galvo_offset
+                    duty_cycle = galvo_rising_ramp
+
                     # Duty cycle must be either 0, 50, or 100
                     # If the duty cycle is not 0, 50, or 100, it will round to the nearest value
                     if duty_cycle not in (0, 50, 100):
@@ -211,52 +216,50 @@ class ASIGalvo(GalvoBase , SerialDevice):
                             duty_cycle = temp - remainder + 50
                         else:
                             duty_cycle = 100
-                        logger.debug(f"Invalid duty cycle given. Duty cycle value corrected to {duty_cycle}")    
+                        logger.debug(
+                            f"Invalid duty cycle given. Duty cycle value corrected to {duty_cycle}"
+                        )
                     self.configuration["waveform_constants"]["galvo_constants"][
                         self.galvo_name
-                    ][microscope_name][zoom_value]['rising ramp'] = duty_cycle
-                    print(self.configuration["waveform_constants"]["galvo_constants"][
-                        self.galvo_name
-                    ][microscope_name][zoom_value]['rising ramp'])
+                    ][microscope_name][zoom_value]["rising ramp"] = duty_cycle
+                    print(
+                        self.configuration["waveform_constants"]["galvo_constants"][
+                            self.galvo_name
+                        ][microscope_name][zoom_value]["rising ramp"]
+                    )
                     self.sawtooth(period, amplitude, offset, duty_cycle)
 
                 elif self.galvo_waveform == "sine":
-                    period=galvo_period
-                    amplitude=galvo_amplitude
-                    offset=galvo_offset
-                
+                    period = galvo_period
+                    amplitude = galvo_amplitude
+                    offset = galvo_offset
+
                     self.sine_wave(period, amplitude, offset)
-                
+
                 else:
                     print("Unknown Galvo waveform specified in configuration file.")
                     continue
-    
-    def sawtooth(
-        self,
-        period=10,
-        amplitude=1,
-        offset=0,
-        duty_cycle=100
-    ):
+
+    def sawtooth(self, period=10, amplitude=1, offset=0, duty_cycle=100):
         """
-        Sends the tiger controller commands to intiate the sawtooth wave.
+        Sends the tiger controller commands to initiate the sawtooth wave.
 
         If the duty cycle given is 50, a triangle wave will be initiated.
 
         Parameters
         ----------
-        frequency : Float
-            Unit - Hz
+        period : Float
+            Unit - milliseconds
         amplitude : Float
             Unit - Volts
         offset : Float
             Unit - Volts
         duty_cycle : Float
-            Unit - Percent 
+            Unit - Percent
         """
 
         # Converts period to ms and amplitude and offset to mV
-        period = int(round(period*1000))
+        period = int(round(period * 1000))
         amplitude *= 1000
         offset *= 1000
 
@@ -265,41 +268,36 @@ class ASIGalvo(GalvoBase , SerialDevice):
             amplitude = amplitude * -1
             # Sawtooth waveform that is triggered on TTL input
             self.galvo.SA_waveform(self.axis, 128, amplitude, offset, period)
-        
+
         if duty_cycle == 50:
             # Adjusts the period for a triangle waveform
-            period = 2*round(period/2)
+            period = 2 * round(period / 2)
             # Triangle waveform that is triggered on TTL input
             self.galvo.SA_waveform(self.axis, 129, amplitude, offset, period)
-        
+
         if duty_cycle == 100:
             # Sawtooth waveform that is triggered on TTL input
             self.galvo.SA_waveform(self.axis, 128, amplitude, offset, period)
-        
+
         # Waveform is free running after TTL input
         self.galvo.SAM(self.axis, 4)
 
-    def sine_wave(
-        self,
-        period=10.0,  
-        amplitude=1.0, 
-        offset=0.0
-    ):
-        """Sends the tiger controller commands to intiate the sine wave.
+    def sine_wave(self, period=10.0, amplitude=1.0, offset=0.0):
+        """Sends the tiger controller commands to initiate the sine wave.
 
         Parameters
         ----------
         period : Float
-            Unit - Seconds
+            Unit - milliseconds
         amplitude : Float
             Unit - Volts
         offset : Float
-            Unit - Volts 
+            Unit - Volts
 
         """
 
         # Converts period to ms and amplitude and offset to mV
-        period = int(round(period*1000))
+        period = int(round(period * 1000))
         amplitude *= 1000
         offset *= 1000
 
@@ -308,7 +306,7 @@ class ASIGalvo(GalvoBase , SerialDevice):
         # Waveform is free running after it is triggered
         self.galvo.SAM(self.axis, 4)
 
-    def turn_off(self): 
+    def turn_off(self):
         """Stops the galvo waveform"""
         self.galvo.SAM(self.axis, 0)
 
