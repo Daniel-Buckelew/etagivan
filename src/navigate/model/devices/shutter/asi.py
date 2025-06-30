@@ -45,6 +45,7 @@ from navigate.model.devices.APIs.asi.asi_tiger_controller import TigerController
 p = __name__.split(".")[1]
 logger = logging.getLogger(p)
 
+
 @log_initialization
 class ASIShutter(ShutterBase, SerialDevice):
     """ShutterTTL Class
@@ -74,13 +75,21 @@ class ASIShutter(ShutterBase, SerialDevice):
         """
         super().__init__(microscope_name, device_connection, configuration)
 
+        #: str: Address of the shutter, if applicable.
         self.address = address
 
+        #: TigerController: ASI Tiger Controller object.
         self.shutter = device_connection
 
-        self.axis = configuration["configuration"]["microscopes"][microscope_name]["shutter"]["hardware"]["axis"]
+        #: str: Axis of the shutter.
+        self.axis = configuration["configuration"]["microscopes"][microscope_name][
+            "shutter"
+        ]["hardware"]["axis"]
 
-        self.port = configuration["configuration"]["microscopes"][microscope_name]["shutter"]["hardware"]["port"]
+        #: str: Port for communicating with the shutter.
+        self.port = configuration["configuration"]["microscopes"][microscope_name][
+            "shutter"
+        ]["hardware"]["port"]
 
     @classmethod
     def connect(cls, port, baudrate=115200, timeout=0.25):
@@ -109,7 +118,13 @@ class ASIShutter(ShutterBase, SerialDevice):
         return tiger_controller
 
     def __del__(self) -> None:
-        """Disconnect from the serial port."""
+        """Disconnect from the serial port.
+
+        Raises
+        -------
+        Exception
+            If there is an error during the cleanup process.
+        """
         try:
             if self.shutter:
                 self.shutter.disconnect_from_serial()
@@ -118,7 +133,13 @@ class ASIShutter(ShutterBase, SerialDevice):
             logger.exception(f"Error during cleanup: {traceback.format_exc()}")
 
     def open_shutter(self) -> None:
-        """Opens the shutter."""
+        """Opens the shutter.
+
+        Raises
+        -------
+        Exception
+            If there is an error while trying to open the shutter.
+        """
         try:
             self.shutter.logic_card_on(self.axis)
             logger.debug("ASIShutter opened")
@@ -126,7 +147,13 @@ class ASIShutter(ShutterBase, SerialDevice):
             logger.exception(f"Shutter not open: {traceback.format_exc()}")
 
     def close_shutter(self) -> None:
-        """Closes the shutter."""
+        """Closes the shutter.
+
+        Raises
+        -------
+        Exception
+            If there is an error while trying to close the shutter.
+        """
         try:
             self.shutter.logic_card_off(self.axis)
             logger.debug("ASIShutter closed")
@@ -135,5 +162,11 @@ class ASIShutter(ShutterBase, SerialDevice):
 
     @property
     def state(self) -> bool:
-        """Get the state of the shutter."""
+        """Get the state of the shutter.
+
+        Returns
+        -------
+        bool:
+            True if the shutter is open, False if it is closed.
+        """
         return self.shutter.get_axis_position(self.axis)

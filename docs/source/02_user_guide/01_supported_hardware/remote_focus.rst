@@ -57,13 +57,10 @@ operating range.
 
 -------------
 
-Analog Controlled Voice Coils and Tunable Lenses
-------------------------------------------------
+National Instruments
+--------------------
 
-In principle, this hardware type can support any analog-controlled voice coil or tunable lens.
-The `BLINK <https://www.thorlabs.com/thorproduct.cfm?partnumber=BLINK>`_ and the
-`Optotune Focus Tunable Lens <https://www.optotune.com/tunable-lenses>`_ are
-controlled with an analog signal from the DAQ.
+In principle, this hardware type can support any analog-controlled voice coil or tunable lens. The `BLINK <https://www.thorlabs.com/thorproduct.cfm?partnumber=BLINK>`_ and the `Optotune Focus Tunable Lens <https://www.optotune.com/tunable-lenses>`_ are controlled with an analog signal from the DAQ.
 
 -----------------
 
@@ -111,6 +108,34 @@ Optotune Focus Tunable Lens
                 port: COM2
                 baudrate: 9600
 
+|
+
+------------------
+
+ASI
+---
+
+The ASI Tiger Controller has a few limitations for the analog signals. First, the 
+minimum voltage must be zero volts. Second, the period value needs to be a whole number.
+
+There are two analog waveforms offered, triangle and ramp waves. The triangle waveform is 
+a periodic analog waveform, with no delay periods. The sawtooth waveform is a periodic 
+analog waveform with a delay period between each cycle. 
+
+.. collapse:: Configuration File
+
+    .. code-block:: yaml
+
+      microscopes: 
+        microscope_name:
+          remote_focus_device:
+            hardware: 
+              type: ASI
+              axis: A
+              min: 0
+              max: 5
+              port: COM2
+              baudrate: 9600
 |
 
 ------------------

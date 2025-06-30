@@ -15,8 +15,8 @@ frames, and some jitter in timing is anticipated.
 
 .. _hardware_ni:
 
-National Instruments (NI)
--------------------------
+National Instruments
+--------------------
 In principle, most NI-based data acquisition cards should work with the software, so long
 as there are a sufficient number of analog and digital ports, and the sampling rate (typically 100 kHz)
 is high enough per port.
