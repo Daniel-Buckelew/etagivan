@@ -1013,7 +1013,7 @@ class TigerController:
         self.read_response()
 
     def SA_waveform(
-        self, axis: str, waveform: int = 0, amplitude: int = 1000, offset: int = 500
+        self, axis: str, waveform: int = 0, amplitude: int = 1000, offset: int = 500, frequency=1000
     ) -> None:
         """Programs the analog waveforms using SAA, SAO, and SAP
         Default waveform is a sawtooth waveform with an amplitude of 1V with an offset of 0.5V
@@ -1034,6 +1034,8 @@ class TigerController:
         self.send_command(f"SAA {axis}={amplitude}")
         self.read_response()
         self.send_command(f"SAO {axis}={offset}")
+        self.read_response()
+        self.send_command(f"3 SAF {axis}={frequency}")
         self.read_response()
 
     def SAM(self, axis: str, mode: int) -> None:
