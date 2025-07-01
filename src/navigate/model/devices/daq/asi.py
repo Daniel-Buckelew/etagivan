@@ -33,37 +33,38 @@
 # Standard Imports
 import logging
 from threading import Lock
-import traceback
-import time
-from typing import Union, Dict, Any
+from typing import Dict, Any
 
 # Third Party Imports
-import numpy as np
-import serial
 from multiprocessing.managers import DictProxy, ListProxy
+
 # Local Imports
-from navigate.model.devices.remote_focus.asi import ASIRemoteFocus
-#from navigate.model.devices.galvo.asi import galvo
 from navigate.model.devices.daq.base import DAQBase
 from navigate.model.devices.device_types import SerialDevice
 from navigate.model.devices.APIs.asi.asi_tiger_controller import TigerController
 from navigate.tools.decorators import log_initialization
-#from navigate.tools.waveform_template_funcs import get_waveform_template_parameters
 
 
 # Logger Setup
 p = __name__.split(".")[1]
 logger = logging.getLogger(p)
 
+
 @log_initialization
 class ASIDaq(DAQBase, SerialDevice):
-    """ASIDAQ class for Data Acquisition (DAQ). 
+    """ASIDAQ class for Data Acquisition (DAQ).
 
-    Representation of Tiger Controller in action. 
+    Representation of Tiger Controller in action.
     Triggers all devices and outputs to camera trigger channel.
     """
 
-    def __init__(self, microscope_name, device_connection, configuration: Dict[str, Any], device_id) -> None:
+    def __init__(
+        self,
+        microscope_name,
+        device_connection,
+        configuration: Dict[str, Any],
+        device_id,
+    ) -> None:
         """Initialize the ASI DAQ.
 
         Parameters
@@ -107,34 +108,37 @@ class ASIDaq(DAQBase, SerialDevice):
         self.zoom = self.configuration["experiment"]["MicroscopeState"]["zoom"]
 
         # retrieves galvo ListProxy/DictProxy from config file
-        galvos_raw = self.configuration["configuration"]['microscopes'][self.microscope_name]['galvo']
+        galvos_raw = self.configuration["configuration"]["microscopes"][
+            self.microscope_name
+        ]["galvo"]
 
         # Normalize galvos to always be a list of dicts
         if isinstance(galvos_raw, DictProxy):
             self.galvos = [dict(galvos_raw)]  # wrap single DictProxy into a list
         elif isinstance(galvos_raw, ListProxy):
-            self.galvos = [dict(g) for g in galvos_raw]  # convert each DictProxy in the list to a dict
+            self.galvos = [
+                dict(g) for g in galvos_raw
+            ]  # convert each DictProxy in the list to a dict
         else:
             raise TypeError("Unexpected type for galvos: {}".format(type(galvos_raw)))
 
         # update analog outputs with galvo IDs and associated axes
-        i=0
+        i = 0
         for g in self.galvos:
-            self.analog_outputs[f"galvo {i}"] = g['hardware']['axis']
+            self.analog_outputs[f"galvo {i}"] = g["hardware"]["axis"]
             i += 1
 
         # retreive galvo phases from config
-        self.phases = [
-            galvo["phase"] for galvo in self.galvos
-        ]
+        self.phases = [galvo["phase"] for galvo in self.galvos]
 
         # update analog outputs with rfvc and associated axis
-        remote_focus_channel = self.configuration["configuration"]["microscopes"][self.microscope_name]["remote_focus"]["hardware"]["axis"]
+        remote_focus_channel = self.configuration["configuration"]["microscopes"][
+            self.microscope_name
+        ]["remote_focus"]["hardware"]["axis"]
         self.analog_outputs["remote_focus"] = remote_focus_channel
 
         # sets up initial PLC configuration with default delay (ms), camera delay, rfvc delay, sweep time (ms), and analog outputs dict
         self.daq.setup_control_loop([200], 0, 0, 120, self.analog_outputs)
-        
 
     @classmethod
     def connect(cls, port, baudrate=115200, timeout=0.25):
@@ -176,46 +180,54 @@ class ASIDaq(DAQBase, SerialDevice):
         # Get appropriate sweep_time for the current channel
         sweep_time = self.sweep_times[channel_key]
 
-        # loop through galvo phases to calculate time delays 
+        # loop through galvo phases to calculate time delays
         # delays[i] corresponds to the time between the ith galvo trigger and the master trigger
         n = len(self.galvos)
         i = 0
         delays = []
         for phase in self.phases:
-            frequency = self.waveform_constants["galvo_constants"][f"Galvo {i}"][self.microscope_name][self.zoom]["frequency"]
-            period = self.exposure_times[channel_key]*1000/float(frequency)
+            frequency = self.waveform_constants["galvo_constants"][f"Galvo {i}"][
+                self.microscope_name
+            ][self.zoom]["frequency"]
+            period = self.exposure_times[channel_key] * 1000 / float(frequency)
 
             # round period for triangle waveform to even number, as the TG-1000 can only generate triangle waveforms with even-number-of-ms periods
-            if self.galvos[i]['waveform'] == 'sawtooth':
-                rising_ramp = float(self.waveform_constants["galvo_constants"][f"Galvo {i}"][self.microscope_name][self.zoom].get("rising_ramp", 50))
-                if (rising_ramp == 50):
-                    period = 2*round(period/2)
+            if self.galvos[i]["waveform"] == "sawtooth":
+                rising_ramp = float(
+                    self.waveform_constants["galvo_constants"][f"Galvo {i}"][
+                        self.microscope_name
+                    ][self.zoom].get("rising_ramp", 50)
+                )
+                if rising_ramp == 50:
+                    period = 2 * round(period / 2)
 
             # round period to closest number of ms, as TG-1000 can only generate waveforms with whole-number-of-ms periods
             period = int(round(period))
 
             # save first period to sync control loop with first galvo
-            if (i == 0):
-                period0 = period 
-            
-            # calculate time delay corresponding to phase offset
-            t = period*phase/(2*3.14159265) 
-            delays.append(period*(n-i) - t)
-            i += 1
-        
-        # modify sweep time to sync with the first galvo if there are asi galvos in config
-        if (len(delays) > 0): 
-            n7 = 1000*sweep_time // period0 + 1
-            sweep_time = period0*n7
+            if i == 0:
+                period0 = period
 
-        self.camera_delay = (
-            float(self.waveform_constants["other_constants"].get("camera_delay", 5))
+            # calculate time delay corresponding to phase offset
+            t = period * phase / (2 * 3.14159265)
+            delays.append(period * (n - i) - t)
+            i += 1
+
+        # modify sweep time to sync with the first galvo if there are asi galvos in config
+        if len(delays) > 0:
+            n7 = 1000 * sweep_time // period0 + 1
+            sweep_time = period0 * n7
+
+        self.camera_delay = float(
+            self.waveform_constants["other_constants"].get("camera_delay", 5)
         )
-        rfvc_delay = (
-            float(self.waveform_constants["other_constants"].get("remote_focus_delay", 5))
+        rfvc_delay = float(
+            self.waveform_constants["other_constants"].get("remote_focus_delay", 5)
         )
         # sets up control loop with all parameters (all times in ms)
-        self.daq.setup_control_loop(delays, self.camera_delay, rfvc_delay, sweep_time, self.analog_outputs)
+        self.daq.setup_control_loop(
+            delays, self.camera_delay, rfvc_delay, sweep_time, self.analog_outputs
+        )
 
         self.current_channel_key = channel_key
         self.is_updating_analog_task = False
@@ -250,13 +262,10 @@ class ASIDaq(DAQBase, SerialDevice):
         # reset PLC cell 1 (Master Trigger)
         try:
             self.daq.logic_cell_on("8")
-            self.daq.logic_cell_off("1")             
+            self.daq.logic_cell_off("1")
         except Exception:
             logger.debug("DAQ cannot turn off")
             pass
 
         # if self.wait_to_run_lock.locked():
         #     self.wait_to_run_lock.release()
-
-
-
